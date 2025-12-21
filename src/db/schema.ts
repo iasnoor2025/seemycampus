@@ -16,6 +16,7 @@ export const colleges = pgTable("colleges", {
   website: varchar("website", { length: 255 }),
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
+  isAcademicAlliance: boolean("is_academic_alliance").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

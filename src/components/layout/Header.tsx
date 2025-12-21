@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Phone, Search, Home } from "lucide-react"
@@ -9,9 +10,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Menu } from "@base-ui/react"
 import { Logo } from "./Logo"
 
 export function Header() {
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
+
+  const categories = [
+    {
+      name: "MANAGEMENT",
+      subcategories: [
+        { name: "BBA / BBM COLLEGES", href: "/colleges/management/bba", active: true },
+        { name: "MBA / PGDM COLLEGES", href: "/colleges/management/mba", active: false },
+      ],
+    },
+    {
+      name: "ENGINEERING",
+      subcategories: [
+        { name: "B.TECH / B.E COLLEGES", href: "/colleges/engineering/btech", active: true },
+      ],
+    },
+    {
+      name: "MEDICAL",
+      subcategories: [
+        { name: "MBBS COLLEGES", href: "/colleges/medical/mbbs", active: true },
+      ],
+    },
+    {
+      name: "DESIGN",
+      subcategories: [
+        { name: "DESIGNING AND ARCHITECTURE", href: "/colleges/design", active: true },
+      ],
+    },
+    {
+      name: "LAW",
+      subcategories: [
+        { name: "LLB", href: "/colleges/law", active: true },
+      ],
+    },
+  ]
+
   return (
     <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg">
       <div className="w-full px-6">
@@ -34,39 +72,76 @@ export function Header() {
                 COLLEGES
                 <span className="text-[10px] leading-none">▼</span>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <div className="p-2">
-                  <div className="font-semibold mb-2">Management</div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/management/bba">BBA / BBM Colleges</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/management/mba">MBA / PGDM Colleges</Link>
-                  </DropdownMenuItem>
-                </div>
-                <div className="p-2 border-t">
-                  <div className="font-semibold mb-2">Engineering</div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/engineering/btech">B.Tech / B.E Colleges</Link>
-                  </DropdownMenuItem>
-                </div>
-                <div className="p-2 border-t">
-                  <div className="font-semibold mb-2">Medical</div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/medical/mbbs">MBBS Colleges</Link>
-                  </DropdownMenuItem>
-                </div>
-                <div className="p-2 border-t">
-                  <div className="font-semibold mb-2">Design</div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/design">Designing And Architecture</Link>
-                  </DropdownMenuItem>
-                </div>
-                <div className="p-2 border-t">
-                  <div className="font-semibold mb-2">Law</div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges/law">LLB</Link>
-                  </DropdownMenuItem>
+              <DropdownMenuContent className="p-0 min-w-[200px] overflow-visible" style={{ zIndex: 9999 }}>
+                <div className="flex relative" style={{ minHeight: `${categories.length * 40}px` }}>
+                  {/* First Level - Categories */}
+                  <div className="border-r border-gray-200">
+                    {categories.map((category, index) => {
+                      const isHovered = hoveredCategory === category.name
+                      
+                      return (
+                        <div
+                          key={category.name}
+                          className="relative"
+                          style={{ height: '40px' }}
+                          onMouseEnter={() => setHoveredCategory(category.name)}
+                          onMouseLeave={() => {
+                            setTimeout(() => {
+                              if (hoveredCategory === category.name) {
+                                setHoveredCategory(null)
+                              }
+                            }, 200)
+                          }}
+                        >
+                          <Menu.Item
+                            className={`px-4 py-2 cursor-pointer transition-colors whitespace-nowrap h-full flex items-center ${
+                              isHovered
+                                ? "bg-[hsl(210,50%,25%)] text-white"
+                                : "hover:bg-gray-100"
+                            }`}
+                          >
+                            <div className="font-medium text-sm uppercase">{category.name}</div>
+                          </Menu.Item>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* Second Level - Subcategories Container */}
+                  {hoveredCategory && (() => {
+                    const hoveredIndex = categories.findIndex(cat => cat.name === hoveredCategory)
+                    const topOffset = hoveredIndex * 40
+                    const category = categories.find(cat => cat.name === hoveredCategory)
+                    
+                    return (
+                      <div 
+                        className="absolute left-full bg-white border border-gray-200 shadow-2xl min-w-[240px]"
+                        style={{ 
+                          top: `${topOffset}px`,
+                          zIndex: 10000,
+                          maxHeight: 'none',
+                          overflow: 'visible',
+                          position: 'absolute'
+                        }}
+                        onMouseEnter={() => setHoveredCategory(hoveredCategory)}
+                        onMouseLeave={() => setHoveredCategory(null)}
+                      >
+                        {category?.subcategories.map((subcategory) => (
+                          <Link
+                            key={subcategory.href}
+                            href={subcategory.href}
+                            className={`block px-4 py-2.5 transition-colors whitespace-nowrap ${
+                              subcategory.active
+                                ? "bg-[hsl(210,50%,25%)] text-white hover:bg-[hsl(210,50%,30%)]"
+                                : "text-gray-900 hover:bg-gray-100"
+                            }`}
+                          >
+                            <div className="text-sm font-medium uppercase">{subcategory.name}</div>
+                          </Link>
+                        ))}
+                      </div>
+                    )
+                  })()}
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>

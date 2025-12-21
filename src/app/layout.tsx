@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { TopBar } from "@/components/layout/TopBar"
-import { Header } from "@/components/layout/Header"
+import { HeaderClient } from "@/components/layout/HeaderClient"
 import { Footer } from "@/components/layout/Footer"
 import { SocialIcons } from "@/components/layout/SocialIcons"
 
@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <TopBar />
-        <Header />
+        <HeaderClient />
         <main>{children}</main>
         <SocialIcons />
         <Footer />

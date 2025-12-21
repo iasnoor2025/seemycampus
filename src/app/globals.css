@@ -64,3 +64,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Fix dropdown menu z-index and overflow */
+[data-baseui-menu-popup] {
+  z-index: 9999 !important;
+  overflow: visible !important;
+}
+
+[data-baseui-menu-positioner] {
+  z-index: 9999 !important;
+}

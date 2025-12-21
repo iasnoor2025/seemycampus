@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 }
 
 interface RecommendationsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     quizId?: string
-  }
+  }>
 }
 
 async function RecommendationsContent({ quizId }: { quizId: number }) {
@@ -36,7 +36,8 @@ async function RecommendationsContent({ quizId }: { quizId: number }) {
 export default async function RecommendationsPage({
   searchParams,
 }: RecommendationsPageProps) {
-  const quizId = searchParams.quizId ? parseInt(searchParams.quizId) : null
+  const params = await searchParams
+  const quizId = params.quizId ? parseInt(params.quizId) : null
 
   if (!quizId || isNaN(quizId)) {
     return (
