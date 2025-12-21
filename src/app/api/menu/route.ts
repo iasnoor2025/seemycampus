@@ -51,7 +51,7 @@ export async function GET() {
         id: goal.id + 10000, // Offset to avoid conflicts with category IDs
         name: goal.name,
         slug: goal.slug,
-        courses: goal.courses.map((course) => ({
+        courses: (goal.courses || []).map((course) => ({
           name: course,
           href: goal.link || `/colleges/${goal.slug}`,
         })),

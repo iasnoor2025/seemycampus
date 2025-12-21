@@ -166,7 +166,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 onValueChange={(value) => handleFilterChange("state", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select state" />
+                  <SelectValue>{filters.state || "Select state"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All States</SelectItem>
@@ -189,7 +189,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 onValueChange={(value) => handleFilterChange("course", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select course" />
+                  <SelectValue>{filters.course || "Select course"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Courses</SelectItem>
@@ -212,7 +212,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 onValueChange={(value) => handleFilterChange("entranceExam", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select exam" />
+                  <SelectValue>{filters.entranceExam || "Select exam"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Exams</SelectItem>
@@ -260,7 +260,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 onValueChange={(value) => handleFilterChange("ownership", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select ownership" />
+                  <SelectValue>{filters.ownership || "Select ownership"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All</SelectItem>
@@ -292,7 +292,13 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All colleges" />
+                  <SelectValue>
+                    {filters.academicAlliance === null
+                      ? "All colleges"
+                      : filters.academicAlliance
+                      ? "Academic Alliance Only"
+                      : "Non-Alliance"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Colleges</SelectItem>

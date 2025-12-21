@@ -255,7 +255,7 @@ export function TestimonialsList() {
                     <Label htmlFor="avatarColor">Avatar Color</Label>
                     <Select
                       value={formData.avatarColor}
-                      onValueChange={(value) => setFormData({ ...formData, avatarColor: value })}
+                      onValueChange={(value) => setFormData({ ...formData, avatarColor: value || "blue" })}
                     >
                       <SelectTrigger>
                         <SelectValue />

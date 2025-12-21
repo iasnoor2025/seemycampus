@@ -327,7 +327,7 @@ export function StudyGoalsList() {
                     <Label htmlFor="icon">Icon *</Label>
                     <Select
                       value={formData.icon}
-                      onValueChange={(value) => setFormData({ ...formData, icon: value })}
+                      onValueChange={(value) => setFormData({ ...formData, icon: value || "GraduationCap" })}
                     >
                       <SelectTrigger>
                         <SelectValue />

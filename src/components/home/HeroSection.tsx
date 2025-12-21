@@ -274,7 +274,7 @@ export function HeroSection() {
                         </div>
                       </div>
                       <ul className="space-y-2 mb-4">
-                        {goal.courses.map((course, index) => (
+                        {(goal.courses || []).map((course, index) => (
                           <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
                             <ChevronRight className="h-4 w-4 text-orange-500" />
                             {course}

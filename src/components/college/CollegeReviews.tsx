@@ -214,10 +214,10 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
                 <label className="text-sm font-medium mb-2 block">Rating *</label>
                 <Select
                   value={formData.rating}
-                  onValueChange={(value) => setFormData({ ...formData, rating: value })}
+                  onValueChange={(value) => setFormData({ ...formData, rating: value || "" })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select rating" />
+                    <SelectValue>{formData.rating || "Select rating"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {[5, 4, 3, 2, 1].map((rating) => (
