@@ -11,11 +11,11 @@ export function TopBar() {
     <div className="bg-red-600 text-white py-2 text-sm relative">
       <div className="container mx-auto px-4 max-w-[1400px] relative">
         <p className="text-center">
-          For admissions or other details, call us on{" "}
-          <a href="tel:+918960147776" className="font-semibold hover:underline">
-            +91-8960147776
-          </a>
-        </p>
+        For admissions or other details, call us on{" "}
+        <a href="tel:+918960147776" className="font-semibold hover:underline">
+          +91-8960147776
+        </a>
+      </p>
         <button
           onClick={scrollToTop}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"

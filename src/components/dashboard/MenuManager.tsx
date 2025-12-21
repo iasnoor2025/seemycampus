@@ -4,6 +4,16 @@ import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { CategoryForm } from "./CategoryForm"
 import { MenuCourseForm } from "./MenuCourseForm"
 
@@ -35,6 +45,10 @@ export function MenuManager() {
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [showCourseForm, setShowCourseForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const [deleteCategoryId, setDeleteCategoryId] = useState<number | null>(null)
+  const [deleteCourseId, setDeleteCourseId] = useState<number | null>(null)
+  const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false)
+  const [showDeleteCourseDialog, setShowDeleteCourseDialog] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -73,34 +87,34 @@ export function MenuManager() {
     setExpandedCategories(newExpanded)
   }
 
-  const handleDeleteCategory = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this category? All courses will also be deleted.")) {
-      return
-    }
+  const handleDeleteCategory = async () => {
+    if (!deleteCategoryId) return
 
     try {
-      const response = await fetch(`/api/dashboard/menu/categories/${id}`, {
+      const response = await fetch(`/api/dashboard/menu/categories/${deleteCategoryId}`, {
         method: "DELETE",
       })
       if (response.ok) {
         fetchData()
+        setShowDeleteCategoryDialog(false)
+        setDeleteCategoryId(null)
       }
     } catch (error) {
       console.error("Error deleting category:", error)
     }
   }
 
-  const handleDeleteCourse = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this course?")) {
-      return
-    }
+  const handleDeleteCourse = async () => {
+    if (!deleteCourseId) return
 
     try {
-      const response = await fetch(`/api/dashboard/menu/menu-courses/${id}`, {
+      const response = await fetch(`/api/dashboard/menu/menu-courses/${deleteCourseId}`, {
         method: "DELETE",
       })
       if (response.ok) {
         fetchData()
+        setShowDeleteCourseDialog(false)
+        setDeleteCourseId(null)
       }
     } catch (error) {
       console.error("Error deleting course:", error)
@@ -179,7 +193,10 @@ export function MenuManager() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteCategory(category.id)}
+                        onClick={() => {
+                          setDeleteCategoryId(category.id)
+                          setShowDeleteCategoryDialog(true)
+                        }}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -214,7 +231,10 @@ export function MenuManager() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteCourse(course.id)}
+                              onClick={() => {
+                                setDeleteCourseId(course.id)
+                                setShowDeleteCourseDialog(true)
+                              }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -255,6 +275,42 @@ export function MenuManager() {
           }}
         />
       )}
+
+      {/* Delete Category Dialog */}
+      <AlertDialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this category? All courses in this category will also be deleted. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCategory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Course Dialog */}
+      <AlertDialog open={showDeleteCourseDialog} onOpenChange={setShowDeleteCourseDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this course? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCourse} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

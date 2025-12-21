@@ -52,13 +52,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Auto-generate href if not provided
+    const autoHref = href || `/courses/${slug}`
+
     const [newCourse] = await db
       .insert(menuCourses)
       .values({
         name,
         slug,
         categoryId: parseInt(categoryId),
-        href,
+        href: autoHref,
         displayOrder: displayOrder || 0,
         isActive: isActive !== undefined ? isActive : true,
       })

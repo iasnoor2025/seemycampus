@@ -93,44 +93,65 @@ export function generateCourseMeta(course: Course, college?: { name: string; slu
 }
 
 export function generateStructuredDataCollege(college: College) {
-  return {
+  const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     name: college.name,
-    description: college.description,
     address: {
       "@type": "PostalAddress",
-      addressLocality: college.city || college.location,
+      addressLocality: college.city || college.location || "",
       addressCountry: "IN",
     },
     url: `https://seemycampus.com/colleges/${college.slug}`,
-    image: college.images && college.images.length > 0 ? college.images[0] : undefined,
   }
+
+  if (college.description) {
+    structuredData.description = college.description
+  }
+
+  if (college.images && college.images.length > 0) {
+    structuredData.image = college.images[0]
+  }
+
+  return structuredData
 }
 
 export function generateStructuredDataCourse(course: Course, college?: { name: string; slug: string } | null) {
-  return {
+  const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Course",
     name: course.name,
-    description: course.description,
-    provider: college
-      ? {
-          "@type": "EducationalOrganization",
-          name: college.name,
-          url: `https://seemycampus.com/colleges/${college.slug}`,
-        }
-      : undefined,
     courseCode: course.slug,
-    educationalLevel: course.level,
-    timeRequired: course.duration,
-    offers: course.fees
-      ? {
-          "@type": "Offer",
-          price: course.fees,
-          priceCurrency: "INR",
-        }
-      : undefined,
   }
+
+  if (course.description) {
+    structuredData.description = course.description
+  }
+
+  if (college) {
+    structuredData.provider = {
+      "@type": "EducationalOrganization",
+      name: college.name,
+      url: `https://seemycampus.com/colleges/${college.slug}`,
+    }
+  }
+
+  if (course.level) {
+    structuredData.educationalLevel = course.level
+  }
+
+  if (course.duration) {
+    structuredData.timeRequired = course.duration
+  }
+
+  if (course.fees) {
+    structuredData.offers = {
+      "@type": "Offer",
+      price: course.fees,
+      priceCurrency: "INR",
+    }
+  }
+
+  return structuredData
 }
 

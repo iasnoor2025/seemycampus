@@ -18,7 +18,7 @@ const connectionString = process.env.DATABASE_URL
 const client = postgres(connectionString)
 const db = drizzle(client, { schema })
 
-import { colleges } from "./schema"
+import { colleges, categories, menuCourses } from "./schema"
 
 // College data from https://www.seemycampus.com/academic-alliance.php
 // These colleges appear on both Academic Alliance and College List pages
@@ -400,9 +400,117 @@ const additionalColleges = [
   },
 ]
 
+// Menu categories and courses from https://www.seemycampus.com/
+const menuData = [
+  {
+    category: { name: "MANAGEMENT", slug: "management", displayOrder: 1 },
+    courses: [
+      { name: "BBA", slug: "bba" },
+      { name: "BBM", slug: "bbm" },
+      { name: "MBA", slug: "mba" },
+      { name: "PGDM", slug: "pgdm" },
+      { name: "Executive MBA", slug: "executive-mba" },
+    ],
+  },
+  {
+    category: { name: "ENGINEERING", slug: "engineering", displayOrder: 2 },
+    courses: [
+      { name: "BE", slug: "be" },
+      { name: "B.Tech", slug: "btech" },
+      { name: "ME", slug: "me" },
+      { name: "M.Tech", slug: "mtech" },
+      { name: "Diploma in Engg.", slug: "diploma-in-engg" },
+    ],
+  },
+  {
+    category: { name: "MEDICAL", slug: "medical", displayOrder: 3 },
+    courses: [
+      { name: "MBBS", slug: "mbbs" },
+      { name: "PG Medical", slug: "pg-medical" },
+    ],
+  },
+  {
+    category: { name: "LAW", slug: "law", displayOrder: 4 },
+    courses: [
+      { name: "LLB", slug: "llb" },
+      { name: "LLM", slug: "llm" },
+    ],
+  },
+  {
+    category: { name: "DESIGN", slug: "design", displayOrder: 5 },
+    courses: [
+      { name: "B.Des", slug: "bdes" },
+      { name: "M.Des", slug: "mdes" },
+    ],
+  },
+]
+
 async function seed() {
   try {
-    console.log("🌱 Seeding database with colleges from seemycampus.com...")
+    console.log("🌱 Seeding database with data from seemycampus.com...")
+    console.log("📋 Source: https://www.seemycampus.com/\n")
+
+    // Seed categories and menu courses
+    console.log("📂 Seeding menu categories and courses...")
+    for (const menuItem of menuData) {
+      try {
+        // Insert or get category
+        let categoryResult = await db
+          .select()
+          .from(categories)
+          .where(eq(categories.slug, menuItem.category.slug))
+          .limit(1)
+
+        let categoryId: number
+        if (categoryResult.length === 0) {
+          const [newCategory] = await db
+            .insert(categories)
+            .values({
+              name: menuItem.category.name,
+              slug: menuItem.category.slug,
+              displayOrder: menuItem.category.displayOrder,
+              isActive: true,
+            })
+            .returning()
+          categoryId = newCategory.id
+          console.log(`  ✅ Category: ${menuItem.category.name}`)
+        } else {
+          categoryId = categoryResult[0].id
+          console.log(`  ℹ️  Category exists: ${menuItem.category.name}`)
+        }
+
+        // Insert courses for this category
+        for (const course of menuItem.courses) {
+          try {
+            const existingCourse = await db
+              .select()
+              .from(menuCourses)
+              .where(eq(menuCourses.slug, course.slug))
+              .limit(1)
+
+            if (existingCourse.length === 0) {
+              await db.insert(menuCourses).values({
+                name: course.name,
+                slug: course.slug,
+                categoryId: categoryId,
+                href: `/courses/${course.slug}`,
+                displayOrder: 0,
+                isActive: true,
+              })
+              console.log(`    ✅ Course: ${course.name}`)
+            }
+          } catch (error: any) {
+            if (error.code !== "23505") {
+              console.error(`    ❌ Error inserting course ${course.name}:`, error.message)
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error(`  ❌ Error with category ${menuItem.category.name}:`, error.message)
+      }
+    }
+
+    console.log("\n📚 Seeding colleges...")
     console.log("📋 Source: Academic Alliance page and College List page (all categories)")
 
     // Combine all colleges
@@ -453,7 +561,11 @@ async function seed() {
       }
     }
 
-    console.log("✨ Seeding completed!")
+    console.log("\n✨ Seeding completed successfully!")
+    console.log("📊 Summary:")
+    console.log(`   - Categories: ${menuData.length}`)
+    console.log(`   - Menu Courses: ${menuData.reduce((sum, m) => sum + m.courses.length, 0)}`)
+    console.log(`   - Colleges: ${allColleges.length}`)
   } catch (error) {
     console.error("❌ Seeding failed:", error)
     throw error

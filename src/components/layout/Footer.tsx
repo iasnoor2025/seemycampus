@@ -32,6 +32,7 @@ export function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-white text-gray-900 border-0 rounded-md px-4 py-3 min-w-[200px] md:min-w-[250px]"
                 required
+                suppressHydrationWarning
               />
               <Button
                 type="submit"

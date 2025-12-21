@@ -12,6 +12,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { CollegeForm } from "./CollegeForm"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface College {
   id: number
@@ -36,6 +46,8 @@ export function CollegesList() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCollege, setEditingCollege] = useState<College | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [deleteCollegeId, setDeleteCollegeId] = useState<number | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const fetchColleges = async () => {
     try {
@@ -56,18 +68,18 @@ export function CollegesList() {
     fetchColleges()
   }, [])
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this college?")) {
-      return
-    }
+  const handleDelete = async () => {
+    if (!deleteCollegeId) return
 
     try {
-      const response = await fetch(`/api/dashboard/colleges/${id}`, {
+      const response = await fetch(`/api/dashboard/colleges/${deleteCollegeId}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
         fetchColleges()
+        setShowDeleteDialog(false)
+        setDeleteCollegeId(null)
       } else {
         alert("Failed to delete college")
       }
@@ -187,7 +199,10 @@ export function CollegesList() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(college.id)}
+                          onClick={() => {
+                            setDeleteCollegeId(college.id)
+                            setShowDeleteDialog(true)
+                          }}
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -209,6 +224,24 @@ export function CollegesList() {
           onClose={handleFormClose}
         />
       )}
+
+      {/* Delete College Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete College</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this college? All courses associated with this college will also be deleted. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

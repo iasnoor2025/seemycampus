@@ -47,7 +47,10 @@ export function MenuCourseForm({
 
   useEffect(() => {
     if (course) {
-      setFormData(course)
+      setFormData({
+        ...course,
+        href: course.href || `/courses/${course.slug}`,
+      })
     } else if (categoryId) {
       setFormData({ ...formData, categoryId })
     }
@@ -61,10 +64,20 @@ export function MenuCourseForm({
   }
 
   const handleNameChange = (name: string) => {
+    const newSlug = formData.slug || generateSlug(name)
     setFormData({
       ...formData,
       name,
-      slug: formData.slug || generateSlug(name),
+      slug: newSlug,
+      href: formData.href || `/courses/${newSlug}`,
+    })
+  }
+
+  const handleSlugChange = (slug: string) => {
+    setFormData({
+      ...formData,
+      slug,
+      href: formData.href || `/courses/${slug}`,
     })
   }
 
@@ -85,12 +98,18 @@ export function MenuCourseForm({
         : "/api/dashboard/menu/menu-courses"
       const method = course?.id ? "PUT" : "POST"
 
+      // Auto-generate href if not provided
+      const submitData = {
+        ...formData,
+        href: formData.href || `/courses/${formData.slug}`,
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (!response.ok) {
@@ -164,18 +183,16 @@ export function MenuCourseForm({
               <Input
                 id="slug"
                 value={formData.slug}
-                onChange={(e) =>
-                  setFormData({ ...formData, slug: e.target.value })
-                }
+                onChange={(e) => handleSlugChange(e.target.value)}
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="href">Link (href)</Label>
+              <Label htmlFor="href">Link (href) - Auto-generated</Label>
               <Input
                 id="href"
-                value={formData.href || ""}
+                value={formData.href || `/courses/${formData.slug || ""}`}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -183,7 +200,11 @@ export function MenuCourseForm({
                   })
                 }
                 placeholder="/courses/mba"
+                className="bg-gray-50"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Auto-generated from slug. You can customize if needed.
+              </p>
             </div>
 
             <div>

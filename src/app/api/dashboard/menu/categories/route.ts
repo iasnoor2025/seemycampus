@@ -64,8 +64,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    if (error.code === "42P01") {
+      return NextResponse.json(
+        { error: "Database table 'categories' does not exist. Please run: npm run db:migrate" },
+        { status: 500 }
+      )
+    }
+    // Return more detailed error message
+    const errorMessage = error.message || error.toString() || "Failed to create category"
     return NextResponse.json(
-      { error: "Failed to create category" },
+      { error: errorMessage },
       { status: 500 }
     )
   }

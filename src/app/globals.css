@@ -74,3 +74,12 @@
 [data-baseui-menu-positioner] {
   z-index: 9999 !important;
 }
+
+/* Fix NavigationMenu viewport overflow */
+[data-baseui-navigation-menu-viewport] {
+  overflow: visible !important;
+}
+
+[data-baseui-navigation-menu-popup] {
+  overflow: visible !important;
+}

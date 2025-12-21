@@ -71,7 +71,8 @@ export function CategoryForm({ category, onClose }: CategoryFormProps) {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to save category")
+        const errorMessage = data.error || `Failed to save category (Status: ${response.status})`
+        throw new Error(errorMessage)
       }
 
       onClose()

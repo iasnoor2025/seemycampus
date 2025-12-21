@@ -57,13 +57,16 @@ export async function PUT(
     const body = await request.json()
     const { name, slug, categoryId, href, displayOrder, isActive } = body
 
+    // Auto-generate href if not provided and slug exists
+    const autoHref = href || (slug ? `/courses/${slug}` : undefined)
+
     const [updatedCourse] = await db
       .update(menuCourses)
       .set({
         name,
         slug,
         categoryId: categoryId ? parseInt(categoryId) : undefined,
-        href,
+        href: autoHref,
         displayOrder,
         isActive,
         updatedAt: new Date(),
