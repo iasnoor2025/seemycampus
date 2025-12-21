@@ -240,7 +240,10 @@ export function CoursesList() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(course.id)}
+                          onClick={() => {
+                            setDeleteCourseId(course.id)
+                            setShowDeleteDialog(true)
+                          }}
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
