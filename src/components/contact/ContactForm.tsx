@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { User, Mail, Building, MapPin, Pencil, Phone, List, Send, Calendar } from "lucide-react"
+import { User, Mail, Building, MapPin, Pencil, Phone, Calendar, FileText } from "lucide-react"
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -72,14 +72,13 @@ export function ContactForm() {
           <div className="space-y-2">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Send className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
               <Input
                 type="email"
                 name="email"
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="pl-10 pr-10 border-gray-300"
+                className="pl-10 border-gray-300"
               />
             </div>
           </div>
@@ -147,7 +146,7 @@ export function ContactForm() {
           {/* Interested Courses */}
           <div className="space-y-2">
             <div className="relative">
-              <List className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
                 type="text"
                 name="interestedCourses"
@@ -194,7 +193,7 @@ export function ContactForm() {
         <div className="pt-4">
           <Button
             type="submit"
-            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 border border-gray-300 py-6 text-lg font-medium"
+            className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 py-6 text-lg font-medium"
           >
             Submit
           </Button>

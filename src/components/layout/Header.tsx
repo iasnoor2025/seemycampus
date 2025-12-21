@@ -52,23 +52,28 @@ export function Header() {
 
   return (
     <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg">
-      <div className="w-full px-6">
-        <div className="flex items-center justify-between h-16 max-w-[1400px] mx-auto">
-          {/* Logo - Left Side */}
-          <Link href="/" className="flex items-center flex-shrink-0">
-            <Logo />
-          </Link>
+      <div className="w-full relative">
+        {/* Logo - Absolute Left Edge */}
+        <Link href="/" className="absolute left-0 top-0 h-16 flex items-center z-10 pl-3 md:pl-4">
+          <Logo />
+        </Link>
 
-          {/* Navigation Links - Center */}
-          <nav className="hidden lg:flex items-center gap-8 text-white flex-1 justify-center">
-            <Link href="/" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide">
+        {/* Main Content Container - Aligned with page content */}
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16 max-w-[1400px] mx-auto">
+            {/* Spacer for Logo */}
+            <div className="flex-shrink-0 w-72 md:w-80 lg:w-96 xl:w-[420px]"></div>
+
+            {/* Navigation Links - Centered */}
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-white flex-1 justify-center">
+            <Link href="/" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap">
               HOME
             </Link>
-            <Link href="/about" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide">
+            <Link href="/about" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap">
               ABOUT US
             </Link>
             <DropdownMenu>
-              <DropdownMenuTrigger className="hover:text-red-400 transition-colors font-medium flex items-center gap-1 text-sm uppercase tracking-wide">
+              <DropdownMenuTrigger className="hover:text-red-400 transition-colors font-medium flex items-center gap-1 text-sm uppercase tracking-wide whitespace-nowrap">
                 COLLEGES
                 <span className="text-[10px] leading-none">▼</span>
               </DropdownMenuTrigger>
@@ -145,19 +150,19 @@ export function Header() {
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href="/academic-alliance" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide">
+            <Link href="/academic-alliance" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap">
               ACADEMIC ALLIANCE
             </Link>
-            <Link href="/career-counseling" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide">
+            <Link href="/career-counseling" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap">
               CAREER COUNCELLING
             </Link>
-            <Link href="/contact" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide">
+            <Link href="/contact" className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap">
               CONTACT US
             </Link>
           </nav>
 
           {/* Right Side Utilities */}
-          <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-shrink-0 pr-4 md:pr-6 ml-8 xl:ml-10">
             {/* Search Icon in Square Box */}
             <div className="w-9 h-9 border border-white/40 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors">
               <Search className="h-4 w-4 text-white" />
@@ -186,6 +191,7 @@ export function Header() {
                 <span className="text-gray-800 font-semibold text-xs uppercase tracking-wide">CALL NOW</span>
               </div>
             </a>
+          </div>
           </div>
         </div>
       </div>
