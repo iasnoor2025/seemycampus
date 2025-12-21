@@ -1,0 +1,26 @@
+<svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Graduation Cap -->
+  <path d="M100 15 L50 40 L50 50 L100 70 L150 50 L150 40 Z" fill="white"/>
+  <circle cx="100" cy="45" r="4" fill="white"/>
+  <path d="M100 45 Q90 55 80 65" stroke="white" stroke-width="2.5" fill="none"/>
+  
+  <!-- Open Book -->
+  <path d="M40 75 L100 100 L160 75 L160 115 L100 140 L40 115 Z" fill="white" opacity="0.9"/>
+  <line x1="100" y1="100" x2="100" y2="140" stroke="white" stroke-width="2"/>
+  
+  <!-- V Shape / Achievement Symbol -->
+  <path d="M100 110 L85 130 L100 140 L115 130 Z" fill="white"/>
+  
+  <!-- Shield -->
+  <path d="M60 140 Q60 150 70 160 Q80 170 100 180 Q120 170 130 160 Q140 150 140 140 L140 175 Q140 185 130 190 Q120 195 100 200 Q80 195 70 190 Q60 185 60 175 Z" fill="white" opacity="0.95"/>
+  
+  <!-- Banner across shield -->
+  <rect x="70" y="160" width="60" height="12" fill="#1a3a5f" rx="2"/>
+  <text x="100" y="169" text-anchor="middle" font-size="8" fill="white" font-weight="bold" font-family="Arial, sans-serif">SEE MY</text>
+  
+  <!-- Dots/Stars at bottom -->
+  <circle cx="80" cy="185" r="2" fill="white"/>
+  <circle cx="100" cy="188" r="2" fill="white"/>
+  <circle cx="120" cy="185" r="2" fill="white"/>
+</svg>
+
