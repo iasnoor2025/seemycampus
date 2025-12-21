@@ -6,7 +6,7 @@ import { GraduationCap, Users, Brain, BookOpen, Briefcase, Stethoscope, Scale, P
 import Image from "next/image"
 import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
 import { ContactForm } from "@/components/contact/ContactForm"
-import { HeroCarousel } from "@/components/home/HeroCarousel"
+import { HeroSection } from "@/components/home/HeroSection"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      {/* Hero Section with Carousel */}
-      <HeroCarousel />
+      {/* Hero Section with Search */}
+      <HeroSection />
 
       {/* Welcome Section */}
       <section className="py-16 bg-white">

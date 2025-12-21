@@ -2,21 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Suspense } from "react"
 
 interface CollegePaginationProps {
   currentPage: number
   totalPages: number
+  onPageChange: (page: number) => void
 }
 
-function CollegePaginationInner({ currentPage, totalPages }: CollegePaginationProps) {
-  const router = useRouter()
-
-  const handlePageChange = (page: number) => {
-    router.push(`?page=${page}`)
-  }
-
+export function CollegePagination({ currentPage, totalPages, onPageChange }: CollegePaginationProps) {
   const getPageNumbers = () => {
     const pages: (number | string)[] = []
     const maxVisible = 5
@@ -63,7 +56,7 @@ function CollegePaginationInner({ currentPage, totalPages }: CollegePaginationPr
       <Button
         variant="outline"
         size="sm"
-        onClick={() => handlePageChange(currentPage - 1)}
+        onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="border-gray-300 text-gray-700 hover:bg-gray-50"
       >
@@ -90,7 +83,7 @@ function CollegePaginationInner({ currentPage, totalPages }: CollegePaginationPr
               key={pageNum}
               variant={isActive ? "default" : "outline"}
               size="sm"
-              onClick={() => handlePageChange(pageNum)}
+              onClick={() => onPageChange(pageNum)}
               className={
                 isActive
                   ? "bg-red-600 hover:bg-red-700 text-white"
@@ -107,7 +100,7 @@ function CollegePaginationInner({ currentPage, totalPages }: CollegePaginationPr
       <Button
         variant="outline"
         size="sm"
-        onClick={() => handlePageChange(currentPage + 1)}
+        onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="border-gray-300 text-gray-700 hover:bg-gray-50"
       >
@@ -117,17 +110,3 @@ function CollegePaginationInner({ currentPage, totalPages }: CollegePaginationPr
     </div>
   )
 }
-
-export function CollegePagination(props: CollegePaginationProps) {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center gap-2 mt-8">
-      <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
-      <div className="h-9 w-9 bg-gray-200 rounded animate-pulse"></div>
-      <div className="h-9 w-9 bg-gray-200 rounded animate-pulse"></div>
-      <div className="h-9 w-20 bg-gray-200 rounded animate-pulse"></div>
-    </div>}>
-      <CollegePaginationInner {...props} />
-    </Suspense>
-  )
-}
-

@@ -17,6 +17,19 @@ export const colleges = pgTable("colleges", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   isAcademicAlliance: boolean("is_academic_alliance").default(false),
+  // Additional fields inspired by collegedunia
+  ranking: integer("ranking"), // College ranking
+  establishedYear: integer("established_year"), // Year college was established
+  accreditation: varchar("accreditation", { length: 255 }), // AICTE, UGC, etc.
+  hostelFees: integer("hostel_fees"), // Hostel fees per year
+  hostelFeesCurrency: varchar("hostel_fees_currency", { length: 10 }).default("INR"),
+  averagePackage: integer("average_package"), // Average placement package
+  highestPackage: integer("highest_package"), // Highest placement package
+  placementCurrency: varchar("placement_currency", { length: 10 }).default("INR"),
+  entranceExams: jsonb("entrance_exams").$type<string[]>().default([]), // CAT, GMAT, etc.
+  ownership: varchar("ownership", { length: 50 }), // Private, Government, Public
+  campusSize: varchar("campus_size", { length: 100 }), // e.g., "50 acres"
+  totalStudents: integer("total_students"), // Total student enrollment
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -145,9 +158,48 @@ export const heroSlides = pgTable("hero_slides", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// College Reviews table
+export const collegeReviews = pgTable("college_reviews", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  reviewerName: varchar("reviewer_name", { length: 255 }), // Name if not logged in
+  reviewerEmail: varchar("reviewer_email", { length: 255 }), // Email if not logged in
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title", { length: 255 }),
+  review: text("review").notNull(),
+  course: varchar("course", { length: 255 }), // Course they studied
+  batch: varchar("batch", { length: 50 }), // Graduation year
+  isVerified: boolean("is_verified").default(false), // Admin verified
+  isApproved: boolean("is_approved").default(false), // Admin approved for display
+  helpfulCount: integer("helpful_count").default(0), // Number of helpful votes
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Entrance Exams table
+export const entranceExams = pgTable("entrance_exams", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // CAT, GMAT, JEE, etc.
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  examDate: timestamp("exam_date"), // Next exam date
+  registrationStartDate: timestamp("registration_start_date"),
+  registrationEndDate: timestamp("registration_end_date"),
+  resultDate: timestamp("result_date"),
+  officialWebsite: varchar("official_website", { length: 500 }),
+  eligibility: text("eligibility"), // Eligibility criteria
+  examPattern: text("exam_pattern"), // Exam pattern details
+  cutOffs: jsonb("cut_offs").$type<Record<string, any>>(), // Cut-off scores by college/course
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),
+  reviews: many(collegeReviews),
 }));
 
 export const coursesRelations = relations(courses, ({ one }) => ({
@@ -199,5 +251,20 @@ export const menuCoursesRelations = relations(menuCourses, ({ one }) => ({
     fields: [menuCourses.categoryId],
     references: [categories.id],
   }),
+}));
+
+export const collegeReviewsRelations = relations(collegeReviews, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeReviews.collegeId],
+    references: [colleges.id],
+  }),
+  user: one(users, {
+    fields: [collegeReviews.userId],
+    references: [users.id],
+  }),
+}));
+
+export const usersReviewsRelations = relations(users, ({ many }) => ({
+  reviews: many(collegeReviews),
 }));
 

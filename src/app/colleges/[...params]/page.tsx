@@ -8,6 +8,7 @@ import { getCollegeBySlug, getCollegeWithCourses, getCollegesByCategoryPaginated
 import { CollegeHero } from "@/components/college/CollegeHero"
 import { CourseCard } from "@/components/course/CourseCard"
 import { CollegePagination } from "@/components/colleges/CollegePagination"
+import { CollegeReviews } from "@/components/college/CollegeReviews"
 import { generateCollegeMeta, generateStructuredDataCollege } from "@/lib/seo/generateMeta"
 
 interface PageProps {
@@ -418,6 +419,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
             <p className="text-muted-foreground">No courses available at this time.</p>
           </div>
         )}
+
+        {/* Reviews Section */}
+        <div className="mt-12">
+          <CollegeReviews collegeSlug={slug} />
+        </div>
       </div>
     </>
   )
