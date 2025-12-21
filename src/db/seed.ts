@@ -18,7 +18,7 @@ const connectionString = process.env.DATABASE_URL
 const client = postgres(connectionString)
 const db = drizzle(client, { schema })
 
-import { colleges, categories, menuCourses } from "./schema"
+import { colleges, categories, menuCourses, testimonials, studyGoals } from "./schema"
 
 // College data from https://www.seemycampus.com/academic-alliance.php
 // These colleges appear on both Academic Alliance and College List pages
@@ -561,11 +561,211 @@ async function seed() {
       }
     }
 
+    // Seed testimonials from https://www.seemycampus.com/index.php
+    console.log("\n💬 Seeding testimonials...")
+    console.log("📋 Source: https://www.seemycampus.com/index.php\n")
+    
+    const testimonialsData = [
+      {
+        name: "Ayushi Singh",
+        testimonial: "I am extremely satisfied with the support provided by the Seemycampus. Your guidance and advices significantly contributed to my successful admission into the MBA program. Your personalized approach, assistance, and knowledgeable team made the entire admission process seamless. Thank you!",
+        avatarColor: "blue",
+        date: new Date("2023-08-22"),
+        displayOrder: 1,
+        isActive: true,
+      },
+      {
+        name: "Roshni singh Tomar",
+        testimonial: "Seemycampus played an important role grateful for guiding me through the PGDM admission process. Your expertise, insightful knowledge and support helped me to go with the best option of college. I appreciate the team's commitment for students like me to get through the process smoothly.",
+        avatarColor: "purple",
+        date: new Date("2023-08-22"),
+        displayOrder: 2,
+        isActive: true,
+      },
+      {
+        name: "Ankur mishra",
+        testimonial: "In my journey of searching good pgdm college seemycampus supports me alot and recommend the best colleges and he never see the timings whenever I have doubt he always there to correct them all, beacuse of him I am in good college. Thaank you very much for your support and guidance!",
+        avatarColor: "green",
+        date: new Date("2023-08-22"),
+        displayOrder: 3,
+        isActive: true,
+      },
+      {
+        name: "Farhan Seth",
+        testimonial: "Seemycampus's research and insightful recommendations showcased a keen understanding of the student's objectives. Their ability to effectively communicate and tailor suggestions to individual needs sets them apart as a valuable asset for assisting and making informed decisions!",
+        avatarColor: "red",
+        date: new Date("2018-01-22"),
+        displayOrder: 4,
+        isActive: true,
+      },
+      {
+        name: "Sania Khan",
+        testimonial: "Exceptional guidance from Seemycampus! Their expertise paved the way for my successful admission to an engineering college, and I secured a rewarding job with an impressive pay scale. Grateful for their support throughout the process, ensuring a seamless transition from academics to a fulfilling career!",
+        avatarColor: "indigo",
+        date: new Date("2018-09-20"),
+        displayOrder: 5,
+        isActive: true,
+      },
+      {
+        name: "Srishti Yadav",
+        testimonial: "Excellent service from Seemycampus and their guidance benefitted in securing my child's admission to an PGDM college. The placement support exceeded expectations, resulting in a job with an impressive pay scale. Grateful for their expertise and commitment to our child's academic and professional success.",
+        avatarColor: "orange",
+        date: new Date("2019-08-22"),
+        displayOrder: 6,
+        isActive: true,
+      },
+      {
+        name: "Ahad Ansari",
+        testimonial: "I highly appreciate the support provided by the Seemycampus team. Their guidance ensured my admission to a reputable college, saving me from potential fraud. The personalized assistance and transparent process showcased their commitment to students' success. Always grateful and recommend to other students.",
+        avatarColor: "pink",
+        date: new Date("2023-01-22"),
+        displayOrder: 7,
+        isActive: true,
+      },
+      {
+        name: "Sherlin Singh",
+        testimonial: "My friend suggested me to consult Seemycampus team, being unaware and confused they entered in my life as a guiding light to take me through the complex college admission process. I am thankful to their expertise and support in securing a spot in a reputable college, despite from a small city.",
+        avatarColor: "yellow",
+        date: new Date("2018-09-20"),
+        displayOrder: 8,
+        isActive: true,
+      },
+      {
+        name: "Aman Gupta",
+        testimonial: "Always thankful to Seemycampus for facilitating my admission within budget constraints. Unlike others, they never demanded consultancy fees, demonstrating a commitment to students' financial concerns. Their transparent and student-centric approach sets them apart, creating a positive and trustworthy experience.",
+        avatarColor: "blue",
+        date: new Date("2019-08-22"),
+        displayOrder: 9,
+        isActive: true,
+      },
+    ]
+
+    for (const testimonial of testimonialsData) {
+      try {
+        await db.insert(testimonials).values({
+          name: testimonial.name,
+          testimonial: testimonial.testimonial,
+          avatarColor: testimonial.avatarColor,
+          date: testimonial.date,
+          displayOrder: testimonial.displayOrder,
+          isActive: testimonial.isActive,
+        })
+        console.log(`  ✅ Testimonial: ${testimonial.name}`)
+      } catch (error: any) {
+        if (error?.code !== "23505") {
+          console.error(`  ❌ Error inserting testimonial ${testimonial.name}:`, error.message)
+        } else {
+          console.log(`  ℹ️  Testimonial exists: ${testimonial.name}`)
+        }
+      }
+    }
+
+    // Seed study goals from https://www.seemycampus.com/index.php
+    console.log("\n🎯 Seeding study goals...")
+    console.log("📋 Source: https://www.seemycampus.com/index.php\n")
+    
+    const studyGoalsData = [
+      {
+        name: "Engineering",
+        slug: "engineering",
+        icon: "GraduationCap",
+        collegeCount: "6348 Colleges",
+        courses: ["BE/B.Tech", "Diploma in Engineering", "ME/M.Tech"],
+        link: "/colleges/engineering",
+        displayOrder: 1,
+        isActive: true,
+      },
+      {
+        name: "Management",
+        slug: "management",
+        icon: "Briefcase",
+        collegeCount: "7980 Colleges",
+        courses: ["MBA/PGDM", "BBA/BMS", "Executive MBA"],
+        link: "/colleges/management",
+        displayOrder: 2,
+        isActive: true,
+      },
+      {
+        name: "Commerce",
+        slug: "commerce",
+        icon: "ShoppingCart",
+        collegeCount: "5067 Colleges",
+        courses: ["B.Com", "M.Com"],
+        link: "/colleges/commerce",
+        displayOrder: 3,
+        isActive: true,
+      },
+      {
+        name: "Arts",
+        slug: "arts",
+        icon: "Palette",
+        collegeCount: "5706 Colleges",
+        courses: ["BA", "MA", "BFA", "BSW"],
+        link: "/colleges/arts",
+        displayOrder: 4,
+        isActive: true,
+      },
+      {
+        name: "Medical",
+        slug: "medical",
+        icon: "Stethoscope",
+        collegeCount: "2845 Colleges",
+        courses: ["MBBS", "PG Medical"],
+        link: "/colleges/medical",
+        displayOrder: 5,
+        isActive: true,
+      },
+      {
+        name: "Law",
+        slug: "law",
+        icon: "Scale",
+        collegeCount: "1523 Colleges",
+        courses: ["LLB", "LLM"],
+        link: "/colleges/law",
+        displayOrder: 6,
+        isActive: true,
+      },
+      {
+        name: "Design",
+        slug: "design",
+        icon: "BookOpen",
+        collegeCount: "892 Colleges",
+        courses: ["B.Des", "M.Des"],
+        link: "/colleges/design",
+        displayOrder: 7,
+        isActive: true,
+      },
+    ]
+
+    for (const goal of studyGoalsData) {
+      try {
+        await db.insert(studyGoals).values({
+          name: goal.name,
+          slug: goal.slug,
+          icon: goal.icon,
+          collegeCount: goal.collegeCount,
+          courses: goal.courses,
+          link: goal.link,
+          displayOrder: goal.displayOrder,
+          isActive: goal.isActive,
+        })
+        console.log(`  ✅ Study Goal: ${goal.name}`)
+      } catch (error: any) {
+        if (error?.code !== "23505") {
+          console.error(`  ❌ Error inserting study goal ${goal.name}:`, error.message)
+        } else {
+          console.log(`  ℹ️  Study goal exists: ${goal.name}`)
+        }
+      }
+    }
+
     console.log("\n✨ Seeding completed successfully!")
     console.log("📊 Summary:")
     console.log(`   - Categories: ${menuData.length}`)
     console.log(`   - Menu Courses: ${menuData.reduce((sum, m) => sum + m.courses.length, 0)}`)
     console.log(`   - Colleges: ${allColleges.length}`)
+    console.log(`   - Testimonials: ${testimonialsData.length}`)
+    console.log(`   - Study Goals: ${studyGoalsData.length}`)
   } catch (error) {
     console.error("❌ Seeding failed:", error)
     throw error

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/db"
-import { categories } from "@/db/schema"
+import { categories, studyGoals } from "@/db/schema"
 import { eq } from "drizzle-orm"
 
 // GET - Fetch a single category
@@ -56,6 +56,22 @@ export async function PUT(
     const categoryId = parseInt(id)
     const body = await request.json()
     const { name, slug, displayOrder, isActive } = body
+
+    // Check if slug is being changed and if it conflicts with existing study goal
+    if (slug) {
+      const existingStudyGoal = await db
+        .select()
+        .from(studyGoals)
+        .where(eq(studyGoals.slug, slug))
+        .limit(1)
+
+      if (existingStudyGoal.length > 0) {
+        return NextResponse.json(
+          { error: "A study goal with this slug already exists. Please use the Study Goals section to manage it, or use a different slug." },
+          { status: 400 }
+        )
+      }
+    }
 
     const [updatedCategory] = await db
       .update(categories)

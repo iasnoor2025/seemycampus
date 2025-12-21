@@ -19,72 +19,25 @@ interface HeroSlide {
 }
 
 interface StudyGoal {
-  id: string
+  id: number
   name: string
-  icon: React.ReactNode
-  collegeCount: string
+  slug: string
+  icon: string
+  collegeCount: string | null
   courses: string[]
   link: string
 }
 
-const studyGoals: StudyGoal[] = [
-  {
-    id: "engineering",
-    name: "Engineering",
-    icon: <GraduationCap className="h-8 w-8" />,
-    collegeCount: "6348 Colleges",
-    courses: ["BE/B.Tech", "Diploma in Engineering", "ME/M.Tech"],
-    link: "/colleges/engineering",
-  },
-  {
-    id: "management",
-    name: "Management",
-    icon: <Briefcase className="h-8 w-8" />,
-    collegeCount: "7980 Colleges",
-    courses: ["MBA/PGDM", "BBA/BMS", "Executive MBA"],
-    link: "/colleges/management",
-  },
-  {
-    id: "commerce",
-    name: "Commerce",
-    icon: <ShoppingCart className="h-8 w-8" />,
-    collegeCount: "5067 Colleges",
-    courses: ["B.Com", "M.Com"],
-    link: "/colleges/commerce",
-  },
-  {
-    id: "arts",
-    name: "Arts",
-    icon: <Palette className="h-8 w-8" />,
-    collegeCount: "5706 Colleges",
-    courses: ["BA", "MA", "BFA", "BSW"],
-    link: "/colleges/arts",
-  },
-  {
-    id: "medical",
-    name: "Medical",
-    icon: <Stethoscope className="h-8 w-8" />,
-    collegeCount: "2845 Colleges",
-    courses: ["MBBS", "PG Medical"],
-    link: "/colleges/medical",
-  },
-  {
-    id: "law",
-    name: "Law",
-    icon: <Scale className="h-8 w-8" />,
-    collegeCount: "1523 Colleges",
-    courses: ["LLB", "LLM"],
-    link: "/colleges/law",
-  },
-  {
-    id: "design",
-    name: "Design",
-    icon: <BookOpen className="h-8 w-8" />,
-    collegeCount: "892 Colleges",
-    courses: ["B.Des", "M.Des"],
-    link: "/colleges/design",
-  },
-]
+// Icon mapping
+const iconMap: Record<string, React.ReactNode> = {
+  GraduationCap: <GraduationCap className="h-8 w-8" />,
+  Briefcase: <Briefcase className="h-8 w-8" />,
+  ShoppingCart: <ShoppingCart className="h-8 w-8" />,
+  Palette: <Palette className="h-8 w-8" />,
+  Stethoscope: <Stethoscope className="h-8 w-8" />,
+  Scale: <Scale className="h-8 w-8" />,
+  BookOpen: <BookOpen className="h-8 w-8" />,
+}
 
 // Rotating text messages for hero section (entire text changes)
 const rotatingTexts = [
@@ -105,6 +58,7 @@ export function HeroSection() {
   const [displayText, setDisplayText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [charIndex, setCharIndex] = useState(0)
+  const [studyGoalsData, setStudyGoalsData] = useState<StudyGoal[]>([])
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -124,6 +78,20 @@ export function HeroSection() {
     fetchSlides()
     // Initialize with first text
     setDisplayText(rotatingTexts[0])
+
+    // Fetch study goals
+    const fetchStudyGoals = async () => {
+      try {
+        const response = await fetch("/api/study-goals")
+        if (response.ok) {
+          const data = await response.json()
+          setStudyGoalsData(data.studyGoals || [])
+        }
+      } catch (error) {
+        console.error("Error fetching study goals:", error)
+      }
+    }
+    fetchStudyGoals()
   }, [])
 
   // Rotate background slides every 5 seconds
@@ -280,46 +248,50 @@ export function HeroSection() {
       </section>
 
       {/* Select Your Study Goal Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
-            Select Your Study Goal
-          </h2>
+      {studyGoalsData.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
+              Select Your Study Goal
+            </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {studyGoals.map((goal) => (
-              <Link key={goal.id} href={goal.link}>
-                <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 hover:border-orange-500">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                        {goal.icon}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+              {studyGoalsData.map((goal) => (
+                <Link key={goal.id} href={goal.link}>
+                  <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 hover:border-orange-500">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
+                          {iconMap[goal.icon] || <GraduationCap className="h-8 w-8" />}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            {goal.name}
+                          </h3>
+                          {goal.collegeCount && (
+                            <p className="text-sm text-gray-600">{goal.collegeCount}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">
-                          {goal.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">{goal.collegeCount}</p>
+                      <ul className="space-y-2 mb-4">
+                        {goal.courses.map((course, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
+                            <ChevronRight className="h-4 w-4 text-orange-500" />
+                            {course}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex items-center text-orange-600 font-semibold text-sm mt-4">
+                        Explore <ChevronRight className="h-4 w-4 ml-1" />
                       </div>
-                    </div>
-                    <ul className="space-y-2 mb-4">
-                      {goal.courses.map((course, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                          <ChevronRight className="h-4 w-4 text-orange-500" />
-                          {course}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="flex items-center text-orange-600 font-semibold text-sm mt-4">
-                      Explore <ChevronRight className="h-4 w-4 ml-1" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   )
 }

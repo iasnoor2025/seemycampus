@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   GraduationCap,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MessageSquare
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -41,6 +42,16 @@ const menuItems = [
     title: "Hero Slides",
     href: "/dashboard/hero-slides",
     icon: ImageIcon,
+  },
+  {
+    title: "Testimonials",
+    href: "/dashboard/testimonials",
+    icon: MessageSquare,
+  },
+  {
+    title: "Study Goals",
+    href: "/dashboard/study-goals",
+    icon: GraduationCap,
   },
   {
     title: "Students",

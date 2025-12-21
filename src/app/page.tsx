@@ -7,6 +7,7 @@ import Image from "next/image"
 import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { HeroSection } from "@/components/home/HeroSection"
+import { TestimonialsSection } from "@/components/home/TestimonialsSection"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -159,109 +160,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 relative overflow-hidden">
-        {/* Abstract pattern overlay */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Section Title */}
-          <div className="flex items-center gap-3 mb-12">
-            <ChevronRight className="h-8 w-8 text-red-600 rotate-90" />
-            <h2 className="text-5xl md:text-6xl font-bold text-white">Testimonials</h2>
-          </div>
-
-          {/* Testimonial Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {/* Testimonial 1 - Ayushi Singh */}
-            <Card className="bg-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center mb-4">
-                  <div className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden flex items-center justify-center">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-                      AS
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Aug 22, 2023</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Ayushi Singh</h3>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                  I am extremely satisfied with the support provided by the Seemycampus. Your guidance and advices significantly contributed to my successful admission into the MBA program. Your personalized approach, assistance, and knowledgeable team made the entire admission process seamless. Thank you!
-                </p>
-                <Link href="/contact" className="block">
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                    GET IN TOUCH
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 2 - Roshni singh Tomar */}
-            <Card className="bg-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center mb-4">
-                  <div className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden flex items-center justify-center">
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                      RT
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Aug 22, 2023</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Roshni singh Tomar</h3>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                  Seemycampus played an important role grateful for guiding me through the PGDM admission process. Your expertise, insightful knowledge and support helped me to go with the best option of college. I appreciate the team's commitment for students like me to get through the process smoothly.
-                </p>
-                <Link href="/contact" className="block">
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                    GET IN TOUCH
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 3 - Ankur mishra */}
-            <Card className="bg-white shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center mb-4">
-                  <div className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden flex items-center justify-center">
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-2xl font-bold">
-                      AM
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Aug 22, 2023</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Ankur mishra</h3>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                  In my journey of searching good pgdm college seemycampus supports me alot and recommend the best colleges and he never see the timings whenever I have doubt he always there to correct them all, beacuse of him I am in good college. Thaank you very much for your support and guidance!
-                </p>
-                <Link href="/contact" className="block">
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                    GET IN TOUCH
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pagination Dots */}
-          <div className="flex justify-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-white"></div>
-            <div className="w-2 h-2 rounded-full bg-white/50"></div>
-            <div className="w-2 h-2 rounded-full bg-white/50"></div>
-          </div>
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* Career Streams */}
       <section className="py-16 bg-white">

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/db"
-import { categories, menuCourses } from "@/db/schema"
+import { categories, menuCourses, studyGoals } from "@/db/schema"
 import { eq, asc } from "drizzle-orm"
 
 // GET - Fetch menu structure for public header
@@ -18,6 +18,13 @@ export async function GET() {
       .where(eq(menuCourses.isActive, true))
       .orderBy(asc(menuCourses.displayOrder), asc(menuCourses.name))
 
+    // Fetch active study goals
+    const allStudyGoals = await db
+      .select()
+      .from(studyGoals)
+      .where(eq(studyGoals.isActive, true))
+      .orderBy(asc(studyGoals.displayOrder), asc(studyGoals.name))
+
     // Organize data into 2-level structure: Category -> Courses
     const menuStructure = allCategories.map((category) => {
       const courses = allMenuCourses
@@ -33,7 +40,27 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ menu: menuStructure })
+    // Get category slugs to check for duplicates
+    const categorySlugs = new Set(allCategories.map((cat) => cat.slug.toLowerCase()))
+
+    // Convert study goals to menu format (as categories with courses)
+    // Only include study goals that don't already exist as categories
+    const studyGoalsMenu = allStudyGoals
+      .filter((goal) => !categorySlugs.has(goal.slug.toLowerCase()))
+      .map((goal) => ({
+        id: goal.id + 10000, // Offset to avoid conflicts with category IDs
+        name: goal.name,
+        slug: goal.slug,
+        courses: goal.courses.map((course) => ({
+          name: course,
+          href: goal.link || `/colleges/${goal.slug}`,
+        })),
+      }))
+
+    // Combine categories and study goals (no duplicates)
+    const combinedMenu = [...menuStructure, ...studyGoalsMenu]
+
+    return NextResponse.json({ menu: combinedMenu })
   } catch (error) {
     console.error("Error fetching menu:", error)
     return NextResponse.json(

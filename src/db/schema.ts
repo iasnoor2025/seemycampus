@@ -196,6 +196,34 @@ export const entranceExams = pgTable("entrance_exams", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Testimonials table
+export const testimonials = pgTable("testimonials", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  testimonial: text("testimonial").notNull(),
+  avatarColor: varchar("avatar_color", { length: 50 }).default("blue"), // blue, purple, green, etc.
+  date: timestamp("date").defaultNow().notNull(), // Date of testimonial
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Study Goals table (for "Select Your Study Goal" section)
+export const studyGoals = pgTable("study_goals", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // Engineering, Management, etc.
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  icon: varchar("icon", { length: 50 }).notNull(), // GraduationCap, Briefcase, etc.
+  collegeCount: varchar("college_count", { length: 100 }), // "6348 Colleges"
+  courses: jsonb("courses").$type<string[]>().default([]), // ["BE/B.Tech", "Diploma in Engineering"]
+  link: varchar("link", { length: 500 }), // "/colleges/engineering"
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),

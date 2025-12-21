@@ -10,6 +10,9 @@ import { CourseCard } from "@/components/course/CourseCard"
 import { CollegePagination } from "@/components/colleges/CollegePagination"
 import { CollegeReviews } from "@/components/college/CollegeReviews"
 import { generateCollegeMeta, generateStructuredDataCollege } from "@/lib/seo/generateMeta"
+import { db } from "@/db"
+import { categories, studyGoals } from "@/db/schema"
+import { eq, or, asc } from "drizzle-orm"
 
 interface PageProps {
   params: Promise<{
@@ -78,30 +81,45 @@ const sampleColleges = [
   },
 ]
 
-const categoryMap: Record<string, string> = {
-  engineering: "Engineering",
-  management: "Management",
-  medical: "Medical",
-  design: "Design",
-  law: "Law",
+// Helper function to get all valid category slugs from database
+async function getCategorySlugs(): Promise<Map<string, { name: string; type: 'category' | 'studyGoal' }>> {
+  const categoryMap = new Map<string, { name: string; type: 'category' | 'studyGoal' }>()
+  
+  try {
+    // Fetch active categories
+    const dbCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.isActive, true))
+    
+    dbCategories.forEach((cat) => {
+      categoryMap.set(cat.slug.toLowerCase(), { name: cat.name, type: 'category' })
+    })
+    
+    // Fetch active study goals
+    const dbStudyGoals = await db
+      .select()
+      .from(studyGoals)
+      .where(eq(studyGoals.isActive, true))
+    
+    dbStudyGoals.forEach((goal) => {
+      // Only add if not already in categories (no duplicates)
+      if (!categoryMap.has(goal.slug.toLowerCase())) {
+        categoryMap.set(goal.slug.toLowerCase(), { name: goal.name, type: 'studyGoal' })
+      }
+    })
+  } catch (error) {
+    console.error("Error fetching category slugs:", error)
+  }
+  
+  return categoryMap
 }
 
-const subcategoryMap: Record<string, string> = {
-  btech: "B.Tech / B.E Colleges",
-  bba: "BBA / BBM Colleges",
-  mba: "MBA / PGDM Colleges",
-  mbbs: "MBBS Colleges",
+// Helper function to get category/subcategory info by slug
+async function getCategoryBySlug(slug: string): Promise<{ name: string; type: 'category' | 'studyGoal' } | null> {
+  const categorySlugs = await getCategorySlugs()
+  return categorySlugs.get(slug.toLowerCase()) || null
 }
-
-// Known category/subcategory combinations
-const categoryRoutes = new Set([
-  "engineering/btech",
-  "management/bba",
-  "management/mba",
-  "medical/mbbs",
-  "design",
-  "law",
-])
 
 function getInitials(name: string): string {
   return name
@@ -115,21 +133,14 @@ function getInitials(name: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { params: routeParams } = await params
   
-  // If it's a category route
-  if (routeParams.length === 1 && categoryMap[routeParams[0]]) {
-    const categoryName = categoryMap[routeParams[0]]
-    return {
-      title: `${categoryName} Colleges | SeeMyCampus`,
-      description: `Find the best ${categoryName} colleges in India. Browse top colleges with detailed information, ratings, and admission details.`,
-    }
-  }
-  
-  if (routeParams.length === 2 && categoryRoutes.has(`${routeParams[0]}/${routeParams[1]}`)) {
-    const categoryName = categoryMap[routeParams[0]] || routeParams[0]
-    const subcategoryName = subcategoryMap[routeParams[1]] || routeParams[1]
-    return {
-      title: `${subcategoryName} | ${categoryName} Colleges | SeeMyCampus`,
-      description: `Find the best ${subcategoryName} in India. Browse top ${categoryName} colleges with detailed information, ratings, and admission details.`,
+  // If it's a category route (single parameter)
+  if (routeParams.length === 1) {
+    const categoryInfo = await getCategoryBySlug(routeParams[0])
+    if (categoryInfo) {
+      return {
+        title: `${categoryInfo.name} Colleges | SeeMyCampus`,
+        description: `Find the best ${categoryInfo.name} colleges in India. Browse top colleges with detailed information, ratings, and admission details.`,
+      }
     }
   }
   
@@ -151,12 +162,16 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   const params_searchParams = await searchParams
   const currentPage = parseInt(params_searchParams.page || "1", 10)
   
-  // Handle category/subcategory routes
-  if (routeParams.length === 1 && categoryMap[routeParams[0]]) {
-    // Category page (e.g., /colleges/design, /colleges/law)
-    const category = routeParams[0]
-    const categoryName = categoryMap[category]
-    const { colleges: collegesList, pagination } = await getCollegesByCategoryPaginated(category, currentPage, 10)
+  // Handle category routes (single parameter - dynamic from database)
+  if (routeParams.length === 1) {
+    const categorySlug = routeParams[0]
+    const categoryInfo = await getCategoryBySlug(categorySlug)
+    
+    if (categoryInfo) {
+      // Category page (e.g., /colleges/design, /colleges/law, /colleges/commerce, /colleges/arts)
+      const categoryName = categoryInfo.name
+      // Get colleges with pagination
+      const { colleges: collegesList, pagination } = await getCollegesByCategoryPaginated(categorySlug, currentPage, 10)
 
     return (
       <div className="min-h-screen bg-red-600">
@@ -250,14 +265,17 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         </div>
       </div>
     )
+    }
+    // If category not found, fall through to treat as college slug
   }
   
-  if (routeParams.length === 2 && categoryRoutes.has(`${routeParams[0]}/${routeParams[1]}`)) {
-    // Subcategory page (e.g., /colleges/engineering/btech)
+  // Handle subcategory routes (two parameters) - keeping for backward compatibility
+  if (routeParams.length === 2) {
     const category = routeParams[0]
     const subcategory = routeParams[1]
-    const categoryName = categoryMap[category] || category
-    const subcategoryName = subcategoryMap[subcategory] || subcategory
+    const categoryInfo = await getCategoryBySlug(category)
+    const categoryName = categoryInfo?.name || category
+    const subcategoryName = subcategory.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
     const { colleges: collegesList, pagination } = await getCollegesByCategoryAndSubcategoryPaginated(category, subcategory, currentPage, 10)
 
     return (
