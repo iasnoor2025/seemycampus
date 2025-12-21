@@ -147,7 +147,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
               <div className="space-y-0">
                 {collegesList.map((college, index) => {
                   // Get courses for this college that match the menu course name
-                  const collegeCourses = coursesByCollege
+                  const collegeCourses = coursesWithColleges
                     .filter(({ college: c }) => c.id === college.id)
                     .map(({ course }) => course)
 
