@@ -1,3 +1,4 @@
+import { Metadata } from "next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -5,37 +6,46 @@ import { GraduationCap, Users, Brain, BookOpen, Briefcase, Stethoscope, Scale, P
 import Image from "next/image"
 import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
 import { ContactForm } from "@/components/contact/ContactForm"
+import { HeroCarousel } from "@/components/home/HeroCarousel"
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+
+export const metadata: Metadata = {
+  title: "SeeMyCampus - Find Your Perfect College | Admissions Counseling Platform",
+  description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses. Find over 60,000 institutions and 375,000+ courses.",
+  keywords: ["college admissions", "course finder", "education counseling", "college recommendations", "MBA", "BBA", "Engineering", "Medical", "Law", "Design", "college search India", "admission guidance"],
+  openGraph: {
+    title: "SeeMyCampus - Find Your Perfect College",
+    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    url: baseUrl,
+    siteName: "SeeMyCampus",
+    images: [
+      {
+        url: `${baseUrl}/main-logo-xxxx.png`,
+        width: 1200,
+        height: 630,
+        alt: "SeeMyCampus - Find Your Perfect College",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SeeMyCampus - Find Your Perfect College",
+    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    images: [`${baseUrl}/main-logo-xxxx.png`],
+  },
+  alternates: {
+    canonical: baseUrl,
+  },
+}
 
 export default function Home() {
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative bg-[hsl(210,50%,25%)] py-20 text-white min-h-[600px] flex items-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <p className="text-lg mb-4 font-medium text-white/90">Now You Can Get</p>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white leading-tight">
-                The Best Education for<br />
-                <span className="text-white">Bright Future</span>
-              </h1>
-              <Link href="/quiz">
-                <Button size="lg" className="text-lg px-8 py-6 bg-red-600 hover:bg-red-700 text-white">
-                  MORE ABOUT
-                </Button>
-              </Link>
-            </div>
-            <div className="hidden lg:block relative">
-              <div className="relative w-full h-[500px] bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
-                <div className="text-center text-white/50">
-                  <p className="text-sm">Graduate Image Placeholder</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Carousel */}
+      <HeroCarousel />
 
       {/* Welcome Section */}
       <section className="py-16 bg-white">

@@ -5,9 +5,34 @@ import { Building, Flag, BookOpen, Lightbulb, GraduationCap, ChevronRight, Trend
 import { ContactForm } from "@/components/contact/ContactForm"
 import Image from "next/image"
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+
 export const metadata: Metadata = {
   title: "About Us | SeeMyCampus",
-  description: "Learn more about Seemycampus - your go-to platform for college admissions counseling.",
+  description: "Learn more about Seemycampus - your go-to platform for college admissions counseling. We've counseled over 50,000 students and connect students to colleges and universities globally.",
+  keywords: ["about seemycampus", "education platform", "college counseling", "student guidance", "ed-tech India"],
+  openGraph: {
+    title: "About Us | SeeMyCampus",
+    description: "Learn more about Seemycampus - your go-to platform for college admissions counseling. We've counseled over 50,000 students and connect students to colleges and universities globally.",
+    url: `${baseUrl}/about`,
+    type: "website",
+    images: [
+      {
+        url: `${baseUrl}/main-logo-xxxx.png`,
+        width: 1200,
+        height: 630,
+        alt: "About SeeMyCampus",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Us | SeeMyCampus",
+    description: "Learn more about Seemycampus - your go-to platform for college admissions counseling.",
+  },
+  alternates: {
+    canonical: `${baseUrl}/about`,
+  },
 }
 
 export default function AboutPage() {

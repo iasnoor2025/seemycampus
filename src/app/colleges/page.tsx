@@ -5,10 +5,34 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ContactForm } from "@/components/contact/ContactForm"
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+
 export const metadata: Metadata = {
   title: "Browse Colleges | SeeMyCampus",
-  description: "Discover top colleges and universities. Find the perfect institution for your educational journey.",
-  keywords: ["colleges", "universities", "education", "admissions"],
+  description: "Discover top colleges and universities. Find the perfect institution for your educational journey. Browse over 60,000 institutions with detailed information.",
+  keywords: ["colleges", "universities", "education", "admissions", "college directory", "find college", "college search India"],
+  openGraph: {
+    title: "Browse Colleges | SeeMyCampus",
+    description: "Discover top colleges and universities. Find the perfect institution for your educational journey. Browse over 60,000 institutions with detailed information.",
+    url: `${baseUrl}/colleges`,
+    type: "website",
+    images: [
+      {
+        url: `${baseUrl}/main-logo-xxxx.png`,
+        width: 1200,
+        height: 630,
+        alt: "Browse Colleges - SeeMyCampus",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Browse Colleges | SeeMyCampus",
+    description: "Discover top colleges and universities. Find the perfect institution for your educational journey.",
+  },
+  alternates: {
+    canonical: `${baseUrl}/colleges`,
+  },
 }
 
 function getInitials(name: string): string {

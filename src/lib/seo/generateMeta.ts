@@ -21,11 +21,14 @@ interface Course {
 }
 
 export function generateCollegeMeta(college: College): Metadata {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const title = `${college.name} | SeeMyCampus`
   const description =
     college.description ||
     `Learn about ${college.name} - ${college.location || college.city || "a leading educational institution"}. Find courses, admission details, and more.`
-  const imageUrl = college.images && college.images.length > 0 ? college.images[0] : undefined
+  const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
+    ? college.images[0] 
+    : (typeof college.images === 'string' ? college.images : undefined)
 
   return {
     title,
@@ -38,13 +41,16 @@ export function generateCollegeMeta(college: College): Metadata {
       "admissions",
       "courses",
       "education",
+      "India colleges",
     ].filter(Boolean),
     openGraph: {
       title,
       description,
       type: "website",
-      url: `https://seemycampus.com/colleges/${college.slug}`,
-      images: imageUrl ? [{ url: imageUrl }] : undefined,
+      url: `${baseUrl}/colleges/${college.slug}`,
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630, alt: `${college.name} - SeeMyCampus` }] : undefined,
+      locale: "en_IN",
+      siteName: "SeeMyCampus",
     },
     twitter: {
       card: "summary_large_image",
@@ -53,12 +59,13 @@ export function generateCollegeMeta(college: College): Metadata {
       images: imageUrl ? [imageUrl] : undefined,
     },
     alternates: {
-      canonical: `https://seemycampus.com/colleges/${college.slug}`,
+      canonical: `${baseUrl}/colleges/${college.slug}`,
     },
   }
 }
 
 export function generateCourseMeta(course: Course, college?: { name: string; slug: string } | null): Metadata {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const title = `${course.name}${college ? ` at ${college.name}` : ""} | SeeMyCampus`
   const description =
     course.description ||
@@ -74,35 +81,44 @@ export function generateCourseMeta(course: Course, college?: { name: string; slu
       "course",
       "admissions",
       "education",
+      "college course",
+      "India courses",
     ].filter(Boolean),
     openGraph: {
       title,
       description,
       type: "website",
-      url: `https://seemycampus.com/courses/${course.slug}`,
+      url: `${baseUrl}/courses/${course.slug}`,
+      images: [
+        {
+          url: `${baseUrl}/main-logo-xxxx.png`,
+          width: 1200,
+          height: 630,
+          alt: `${course.name} - SeeMyCampus`,
+        },
+      ],
+      locale: "en_IN",
+      siteName: "SeeMyCampus",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
+      images: [`${baseUrl}/main-logo-xxxx.png`],
     },
     alternates: {
-      canonical: `https://seemycampus.com/courses/${course.slug}`,
+      canonical: `${baseUrl}/courses/${course.slug}`,
     },
   }
 }
 
 export function generateStructuredDataCollege(college: College) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     name: college.name,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: college.city || college.location || "",
-      addressCountry: "IN",
-    },
-    url: `https://seemycampus.com/colleges/${college.slug}`,
+    url: `${baseUrl}/colleges/${college.slug}`,
   }
 
   if (college.description) {
@@ -110,18 +126,31 @@ export function generateStructuredDataCollege(college: College) {
   }
 
   if (college.images && college.images.length > 0) {
-    structuredData.image = college.images[0]
+    structuredData.image = Array.isArray(college.images) ? college.images[0] : college.images
   }
 
-  return structuredData
+  if (college.city || college.location) {
+    structuredData.address = {
+      "@type": "PostalAddress",
+      addressLocality: college.city || college.location || "",
+      addressCountry: "IN",
+    }
+  }
+
+  // Filter out undefined values
+  return Object.fromEntries(
+    Object.entries(structuredData).filter(([_, value]) => value !== undefined)
+  )
 }
 
 export function generateStructuredDataCourse(course: Course, college?: { name: string; slug: string } | null) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Course",
     name: course.name,
     courseCode: course.slug,
+    url: `${baseUrl}/courses/${course.slug}`,
   }
 
   if (course.description) {
@@ -132,7 +161,7 @@ export function generateStructuredDataCourse(course: Course, college?: { name: s
     structuredData.provider = {
       "@type": "EducationalOrganization",
       name: college.name,
-      url: `https://seemycampus.com/colleges/${college.slug}`,
+      url: `${baseUrl}/colleges/${college.slug}`,
     }
   }
 
@@ -152,6 +181,9 @@ export function generateStructuredDataCourse(course: Course, college?: { name: s
     }
   }
 
-  return structuredData
+  // Filter out undefined values
+  return Object.fromEntries(
+    Object.entries(structuredData).filter(([_, value]) => value !== undefined)
+  )
 }
 

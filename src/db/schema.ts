@@ -131,6 +131,20 @@ export const menuCourses = pgTable("menu_courses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Hero Slides table (for homepage hero section carousel)
+export const heroSlides = pgTable("hero_slides", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }),
+  subtitle: varchar("subtitle", { length: 500 }),
+  imageUrl: varchar("image_url", { length: 500 }).notNull(),
+  buttonText: varchar("button_text", { length: 100 }),
+  buttonLink: varchar("button_link", { length: 500 }),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),

@@ -10,7 +10,8 @@ import {
   BarChart3, 
   Settings,
   LogOut,
-  GraduationCap
+  GraduationCap,
+  Image as ImageIcon
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -35,6 +36,11 @@ const menuItems = [
     title: "Menu",
     href: "/dashboard/menu",
     icon: Settings,
+  },
+  {
+    title: "Hero Slides",
+    href: "/dashboard/hero-slides",
+    icon: ImageIcon,
   },
   {
     title: "Students",

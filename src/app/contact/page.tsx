@@ -3,9 +3,34 @@ import Link from "next/link"
 import { ChevronRight, Home, GraduationCap } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+
 export const metadata: Metadata = {
   title: "Contact Us | SeeMyCampus",
-  description: "Get in touch with Seemycampus for college admissions counseling and guidance.",
+  description: "Get in touch with Seemycampus for college admissions counseling and guidance. We're here to help you find your perfect college match.",
+  keywords: ["contact seemycampus", "college counseling", "admission help", "student guidance", "education consultation"],
+  openGraph: {
+    title: "Contact Us | SeeMyCampus",
+    description: "Get in touch with Seemycampus for college admissions counseling and guidance. We're here to help you find your perfect college match.",
+    url: `${baseUrl}/contact`,
+    type: "website",
+    images: [
+      {
+        url: `${baseUrl}/main-logo-xxxx.png`,
+        width: 1200,
+        height: 630,
+        alt: "Contact SeeMyCampus",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact Us | SeeMyCampus",
+    description: "Get in touch with Seemycampus for college admissions counseling and guidance.",
+  },
+  alternates: {
+    canonical: `${baseUrl}/contact`,
+  },
 }
 
 export default function ContactPage() {
