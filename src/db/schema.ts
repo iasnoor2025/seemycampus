@@ -107,6 +107,30 @@ export const verificationTokens = pgTable("verification_tokens", {
   expires: timestamp("expires").notNull(),
 });
 
+// Categories table (for navigation menu)
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Menu Courses table (for navigation menu course links) - directly linked to categories
+export const menuCourses = pgTable("menu_courses", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull(),
+  categoryId: integer("category_id").references(() => categories.id, { onDelete: "cascade" }).notNull(),
+  href: varchar("href", { length: 500 }),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),
@@ -149,6 +173,17 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {
     fields: [sessions.userId],
     references: [users.id],
+  }),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  menuCourses: many(menuCourses),
+}));
+
+export const menuCoursesRelations = relations(menuCourses, ({ one }) => ({
+  category: one(categories, {
+    fields: [menuCourses.categoryId],
+    references: [categories.id],
   }),
 }));
 

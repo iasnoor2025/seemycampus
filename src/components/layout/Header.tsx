@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Phone, Search, Home, LogIn } from "lucide-react"
 import {
@@ -11,42 +11,41 @@ import {
 import { Menu } from "@base-ui/react"
 import { Logo } from "./Logo"
 
+interface MenuCourse {
+  name: string
+  href: string
+}
+
+interface MenuCategory {
+  id: number
+  name: string
+  courses: MenuCourse[]
+}
+
 export function Header() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
+  const [categories, setCategories] = useState<MenuCategory[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const categories = [
-    {
-      name: "MANAGEMENT",
-      subcategories: [
-        { name: "BBA / BBM COLLEGES", href: "/colleges/management/bba", active: true },
-        { name: "MBA / PGDM COLLEGES", href: "/colleges/management/mba", active: false },
-      ],
-    },
-    {
-      name: "ENGINEERING",
-      subcategories: [
-        { name: "B.TECH / B.E COLLEGES", href: "/colleges/engineering/btech", active: true },
-      ],
-    },
-    {
-      name: "MEDICAL",
-      subcategories: [
-        { name: "MBBS COLLEGES", href: "/colleges/medical/mbbs", active: true },
-      ],
-    },
-    {
-      name: "DESIGN",
-      subcategories: [
-        { name: "DESIGNING AND ARCHITECTURE", href: "/colleges/design", active: true },
-      ],
-    },
-    {
-      name: "LAW",
-      subcategories: [
-        { name: "LLB", href: "/colleges/law", active: true },
-      ],
-    },
-  ]
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const response = await fetch("/api/menu")
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.menu || [])
+        }
+      } catch (error) {
+        console.error("Error fetching menu:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMenu()
+  }, [])
+
+  // Fallback to empty array if loading or no data
+  const displayCategories = loading ? [] : categories
 
   return (
     <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg">
@@ -87,10 +86,10 @@ export function Header() {
                   className="p-0 min-w-[200px] overflow-visible" 
                   style={{ zIndex: 9999 }}
                 >
-                  <div className="flex relative" style={{ minHeight: `${categories.length * 40}px` }}>
+                  <div className="flex relative" style={{ minHeight: `${displayCategories.length * 40}px` }}>
                     {/* First Level - Categories */}
                     <div className="border-r border-gray-200">
-                      {categories.map((category) => {
+                      {displayCategories.map((category) => {
                         const isHovered = hoveredCategory === category.name
                         return (
                           <div
@@ -120,15 +119,19 @@ export function Header() {
                       })}
                     </div>
                     
-                    {/* Second Level - Subcategories */}
+                    {/* Second Level - Courses */}
                     {hoveredCategory && (() => {
-                      const hoveredIndex = categories.findIndex(cat => cat.name === hoveredCategory)
+                      const hoveredIndex = displayCategories.findIndex(cat => cat.name === hoveredCategory)
                       const topOffset = hoveredIndex * 40
-                      const category = categories.find(cat => cat.name === hoveredCategory)
+                      const category = displayCategories.find(cat => cat.name === hoveredCategory)
+                      
+                      if (!category || !category.courses || category.courses.length === 0) {
+                        return null
+                      }
                       
                       return (
                         <div 
-                          className="absolute left-full bg-white border border-gray-200 shadow-2xl min-w-[240px]"
+                          className="absolute left-full bg-white border border-gray-200 shadow-2xl min-w-[200px]"
                           style={{ 
                             top: `${topOffset}px`,
                             zIndex: 10000,
@@ -139,17 +142,13 @@ export function Header() {
                           onMouseEnter={() => setHoveredCategory(hoveredCategory)}
                           onMouseLeave={() => setHoveredCategory(null)}
                         >
-                          {category?.subcategories.map((subcategory) => (
+                          {category.courses.map((course) => (
                             <Link
-                              key={subcategory.href}
-                              href={subcategory.href}
-                              className={`block px-4 py-2.5 transition-colors whitespace-nowrap ${
-                                subcategory.active
-                                  ? "bg-[hsl(210,50%,25%)] text-white hover:bg-[hsl(210,50%,30%)]"
-                                  : "text-gray-900 hover:bg-gray-100"
-                              }`}
+                              key={course.href}
+                              href={course.href}
+                              className="block px-4 py-2.5 text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap text-sm"
                             >
-                              <div className="text-sm font-medium uppercase">{subcategory.name}</div>
+                              {course.name}
                             </Link>
                           ))}
                         </div>
