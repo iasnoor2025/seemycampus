@@ -7,7 +7,7 @@ import Image from "next/image"
 import { getCollegeBySlug, getCollegeWithCourses, getCollegesByCategoryPaginated, getCollegesByCategoryAndSubcategoryPaginated } from "@/lib/colleges"
 import { CollegeHero } from "@/components/college/CollegeHero"
 import { CourseCard } from "@/components/course/CourseCard"
-import { CollegePagination } from "@/components/colleges/CollegePagination"
+import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 import { CollegeReviews } from "@/components/college/CollegeReviews"
 import { generateCollegeMeta, generateStructuredDataCollege } from "@/lib/seo/generateMeta"
 import { db } from "@/db"
@@ -257,7 +257,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
 
           {/* Pagination */}
           <div className="px-6">
-            <CollegePagination
+            <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
             />
@@ -364,7 +364,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
 
           {/* Pagination */}
           <div className="px-6">
-            <CollegePagination
+            <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
             />

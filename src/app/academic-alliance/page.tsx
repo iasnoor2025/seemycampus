@@ -3,10 +3,10 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Handshake, GraduationCap, Users, Award, ChevronRight, TrendingUp, Globe, Target } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
-import { CollegePagination } from "@/components/colleges/CollegePagination"
 import { getCollegesPaginated } from "@/lib/colleges"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 
 export const metadata: Metadata = {
   title: "Academic Alliance | SeeMyCampus",
@@ -150,7 +150,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
 
           {/* Pagination */}
           <div className="px-6">
-            <CollegePagination
+            <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
             />

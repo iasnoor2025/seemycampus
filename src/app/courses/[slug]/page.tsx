@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Clock, GraduationCap, DollarSign, MapPin, ArrowLeft } from "lucide-react"
 import { Metadata } from "next"
 import { generateCourseMeta, generateStructuredDataCourse } from "@/lib/seo/generateMeta"
-import { CollegePagination } from "@/components/colleges/CollegePagination"
+import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 import Image from "next/image"
 
 interface CoursePageProps {
@@ -226,7 +226,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
 
               {/* Pagination */}
               <div className="px-6">
-                <CollegePagination
+                <PaginationWrapper
                   currentPage={currentPage}
                   totalPages={totalPages}
                 />
