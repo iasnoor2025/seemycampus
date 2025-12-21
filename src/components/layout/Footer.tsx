@@ -52,14 +52,14 @@ export function Footer() {
             {/* Column 1 - Logo and Description */}
             <div>
               <div className="mb-6">
-                <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center p-3 mb-4">
-                  <div className="w-full h-full flex items-center justify-center">
+                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center p-2 mb-4 shadow-lg">
+                  <div className="w-full h-full flex items-center justify-center relative">
                     <Image
-                      src="/main-logo-xxxx.png"
+                      src="/main-logo-footer.png"
                       alt="See My Campus Logo"
-                      width={100}
-                      height={100}
-                      className="w-full h-full object-contain"
+                      width={120}
+                      height={120}
+                      className="w-full h-full object-contain p-1"
                       unoptimized
                     />
                   </div>

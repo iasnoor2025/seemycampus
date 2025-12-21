@@ -236,30 +236,84 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
         )
       }
 
-      // If courses found, show them in cards
+      // If courses found, show them in a table
       return (
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-4">{menuCourse[0].name}</h1>
-          <p className="text-muted-foreground mb-8">
-            Find {menuCourse[0].name} courses at various colleges
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {matchingCourses.map(({ course, college }) => (
-              <Card key={course.id}>
-                <CardHeader>
-                  <CardTitle>{course.name}</CardTitle>
-                  {college && (
-                    <p className="text-sm text-muted-foreground">{college.name}</p>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <Link href={`/courses/${course.slug}`}>
-                    <Button className="w-full">View Details</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+        <div className="min-h-screen bg-red-600">
+          <div className="max-w-5xl mx-auto bg-white min-h-screen py-8">
+            {/* Breadcrumb */}
+            <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+              <span className="text-gray-400">/</span>
+              <Link href="/colleges" className="hover:text-red-600 transition-colors">Colleges</Link>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-900">{menuCourse[0].name}</span>
+            </div>
+
+            <div className="px-6 mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                {menuCourse[0].name} Courses
+              </h1>
+              <p className="text-gray-600">
+                Find {menuCourse[0].name} courses at various colleges
+              </p>
+            </div>
+
+            {/* Table Header */}
+            <div className="px-6 mb-4">
+              <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+                <div className="col-span-5">COURSE NAME</div>
+                <div className="col-span-4">COLLEGE</div>
+                <div className="col-span-2">LOCATION</div>
+                <div className="col-span-1 text-center">VIEW</div>
+              </div>
+            </div>
+
+            <div className="space-y-0">
+              {matchingCourses.map(({ course, college }, index) => (
+                <div
+                  key={course.id}
+                  className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
+                    index !== matchingCourses.length - 1 ? "border-b border-gray-200" : ""
+                  } hover:bg-gray-50 transition-colors`}
+                >
+                  {/* Course Name */}
+                  <div className="col-span-5">
+                    <Link href={`/courses/${course.slug}`} className="hover:text-red-600 transition-colors">
+                      <h3 className="text-base font-semibold text-gray-900">
+                        {course.name}
+                      </h3>
+                    </Link>
+                  </div>
+
+                  {/* College Name */}
+                  <div className="col-span-4">
+                    {college ? (
+                      <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
+                        <p className="text-sm text-gray-700">{college.name}</p>
+                      </Link>
+                    ) : (
+                      <p className="text-sm text-gray-500">N/A</p>
+                    )}
+                  </div>
+
+                  {/* Location */}
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-700">
+                      {college?.location || college?.city || "N/A"}
+                    </p>
+                  </div>
+
+                  {/* View Button */}
+                  <div className="col-span-1 flex justify-center">
+                    <Link href={`/courses/${course.slug}`}>
+                      <Button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs">
+                        VIEW
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )
