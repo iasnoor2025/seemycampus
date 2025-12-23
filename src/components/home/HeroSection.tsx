@@ -39,14 +39,6 @@ const iconMap: Record<string, React.ReactNode> = {
   BookOpen: <BookOpen className="h-8 w-8" />,
 }
 
-// Rotating text messages for hero section (entire text changes)
-const rotatingTexts = [
-  "Find Over 4 Lakh Reviews in India",
-  "Find Over 11000+ Courses in India",
-  "Find Over 25000+ Colleges in India",
-  "Find Over 250+ Exams in India",
-]
-
 export function HeroSection() {
   const router = useRouter()
   const [slides, setSlides] = useState<HeroSlide[]>([])
@@ -59,6 +51,7 @@ export function HeroSection() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [charIndex, setCharIndex] = useState(0)
   const [studyGoalsData, setStudyGoalsData] = useState<StudyGoal[]>([])
+  const [rotatingTexts, setRotatingTexts] = useState<string[]>([])
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -75,9 +68,28 @@ export function HeroSection() {
       }
     }
 
+    const fetchRotatingTexts = async () => {
+      try {
+        const response = await fetch("/api/hero-rotating-texts")
+        if (response.ok) {
+          const data = await response.json()
+          const texts = (data.texts || []).map((t: { text: string }) => t.text)
+          setRotatingTexts(texts.length > 0 ? texts : ["Find Over 25000+ Colleges in India"])
+        }
+      } catch (error) {
+        console.error("Error fetching rotating texts:", error)
+        // Fallback to default texts
+        setRotatingTexts([
+          "Find Over 4 Lakh Reviews in India",
+          "Find Over 11000+ Courses in India",
+          "Find Over 25000+ Colleges in India",
+          "Find Over 250+ Exams in India",
+        ])
+      }
+    }
+
     fetchSlides()
-    // Initialize with first text
-    setDisplayText(rotatingTexts[0])
+    fetchRotatingTexts()
 
     // Fetch study goals
     const fetchStudyGoals = async () => {
@@ -105,9 +117,20 @@ export function HeroSection() {
     return () => clearInterval(interval)
   }, [slides.length, isPaused])
 
+  // Initialize display text when rotating texts are loaded
+  useEffect(() => {
+    if (rotatingTexts.length > 0 && displayText === "") {
+      setDisplayText(rotatingTexts[0])
+      setCharIndex(rotatingTexts[0].length)
+    }
+  }, [rotatingTexts.length])
+
   // Typewriter animation effect
   useEffect(() => {
+    if (rotatingTexts.length === 0) return
+    
     const currentText = rotatingTexts[textIndex]
+    if (!currentText) return
     
     if (!isDeleting && charIndex < currentText.length) {
       // Typing forward
@@ -230,14 +253,14 @@ export function HeroSection() {
               </div>
             </form>
 
-            {/* Need Counselling Button */}
+            {/* Expert Guidance Button */}
             <div className="flex justify-center">
               <Link href="/career-counseling">
                 <Button
                   size="lg"
                   className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-base font-semibold rounded-lg shadow-lg"
                 >
-                  Need Counselling
+                  Get Expert Guidance
                 </Button>
               </Link>
             </div>

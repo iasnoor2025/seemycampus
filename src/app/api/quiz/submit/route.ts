@@ -3,6 +3,7 @@ import { db } from "@/db"
 import { studentAnswers, leads } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { quizSchema } from "@/lib/quiz"
+import { auth } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,10 +12,15 @@ export async function POST(request: NextRequest) {
     // Validate quiz data
     const validatedData = quizSchema.parse(body)
 
-    // Save student answers
+    // Get current user if logged in
+    const session = await auth()
+    const userId = session?.user?.id ? parseInt(session.user.id) : null
+
+    // Save student answers (link to user if logged in)
     const [studentAnswer] = await db
       .insert(studentAnswers)
       .values({
+        userId: userId || undefined,
         interests: validatedData.interests,
         preferredLocation: validatedData.preferredLocation,
         budgetMin: validatedData.budgetMin,

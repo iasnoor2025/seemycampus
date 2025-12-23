@@ -1,9 +1,5 @@
 import { Metadata } from "next"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { GraduationCap, Users, Brain, BookOpen, Briefcase, Stethoscope, Scale, Palette, Calendar, ChevronRight } from "lucide-react"
-import Image from "next/image"
+import { Users } from "lucide-react"
 import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { HeroSection } from "@/components/home/HeroSection"
@@ -48,194 +44,8 @@ export default function Home() {
       {/* Hero Section with Search */}
       <HeroSection />
 
-      {/* Welcome Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-7xl mx-auto">
-            {/* Home breadcrumb */}
-            <div className="mb-8">
-              <Link href="/" className="text-red-600 underline text-sm font-medium">
-                Home
-              </Link>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-              {/* Left Section - Welcome Content */}
-              <div>
-                <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-                  Welcome To Seemycampus
-                </h2>
-                <p className="text-lg text-gray-700 leading-relaxed mb-8">
-                  Seemycampus is student's go-to platform providing holistic approach on all aspects of education, 
-                  simplifying the college selection process for Indian students pursuing undergraduate (UG) and 
-                  postgraduate (PG) courses. It serves as a comprehensive platform, offering a wide range of reliable 
-                  and genuine information on over 60,000 institutions and 375,000+ courses. Our platform caters 
-                  specifically to UG/PG students across popular educational streams like MBA/BBA, Engineering, 
-                  Medical, Law, Design and more.
-                </p>
-                <Link href="/about">
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="border-gray-800 text-gray-800 bg-white hover:bg-gray-50 font-semibold px-8 py-6"
-                  >
-                    MORE ABOUT
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Right Section - Features Grid 2x2 */}
-              <div className="grid grid-cols-2 gap-6">
-                {/* Top Left - Register for weekly Career Updates */}
-                <Card className="border border-gray-200 shadow-sm">
-                  <CardHeader>
-                    <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                      <GraduationCap className="h-12 w-12 text-blue-800" />
-                    </div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
-                      Register for weekly Career Updates
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      Sign up and receive weekly newsletter with career updates, content and tips.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Top Right - Mind Power Training */}
-                <Card className="border border-gray-200 shadow-sm">
-                  <CardHeader>
-                    <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                      <Brain className="h-12 w-12 text-blue-800" />
-                    </div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
-                      Mind Power Training
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      Exclusive session on Power of Powers to train your Mind, Body and Soul aligning energies for super successful life
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Bottom Left - Personalized Career Counselling */}
-                <Card className="border border-gray-200 shadow-sm">
-                  <CardHeader>
-                    <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                      <Users className="h-12 w-12 text-blue-800" />
-                    </div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
-                      Personalized Career Counselling
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      Get Psychometric Testing & Video Calling enabled Career Guidance from Experts
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Bottom Right - Alumni Directory */}
-                <Card className="border border-gray-200 shadow-sm">
-                  <CardHeader>
-                    <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                      <BookOpen className="h-12 w-12 text-blue-800" />
-                    </div>
-                    <CardTitle className="text-lg font-bold text-gray-900">
-                      Alumni Directory
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      We belief in a system that ascribes significance to numbers and their influence on our students.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials Section */}
       <TestimonialsSection />
-
-      {/* Career Streams */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Career Streams</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Briefcase className="h-12 w-12 mx-auto text-primary mb-4" />
-                <CardTitle>Engineering</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• BE</li>
-                  <li>• B.Tech</li>
-                  <li>• ME</li>
-                  <li>• M.Tech</li>
-                  <li>• Diploma in Engg.</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <GraduationCap className="h-12 w-12 mx-auto text-primary mb-4" />
-                <CardTitle>Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• MBA</li>
-                  <li>• PGDM</li>
-                  <li>• BBA</li>
-                  <li>• BBM</li>
-                  <li>• Executive MBA</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Stethoscope className="h-12 w-12 mx-auto text-primary mb-4" />
-                <CardTitle>Medical</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• MBBS</li>
-                  <li>• PG Medical</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Scale className="h-12 w-12 mx-auto text-primary mb-4" />
-                <CardTitle>Law</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• LLB</li>
-                  <li>• LLM</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Palette className="h-12 w-12 mx-auto text-primary mb-4" />
-                <CardTitle>Design</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• B.Des</li>
-                  <li>• M.Des</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* Top Featured Colleges */}
       <FeaturedColleges />
@@ -351,7 +161,7 @@ export default function Home() {
       </section>
 
       {/* For More Guidance Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 pb-32 bg-white">
         <div className="container mx-auto px-4">
           {/* Section Title */}
           <div className="flex items-center gap-3 mb-12">

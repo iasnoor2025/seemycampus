@@ -1,5 +1,6 @@
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu"
 import { cva } from "class-variance-authority"
+import { forwardRef } from "react"
 
 import { cn } from "@/lib/utils"
 import { IconChevronDown } from "@tabler/icons-react"
@@ -57,13 +58,13 @@ const navigationMenuTriggerStyle = cva(
   "bg-background hover:bg-muted focus:bg-muted data-open:hover:bg-muted data-open:focus:bg-muted data-open:bg-muted/50 focus-visible:ring-ring/50 data-popup-open:bg-muted/50 data-popup-open:hover:bg-muted rounded-none px-2.5 py-1.5 text-xs font-medium transition-all focus-visible:ring-1 focus-visible:outline-1 disabled:opacity-50 group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center disabled:pointer-events-none outline-none"
 )
 
-function NavigationMenuTrigger({
-  className,
-  children,
-  ...props
-}: NavigationMenuPrimitive.Trigger.Props) {
+const NavigationMenuTrigger = forwardRef<
+  HTMLButtonElement,
+  NavigationMenuPrimitive.Trigger.Props
+>(({ className, children, ...props }, ref) => {
   return (
     <NavigationMenuPrimitive.Trigger
+      ref={ref}
       data-slot="navigation-menu-trigger"
       className={cn(navigationMenuTriggerStyle(), "group", className)}
       {...props}
@@ -72,7 +73,8 @@ function NavigationMenuTrigger({
       <IconChevronDown className="relative top-[1px] ml-1 size-3 transition duration-300 group-data-open/navigation-menu-trigger:rotate-180 group-data-popup-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
     </NavigationMenuPrimitive.Trigger>
   )
-}
+})
+NavigationMenuTrigger.displayName = "NavigationMenuTrigger"
 
 function NavigationMenuContent({
   className,

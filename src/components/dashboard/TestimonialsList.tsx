@@ -23,6 +23,7 @@ interface Testimonial {
   id: number
   name: string
   testimonial: string
+  photoUrl: string | null
   avatarColor: string
   date: string
   displayOrder: number
@@ -41,6 +42,7 @@ export function TestimonialsList() {
   const [formData, setFormData] = useState({
     name: "",
     testimonial: "",
+    photoUrl: "",
     avatarColor: "blue",
     date: new Date().toISOString().split("T")[0],
     displayOrder: 0,
@@ -92,6 +94,7 @@ export function TestimonialsList() {
     setFormData({
       name: testimonial.name,
       testimonial: testimonial.testimonial,
+      photoUrl: testimonial.photoUrl || "",
       avatarColor: testimonial.avatarColor,
       date: new Date(testimonial.date).toISOString().split("T")[0],
       displayOrder: testimonial.displayOrder,
@@ -105,6 +108,7 @@ export function TestimonialsList() {
     setFormData({
       name: "",
       testimonial: "",
+      photoUrl: "",
       avatarColor: "blue",
       date: new Date().toISOString().split("T")[0],
       displayOrder: 0,
@@ -248,6 +252,29 @@ export function TestimonialsList() {
                     rows={6}
                     required
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="photoUrl">Photo URL</Label>
+                  <Input
+                    id="photoUrl"
+                    type="url"
+                    value={formData.photoUrl}
+                    onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+                    placeholder="https://example.com/photo.jpg"
+                  />
+                  {formData.photoUrl && (
+                    <div className="mt-2">
+                      <img
+                        src={formData.photoUrl}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded-full border-2 border-gray-200"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none"
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

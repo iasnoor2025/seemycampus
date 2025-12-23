@@ -15,13 +15,13 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <div className="overflow-x-hidden">
       <TopBar />
       <HeaderClient />
-      <main>{children}</main>
+      <main className="overflow-x-hidden">{children}</main>
       <SocialIcons />
       <Footer />
-    </>
+    </div>
   )
 }
 

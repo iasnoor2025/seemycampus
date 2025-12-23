@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout"
+import { SessionProvider } from "@/components/providers/SessionProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -107,7 +108,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-x-hidden">
       <head>
         <script
           type="application/ld+json"
@@ -118,8 +119,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <SessionProvider>
         <ConditionalLayout>{children}</ConditionalLayout>
+        </SessionProvider>
       </body>
     </html>
   )

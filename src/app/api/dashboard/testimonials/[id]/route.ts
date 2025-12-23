@@ -49,13 +49,14 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { name, testimonial, avatarColor, date, displayOrder, isActive } = body
+    const { name, testimonial, photoUrl, avatarColor, date, displayOrder, isActive } = body
 
     const [updatedTestimonial] = await db
       .update(testimonials)
       .set({
         name,
         testimonial,
+        photoUrl: photoUrl || null,
         avatarColor,
         date: date ? new Date(date) : undefined,
         displayOrder,

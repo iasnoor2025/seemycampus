@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, testimonial, avatarColor, date, displayOrder, isActive } = body
+    const { name, testimonial, photoUrl, avatarColor, date, displayOrder, isActive } = body
 
     if (!name || !testimonial) {
       return NextResponse.json(
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       .values({
         name,
         testimonial,
+        photoUrl: photoUrl || null,
         avatarColor: avatarColor || "blue",
         date: date ? new Date(date) : new Date(),
         displayOrder: displayOrder || 0,

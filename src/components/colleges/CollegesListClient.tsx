@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { GitCompare } from "lucide-react"
 import { CollegeFilters, FilterState } from "./CollegeFilters"
 import { CollegePagination } from "./CollegePagination"
 
@@ -33,6 +34,7 @@ function getInitials(name: string): string {
 
 export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: CollegesListClientProps) {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [colleges, setColleges] = useState<College[]>(initialColleges)
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState<FilterState>({
@@ -116,12 +118,25 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
       <div className="max-w-6xl mx-auto bg-white min-h-screen py-8">
         {/* Page Header */}
         <div className="px-6 mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-            Browse Colleges
-          </h1>
-          <p className="text-gray-600">
-            Explore our comprehensive directory of colleges and universities
-          </p>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                Browse Colleges
+              </h1>
+              <p className="text-gray-600">
+                Explore our comprehensive directory of colleges and universities
+              </p>
+            </div>
+            <Link href="/compare">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 border-red-600 text-red-600 hover:bg-red-50"
+              >
+                <GitCompare className="h-4 w-4" />
+                Compare Colleges
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Filters */}

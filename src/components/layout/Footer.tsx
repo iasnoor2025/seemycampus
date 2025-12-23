@@ -19,8 +19,8 @@ export function Footer() {
 
   return (
     <footer className="mt-16">
-      {/* Top Section - Newsletter Subscription (Dark Blue) */}
-      <div className="bg-[hsl(210,50%,25%)] text-white py-6">
+      {/* Top Section - Newsletter Subscription (Dark Blue) - Overlapping */}
+      <div className="bg-[hsl(210,50%,25%)] text-white py-6 -mt-16 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <h3 className="text-2xl md:text-3xl font-bold text-white">Subscribe to our Newsletter</h3>

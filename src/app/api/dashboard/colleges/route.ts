@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/db"
 import { colleges } from "@/db/schema"
-import { desc } from "drizzle-orm"
+import { desc, sql } from "drizzle-orm"
 
 // GET - Fetch all colleges
 export async function GET(request: NextRequest) {
@@ -15,25 +15,32 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "10")
-    const offset = (page - 1) * limit
+    const getAll = searchParams.get("all") === "true" || limit >= 10000
 
-    const collegesList = await db
-      .select()
+    // If requesting all colleges (for client-side pagination), return all without limit
+    let query = db.select().from(colleges).orderBy(desc(colleges.createdAt))
+    
+    if (!getAll) {
+      const offset = (page - 1) * limit
+      query = query.limit(limit).offset(offset) as any
+    }
+
+    const collegesList = await query
+
+    // Get total count efficiently using COUNT
+    const totalCountResult = await db
+      .select({ count: sql<number>`count(*)`.as('count') })
       .from(colleges)
-      .orderBy(desc(colleges.createdAt))
-      .limit(limit)
-      .offset(offset)
-
-    const totalCount = await db.select().from(colleges)
-    const totalPages = Math.ceil(totalCount.length / limit)
+    const totalCount = Number(totalCountResult[0]?.count || 0)
+    const totalPages = getAll ? 1 : Math.ceil(totalCount / limit)
 
     return NextResponse.json({
       colleges: collegesList,
       pagination: {
-        currentPage: page,
+        currentPage: getAll ? 1 : page,
         totalPages,
-        totalCount: totalCount.length,
-        limit,
+        totalCount,
+        limit: getAll ? totalCount : limit,
       },
     })
   } catch (error) {
@@ -54,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance } = body
+    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images } = body
 
     if (!name || !slug) {
       return NextResponse.json(
@@ -77,6 +84,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         isAcademicAlliance: isAcademicAlliance || false,
+        images: images || [],
       })
       .returning()
 

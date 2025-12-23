@@ -33,13 +33,14 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
+    // Create user (default role is "student")
     const [newUser] = await db
       .insert(users)
       .values({
         name,
         email,
         password: hashedPassword,
+        role: "student",
       })
       .returning()
 

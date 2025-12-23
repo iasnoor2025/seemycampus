@@ -523,9 +523,254 @@ async function seed() {
     console.log(`   - Academic Alliance: ${academicAllianceColleges.length}`)
     console.log(`   - Additional colleges: ${additionalColleges.length}\n`)
 
+    // Comprehensive college data with all comparison fields
+    const comprehensiveCollegeData: Record<string, any> = {
+      // IITs and Engineering
+      "iit-delhi": {
+        ranking: 2, establishedYear: 1961, accreditation: "AICTE, UGC", ownership: "Government",
+        campusSize: "320 acres", totalStudents: 8500, hostelFees: 120000,
+        averagePackage: 2200000, highestPackage: 15000000, entranceExams: ["JEE Advanced", "GATE"],
+        website: "https://www.iitd.ac.in", email: "admin@iitd.ac.in", phone: "+91-11-26591753",
+      },
+      "iit-bombay": {
+        ranking: 3, establishedYear: 1958, accreditation: "AICTE, UGC", ownership: "Government",
+        campusSize: "550 acres", totalStudents: 10000, hostelFees: 125000,
+        averagePackage: 2100000, highestPackage: 18000000, entranceExams: ["JEE Advanced", "GATE"],
+        website: "https://www.iitb.ac.in", email: "info@iitb.ac.in", phone: "+91-22-25722545",
+      },
+      "iit-madras": {
+        ranking: 1, establishedYear: 1959, accreditation: "AICTE, UGC", ownership: "Government",
+        campusSize: "620 acres", totalStudents: 9000, hostelFees: 115000,
+        averagePackage: 2000000, highestPackage: 16000000, entranceExams: ["JEE Advanced", "GATE"],
+        website: "https://www.iitm.ac.in", email: "admin@iitm.ac.in", phone: "+91-44-22578500",
+      },
+      "bits-pilani": {
+        ranking: 15, establishedYear: 1964, accreditation: "UGC", ownership: "Private",
+        campusSize: "328 acres", totalStudents: 12000, hostelFees: 180000,
+        averagePackage: 1800000, highestPackage: 12000000, entranceExams: ["BITSAT"],
+        website: "https://www.bits-pilani.ac.in", email: "admissions@pilani.bits-pilani.ac.in", phone: "+91-1596-242210",
+      },
+      "vit-vellore": {
+        ranking: 8, establishedYear: 1984, accreditation: "UGC, AICTE", ownership: "Private",
+        campusSize: "372 acres", totalStudents: 35000, hostelFees: 200000,
+        averagePackage: 800000, highestPackage: 4500000, entranceExams: ["VITEEE"],
+        website: "https://vit.ac.in", email: "info@vit.ac.in", phone: "+91-416-2243091",
+      },
+      "srm-institute-of-science-and-technology": {
+        ranking: 35, establishedYear: 1985, accreditation: "UGC, AICTE", ownership: "Private",
+        campusSize: "250 acres", totalStudents: 50000, hostelFees: 150000,
+        averagePackage: 600000, highestPackage: 3500000, entranceExams: ["SRMJEE"],
+        website: "https://www.srmist.edu.in", email: "admissions@srmist.edu.in", phone: "+91-44-27455713",
+      },
+      "manipal-academy-of-higher-education": {
+        ranking: 12, establishedYear: 1953, accreditation: "UGC", ownership: "Private",
+        campusSize: "313 acres", totalStudents: 28000, hostelFees: 220000,
+        averagePackage: 750000, highestPackage: 4000000, entranceExams: ["MET"],
+        website: "https://manipal.edu", email: "info@manipal.edu", phone: "+91-820-2922400",
+      },
+      "amity-university": {
+        ranking: 45, establishedYear: 2005, accreditation: "UGC", ownership: "Private",
+        campusSize: "60 acres", totalStudents: 15000, hostelFees: 180000,
+        averagePackage: 550000, highestPackage: 3000000, entranceExams: ["Amity JEE"],
+        website: "https://www.amity.edu", email: "admission@amity.edu", phone: "+91-120-4392000",
+      },
+      "lovely-professional-university": {
+        ranking: 50, establishedYear: 2005, accreditation: "UGC", ownership: "Private",
+        campusSize: "600 acres", totalStudents: 30000, hostelFees: 140000,
+        averagePackage: 500000, highestPackage: 2500000, entranceExams: ["LPUNEST"],
+        website: "https://www.lpu.in", email: "admissions@lpu.co.in", phone: "+91-1824-517777",
+      },
+      "national-institute-of-technology-warangal": {
+        ranking: 20, establishedYear: 1959, accreditation: "AICTE", ownership: "Government",
+        campusSize: "250 acres", totalStudents: 6000, hostelFees: 80000,
+        averagePackage: 1200000, highestPackage: 8000000, entranceExams: ["JEE Main"],
+        website: "https://www.nitw.ac.in", email: "director@nitw.ac.in", phone: "+91-870-2459191",
+      },
+      "indian-institute-of-technology-delhi": {
+        ranking: 2, establishedYear: 1961, accreditation: "AICTE, UGC", ownership: "Government",
+        campusSize: "320 acres", totalStudents: 8500, hostelFees: 120000,
+        averagePackage: 2200000, highestPackage: 15000000, entranceExams: ["JEE Advanced", "GATE"],
+        website: "https://www.iitd.ac.in", email: "admin@iitd.ac.in", phone: "+91-11-26591753",
+      },
+      // Management Colleges
+      "isbr-business-school": {
+        ranking: 60, establishedYear: 1990, accreditation: "AICTE", ownership: "Private",
+        campusSize: "5 acres", totalStudents: 500, hostelFees: 120000,
+        averagePackage: 800000, highestPackage: 1500000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.isbr.in", email: "admissions@isbr.in", phone: "+91-80-25734999",
+      },
+      "gl-bajaj-institute-of-management-and-technology": {
+        description: "GL Bajaj Institute of Management and Technology is a premier management institute offering quality MBA and PGDM programs with industry-focused curriculum and excellent placement opportunities.",
+        ranking: 65, establishedYear: 2007, accreditation: "AICTE", ownership: "Private",
+        campusSize: "10 acres", totalStudents: 2000, hostelFees: 110000,
+        averagePackage: 650000, highestPackage: 1200000, entranceExams: ["CAT", "MAT", "CMAT", "UPSEE"],
+        website: "https://www.glbitm.org", email: "info@glbitm.org", phone: "+91-120-2324002",
+      },
+      "jaipuria-institute-of-management": {
+        description: "Jaipuria Institute of Management is a leading B-school offering MBA and PGDM programs with a focus on industry-academia interface and holistic development of students.",
+        ranking: 70, establishedYear: 2004, accreditation: "AICTE", ownership: "Private",
+        campusSize: "8 acres", totalStudents: 800, hostelFees: 130000,
+        averagePackage: 700000, highestPackage: 1400000, entranceExams: ["CAT", "MAT", "CMAT", "XAT"],
+        website: "https://www.jaipuria.ac.in", email: "admissions@jaipuria.ac.in", phone: "+91-120-4639100",
+      },
+      "shanti-business-school": {
+        description: "Shanti Business School is a premier management institute offering quality MBA programs with emphasis on practical learning, industry exposure, and placement assistance.",
+        ranking: 75, establishedYear: 2009, accreditation: "AICTE", ownership: "Private",
+        campusSize: "12 acres", totalStudents: 600, hostelFees: 100000,
+        averagePackage: 600000, highestPackage: 1100000, entranceExams: ["CAT", "MAT", "CMAT", "GMAT"],
+        website: "https://www.shantibusinessschool.com", email: "info@shantibusinessschool.com", phone: "+91-79-29705081",
+      },
+      "ramachandran-international-institute-of-management": {
+        ranking: 68, establishedYear: 2005, accreditation: "AICTE", ownership: "Private",
+        campusSize: "7 acres", totalStudents: 500, hostelFees: 115000,
+        averagePackage: 680000, highestPackage: 1300000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.riim.ac.in", email: "admissions@riim.ac.in", phone: "+91-20-27052000",
+      },
+      "international-school-of-management-excellence": {
+        ranking: 72, establishedYear: 2006, accreditation: "AICTE", ownership: "Private",
+        campusSize: "6 acres", totalStudents: 450, hostelFees: 120000,
+        averagePackage: 650000, highestPackage: 1250000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.isme.in", email: "info@isme.in", phone: "+91-80-28462555",
+      },
+      "dr-dy-patil-vidyapeeth": {
+        ranking: 55, establishedYear: 2003, accreditation: "UGC, AICTE", ownership: "Private",
+        campusSize: "50 acres", totalStudents: 5000, hostelFees: 150000,
+        averagePackage: 750000, highestPackage: 2000000, entranceExams: ["CAT", "MAT", "CMAT", "NEET"],
+        website: "https://www.dpu.edu.in", email: "info@dpu.edu.in", phone: "+91-20-27420000",
+      },
+      "lexicon-management-institute-of-leadership-and-excellence": {
+        ranking: 73, establishedYear: 2007, accreditation: "AICTE", ownership: "Private",
+        campusSize: "5 acres", totalStudents: 400, hostelFees: 125000,
+        averagePackage: 620000, highestPackage: 1150000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.lexiconmile.com", email: "admissions@lexiconmile.com", phone: "+91-20-27052000",
+      },
+      "birla-institute-of-management-technology": {
+        ranking: 58, establishedYear: 1988, accreditation: "AICTE", ownership: "Private",
+        campusSize: "15 acres", totalStudents: 1000, hostelFees: 140000,
+        averagePackage: 850000, highestPackage: 1800000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.bimtech.ac.in", email: "admission@bimtech.ac.in", phone: "+91-120-2323001",
+      },
+      "gniot-institute-of-management-studies": {
+        ranking: 77, establishedYear: 2001, accreditation: "AICTE", ownership: "Private",
+        campusSize: "20 acres", totalStudents: 800, hostelFees: 105000,
+        averagePackage: 580000, highestPackage: 1000000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.gniotgroup.edu.in", email: "info@gniotgroup.edu.in", phone: "+91-120-2323001",
+      },
+      "fostiima-business-school": {
+        ranking: 71, establishedYear: 2003, accreditation: "AICTE", ownership: "Private",
+        campusSize: "4 acres", totalStudents: 350, hostelFees: 110000,
+        averagePackage: 640000, highestPackage: 1200000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.fostiima.org", email: "info@fostiima.org", phone: "+91-11-29535000",
+      },
+      "lloyd-business-school": {
+        ranking: 74, establishedYear: 2006, accreditation: "AICTE", ownership: "Private",
+        campusSize: "8 acres", totalStudents: 550, hostelFees: 115000,
+        averagePackage: 610000, highestPackage: 1100000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.lloydbusinessschool.edu.in", email: "info@lloydbusinessschool.edu.in", phone: "+91-120-2323001",
+      },
+      "alliance-university-banglore": {
+        ranking: 52, establishedYear: 2010, accreditation: "UGC", ownership: "Private",
+        campusSize: "120 acres", totalStudents: 8000, hostelFees: 160000,
+        averagePackage: 720000, highestPackage: 1600000, entranceExams: ["CAT", "MAT", "CMAT", "AUMAT"],
+        website: "https://www.alliance.edu.in", email: "admissions@alliance.edu.in", phone: "+91-80-30938000",
+      },
+      "upes-dehradun": {
+        ranking: 48, establishedYear: 2003, accreditation: "UGC, AICTE", ownership: "Private",
+        campusSize: "44 acres", totalStudents: 12000, hostelFees: 170000,
+        averagePackage: 780000, highestPackage: 1700000, entranceExams: ["UPESMET", "JEE Main"],
+        website: "https://www.upes.ac.in", email: "admissions@upes.ac.in", phone: "+91-135-2770137",
+      },
+      "imm-business-school": {
+        ranking: 76, establishedYear: 2008, accreditation: "AICTE", ownership: "Private",
+        campusSize: "3 acres", totalStudents: 300, hostelFees: 100000,
+        averagePackage: 590000, highestPackage: 1050000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.immindia.com", email: "info@immindia.com", phone: "+91-11-29535000",
+      },
+      "xime-bangalore": {
+        ranking: 69, establishedYear: 1991, accreditation: "AICTE", ownership: "Private",
+        campusSize: "10 acres", totalStudents: 600, hostelFees: 135000,
+        averagePackage: 670000, highestPackage: 1350000, entranceExams: ["CAT", "MAT", "CMAT", "XAT"],
+        website: "https://www.xime.org", email: "admissions@xime.org", phone: "+91-80-26989000",
+      },
+      "iibs-bangalore": {
+        ranking: 78, establishedYear: 2000, accreditation: "AICTE", ownership: "Private",
+        campusSize: "5 acres", totalStudents: 400, hostelFees: 108000,
+        averagePackage: 570000, highestPackage: 1000000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.iibs.edu.in", email: "info@iibs.edu.in", phone: "+91-80-25734999",
+      },
+      "isb-and-m-pune": {
+        ranking: 67, establishedYear: 1990, accreditation: "AICTE", ownership: "Private",
+        campusSize: "12 acres", totalStudents: 700, hostelFees: 125000,
+        averagePackage: 690000, highestPackage: 1320000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.isbm.ac.in", email: "admissions@isbm.ac.in", phone: "+91-20-25670000",
+      },
+      "pibm-pune": {
+        ranking: 79, establishedYear: 2002, accreditation: "AICTE", ownership: "Private",
+        campusSize: "4 acres", totalStudents: 350, hostelFees: 105000,
+        averagePackage: 560000, highestPackage: 950000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.pibm.edu.in", email: "info@pibm.edu.in", phone: "+91-20-25670000",
+      },
+      "fortune-institute-of-international-business": {
+        ranking: 80, establishedYear: 2001, accreditation: "AICTE", ownership: "Private",
+        campusSize: "6 acres", totalStudents: 450, hostelFees: 110000,
+        averagePackage: 550000, highestPackage: 900000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.fiib.edu.in", email: "admissions@fiib.edu.in", phone: "+91-11-29535000",
+      },
+      "itm-navi-mumbai": {
+        ranking: 66, establishedYear: 1991, accreditation: "AICTE", ownership: "Private",
+        campusSize: "8 acres", totalStudents: 650, hostelFees: 120000,
+        averagePackage: 680000, highestPackage: 1280000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.itm.edu", email: "admissions@itm.edu", phone: "+91-22-27791000",
+      },
+      "universal-business-school": {
+        ranking: 81, establishedYear: 2009, accreditation: "AICTE", ownership: "Private",
+        campusSize: "40 acres", totalStudents: 500, hostelFees: 140000,
+        averagePackage: 540000, highestPackage: 850000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.universalbusinessschool.com", email: "info@universalbusinessschool.com", phone: "+91-22-28470000",
+      },
+      "soil-institute-of-management": {
+        ranking: 82, establishedYear: 2008, accreditation: "AICTE", ownership: "Private",
+        campusSize: "5 acres", totalStudents: 300, hostelFees: 100000,
+        averagePackage: 530000, highestPackage: 800000, entranceExams: ["CAT", "MAT", "CMAT"],
+        website: "https://www.soil.edu.in", email: "admissions@soil.edu.in", phone: "+91-124-2323001",
+      },
+      "institute-of-technology-and-management": {
+        ranking: 83, establishedYear: 1994, accreditation: "AICTE", ownership: "Private",
+        campusSize: "15 acres", totalStudents: 2000, hostelFees: 95000,
+        averagePackage: 520000, highestPackage: 750000, entranceExams: ["JEE Main", "CAT", "MAT"],
+        website: "https://www.itm.edu", email: "info@itm.edu", phone: "+91-22-27791000",
+      },
+      "woxsen-university": {
+        ranking: 56, establishedYear: 2014, accreditation: "UGC", ownership: "Private",
+        campusSize: "200 acres", totalStudents: 3000, hostelFees: 180000,
+        averagePackage: 800000, highestPackage: 1900000, entranceExams: ["WAT", "CAT", "GMAT"],
+        website: "https://www.woxsen.edu.in", email: "admissions@woxsen.edu.in", phone: "+91-8413-230000",
+      },
+      "atlas-skilltech-university": {
+        ranking: 84, establishedYear: 2020, accreditation: "UGC", ownership: "Private",
+        campusSize: "2 acres", totalStudents: 500, hostelFees: 150000,
+        averagePackage: 510000, highestPackage: 700000, entranceExams: ["ATLAS Entrance"],
+        website: "https://www.atlasuniversity.edu.in", email: "admissions@atlasuniversity.edu.in", phone: "+91-22-28470000",
+      },
+      "bml-munjal-university": {
+        ranking: 57, establishedYear: 2014, accreditation: "UGC", ownership: "Private",
+        campusSize: "50 acres", totalStudents: 4000, hostelFees: 155000,
+        averagePackage: 780000, highestPackage: 1800000, entranceExams: ["BMUEE", "JEE Main"],
+        website: "https://www.bmu.edu.in", email: "admissions@bmu.edu.in", phone: "+91-124-2678900",
+      },
+    }
+
     // Insert or update colleges
     for (const college of allColleges) {
       try {
+        const comprehensiveData = comprehensiveCollegeData[college.slug] || {}
+        const defaultDescription = comprehensiveData.description || `${college.name} is a leading educational institution located in ${college.location}, ${college.state}. It offers quality education across various disciplines and is committed to academic excellence.`
+        
+        // Ensure images array is set, use placeholder if empty
+        const collegeImages = college.images && college.images.length > 0 
+          ? college.images 
+          : [`/images/colleges/${college.slug.replace(/-/g, '_')}_logo.png`]
+
         // Try to insert first
         await db.insert(colleges).values({
           name: college.name,
@@ -534,14 +779,32 @@ async function seed() {
           city: college.city,
           state: college.state,
           country: "India",
-          images: college.images,
-          description: `${college.name} is a leading educational institution located in ${college.location}, ${college.state}.`,
+          images: collegeImages,
+          description: defaultDescription,
           isAcademicAlliance: college.isAcademicAlliance || false,
+          ranking: comprehensiveData.ranking || null,
+          establishedYear: comprehensiveData.establishedYear || null,
+          accreditation: comprehensiveData.accreditation || null,
+          ownership: comprehensiveData.ownership || null,
+          campusSize: comprehensiveData.campusSize || null,
+          totalStudents: comprehensiveData.totalStudents || null,
+          hostelFees: comprehensiveData.hostelFees || null,
+          averagePackage: comprehensiveData.averagePackage || null,
+          highestPackage: comprehensiveData.highestPackage || null,
+          entranceExams: comprehensiveData.entranceExams || [],
+          website: comprehensiveData.website || null,
+          email: comprehensiveData.email || null,
+          phone: comprehensiveData.phone || null,
         })
         console.log(`✅ Inserted: ${college.name}`)
       } catch (error: any) {
-        // If college already exists, update it to mark as Academic Alliance
+        // If college already exists, update it with comprehensive data
         if (error?.code === "23505") {
+          const comprehensiveData = comprehensiveCollegeData[college.slug] || {}
+          const collegeImages = college.images && college.images.length > 0 
+            ? college.images 
+            : [`/images/colleges/${college.slug.replace(/-/g, '_')}_logo.png`]
+          
           await db
             .update(colleges)
             .set({ 
@@ -550,7 +813,22 @@ async function seed() {
               location: college.location,
               city: college.city,
               state: college.state,
-              images: college.images,
+              images: collegeImages,
+              description: comprehensiveData.description || undefined,
+              ranking: comprehensiveData.ranking !== undefined ? comprehensiveData.ranking : undefined,
+              establishedYear: comprehensiveData.establishedYear !== undefined ? comprehensiveData.establishedYear : undefined,
+              accreditation: comprehensiveData.accreditation || undefined,
+              ownership: comprehensiveData.ownership || undefined,
+              campusSize: comprehensiveData.campusSize || undefined,
+              totalStudents: comprehensiveData.totalStudents !== undefined ? comprehensiveData.totalStudents : undefined,
+              hostelFees: comprehensiveData.hostelFees !== undefined ? comprehensiveData.hostelFees : undefined,
+              averagePackage: comprehensiveData.averagePackage !== undefined ? comprehensiveData.averagePackage : undefined,
+              highestPackage: comprehensiveData.highestPackage !== undefined ? comprehensiveData.highestPackage : undefined,
+              entranceExams: comprehensiveData.entranceExams || undefined,
+              website: comprehensiveData.website || undefined,
+              email: comprehensiveData.email || undefined,
+              phone: comprehensiveData.phone || undefined,
+              updatedAt: new Date(),
             })
             .where(eq(colleges.slug, college.slug))
           const allianceStatus = college.isAcademicAlliance ? "Academic Alliance" : "Regular"

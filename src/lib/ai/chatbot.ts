@@ -2,10 +2,24 @@ import { SYSTEM_PROMPT, checkSafety } from "./prompts"
 import { CustomAIProvider } from "./providers/custom"
 import { OpenAIProvider } from "./providers/openai"
 import type { AIProvider } from "./providers/base"
+import { getAllColleges } from "@/lib/colleges"
+import { db } from "@/db"
+import { colleges, courses } from "@/db/schema"
+import { ilike, or } from "drizzle-orm"
 
 export interface ChatMessage {
   role: "user" | "assistant"
   content: string
+}
+
+export interface CollegeSuggestion {
+  id: number
+  name: string
+  slug: string
+  location: string | null
+  city: string | null
+  description: string | null
+  ranking: number | null
 }
 
 export class Chatbot {
@@ -29,10 +43,69 @@ export class Chatbot {
     }
   }
 
-  async sendMessage(userMessage: string): Promise<string> {
+  /**
+   * Search for colleges based on user query
+   */
+  async searchColleges(query: string): Promise<CollegeSuggestion[]> {
+    try {
+      // Extract keywords from query
+      const keywords = query.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+      
+      if (keywords.length === 0) {
+        return []
+      }
+
+      // Build search conditions - match any keyword in any field
+      const conditions = keywords.flatMap(keyword => [
+        ilike(colleges.name, `%${keyword}%`),
+        ilike(colleges.location, `%${keyword}%`),
+        ilike(colleges.city, `%${keyword}%`),
+        ilike(colleges.description, `%${keyword}%`)
+      ])
+
+      // Search colleges by name, location, city, or description
+      const results = await db
+        .select({
+          id: colleges.id,
+          name: colleges.name,
+          slug: colleges.slug,
+          location: colleges.location,
+          city: colleges.city,
+          description: colleges.description,
+          ranking: colleges.ranking,
+        })
+        .from(colleges)
+        .where(or(...conditions))
+        .limit(5)
+
+      return results
+    } catch (error) {
+      console.error("College search error:", error)
+      return []
+    }
+  }
+
+  async sendMessage(userMessage: string, includeColleges: boolean = true): Promise<{ response: string; suggestions: CollegeSuggestion[] }> {
     // Safety check
     if (!checkSafety(userMessage)) {
-      return "I'm here to help with educational questions about colleges and courses. For personal, financial, medical, or legal advice, please consult with appropriate professionals."
+      return {
+        response: "I'm here to help with educational questions about colleges and courses. For personal, financial, medical, or legal advice, please consult with appropriate professionals.",
+        suggestions: []
+      }
+    }
+
+    // Search for relevant colleges if enabled
+    let collegeSuggestions: CollegeSuggestion[] = []
+    let collegeContext = ""
+    
+    if (includeColleges) {
+      collegeSuggestions = await this.searchColleges(userMessage)
+      
+      if (collegeSuggestions.length > 0) {
+        collegeContext = `\n\nRelevant colleges in our database:\n${collegeSuggestions.map((college, idx) => 
+          `${idx + 1}. ${college.name}${college.city ? ` (${college.city})` : ""}${college.ranking ? ` - Rank: ${college.ranking}` : ""}${college.description ? ` - ${college.description.substring(0, 100)}...` : ""}`
+        ).join("\n")}\n\nWhen mentioning these colleges, encourage students to visit /colleges/${collegeSuggestions[0].slug} for more details.`
+      }
     }
 
     // Add user message to history
@@ -42,9 +115,12 @@ export class Chatbot {
     })
 
     try {
+      // Build enhanced system prompt with college context
+      const enhancedSystemPrompt = SYSTEM_PROMPT + collegeContext
+
       // Build messages array with system prompt
       const messages = [
-        { role: "system" as const, content: SYSTEM_PROMPT },
+        { role: "system" as const, content: enhancedSystemPrompt },
         ...this.conversationHistory.map((msg) => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
@@ -60,10 +136,16 @@ export class Chatbot {
         content: response,
       })
 
-      return response
+      return {
+        response,
+        suggestions: collegeSuggestions
+      }
     } catch (error) {
       console.error("Chatbot error:", error)
-      return "I'm sorry, I'm having trouble processing your request right now. Please try again later or contact our support team."
+      return {
+        response: "I'm sorry, I'm having trouble processing your request right now. Please try again later or contact our support team.",
+        suggestions: []
+      }
     }
   }
 

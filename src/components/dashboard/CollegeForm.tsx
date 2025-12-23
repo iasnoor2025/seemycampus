@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
+import Image from "next/image"
 
 interface College {
   id?: number
@@ -20,6 +21,7 @@ interface College {
   email: string | null
   phone: string | null
   isAcademicAlliance: boolean
+  images?: string[] | null
 }
 
 interface CollegeFormProps {
@@ -40,13 +42,23 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
     email: null,
     phone: null,
     isAcademicAlliance: false,
+    images: null,
   })
+  const [logoUrl, setLogoUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
     if (college) {
       setFormData(college)
+      // Set logo URL from images array
+      if (college.images && Array.isArray(college.images) && college.images.length > 0) {
+        setLogoUrl(college.images[0])
+      } else {
+        setLogoUrl("")
+      }
+    } else {
+      setLogoUrl("")
     }
   }, [college])
 
@@ -76,12 +88,18 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
         : "/api/dashboard/colleges"
       const method = college?.id ? "PUT" : "POST"
 
+      // Prepare data with images array from logoUrl
+      const submitData = {
+        ...formData,
+        images: logoUrl.trim() ? [logoUrl.trim()] : [],
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (!response.ok) {
@@ -234,6 +252,48 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
                   setFormData({ ...formData, phone: e.target.value || null })
                 }
               />
+            </div>
+
+            <div>
+              <Label htmlFor="logoUrl">Logo URL</Label>
+              <Input
+                id="logoUrl"
+                type="url"
+                placeholder="https://example.com/logo.png"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter the full URL of the college logo image
+              </p>
+              {logoUrl && (
+                <div className="mt-3 p-3 border rounded-md bg-gray-50">
+                  <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                  <div className="relative w-24 h-24 rounded overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+                    <Image
+                      src={logoUrl}
+                      alt="Logo preview"
+                      fill
+                      className="object-contain p-1 bg-white"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = "none"
+                        const parent = target.parentElement
+                        if (parent) {
+                          const fallback = parent.querySelector(".logo-preview-fallback") as HTMLElement
+                          if (fallback) fallback.style.display = "flex"
+                        }
+                      }}
+                    />
+                    <div 
+                      className="logo-preview-fallback absolute inset-0 flex items-center justify-center text-white font-bold text-xs"
+                      style={{ display: "none" }}
+                    >
+                      Invalid
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">

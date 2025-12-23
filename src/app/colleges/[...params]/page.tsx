@@ -394,6 +394,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
       <div className="container mx-auto px-4 py-8">
         <CollegeHero
           name={college.name}
+          collegeId={college.id}
           location={college.location}
           city={college.city}
           website={college.website}

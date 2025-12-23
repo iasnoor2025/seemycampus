@@ -4,7 +4,7 @@ import { Chatbot } from "@/lib/ai/chatbot"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { message, clearHistory } = body
+    const { message, clearHistory, includeColleges } = body
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -21,10 +21,11 @@ export async function POST(request: NextRequest) {
       chatbot.clearHistory()
     }
 
-    const response = await chatbot.sendMessage(message)
+    const result = await chatbot.sendMessage(message, includeColleges !== false)
 
     return NextResponse.json({
-      response,
+      response: result.response,
+      suggestions: result.suggestions,
       success: true,
     })
   } catch (error) {

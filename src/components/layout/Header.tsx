@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { createPortal } from "react-dom"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Phone, Search, Home, LogIn } from "lucide-react"
+import { Phone, Search, Home, GitCompare } from "lucide-react"
 import { Logo } from "./Logo"
+import { HeaderAuthButton } from "./HeaderAuthButton"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,6 +12,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import { cn } from "@/lib/utils"
 
 interface MenuCourse {
   name: string
@@ -28,11 +29,6 @@ export function Header() {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [loading, setLoading] = useState(true)
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null)
-  const categoryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  const menuContentRef = useRef<HTMLDivElement>(null)
-  const coursesPanelRef = useRef<HTMLDivElement>(null)
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -51,220 +47,183 @@ export function Header() {
     fetchMenu()
   }, [])
 
-  useEffect(() => {
-    if (hoveredCategory && menuContentRef.current) {
-      const categoryElement = categoryRefs.current.get(hoveredCategory)
-      if (categoryElement && menuContentRef.current) {
-        const menuRect = menuContentRef.current.getBoundingClientRect()
-        const categoryRect = categoryElement.getBoundingClientRect()
-        setMenuPosition({
-          top: categoryRect.top - menuRect.top,
-          left: 200,
-        })
-      }
-    }
-  }, [hoveredCategory])
-
   const displayCategories = loading ? [] : categories
+  
+  // Get courses for hovered category
+  const hoveredCategoryData = displayCategories.find(cat => cat.name === hoveredCategory)
+  const coursesToShow = hoveredCategoryData?.courses || []
 
   return (
-    <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg">
-      <div className="w-full">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center h-16 max-w-[1400px] mx-auto">
-            {/* Left Section - Logo */}
-            <div className="flex-shrink-0">
+    <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg w-full overflow-x-hidden">
+      <div className="w-full overflow-x-hidden">
+        <div className="w-full px-2 xl:px-4 overflow-x-hidden">
+          <div className="flex items-center h-16 w-full overflow-x-hidden">
+            {/* Logo */}
+            <div className="flex-shrink-0 absolute left-2 xl:left-4">
               <Link href="/" className="flex items-center">
                 <Logo />
               </Link>
             </div>
 
-            {/* Center Section - Navigation Menu */}
-            <nav className="hidden lg:flex items-center justify-center flex-1 gap-4 xl:gap-6 text-white mx-8 xl:mx-12">
+            {/* Navigation Menu - Centered */}
+            <nav className="flex items-center justify-center flex-1 gap-2 xl:gap-3 text-white overflow-x-hidden min-w-0 mx-auto">
               <Link 
                 href="/" 
-                className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
               >
                 HOME
               </Link>
               
               <Link 
                 href="/about" 
-                className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
               >
                 ABOUT US
               </Link>
               
-              {/* Colleges Dropdown */}
+              {/* Colleges Dropdown - Following shadcn/ui pattern */}
               <NavigationMenu>
                 <NavigationMenuList>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap bg-transparent text-white hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-red-400 h-auto py-0">
+                    <NavigationMenuTrigger 
+                      className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap bg-transparent text-white hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-red-400 h-auto py-0 flex-shrink-0 px-1 xl:px-2"
+                    >
                       COLLEGES
                     </NavigationMenuTrigger>
-                    <NavigationMenuContent className="!p-0 w-auto" style={{ overflow: 'visible' }}>
-                      <div 
-                        ref={menuContentRef}
-                        className="flex relative" 
-                        style={{ minWidth: '200px', overflow: 'visible' }}
-                      >
+                    <NavigationMenuContent>
+                      {/* Two-column layout: Categories + Courses */}
+                      <div className="flex">
                         {/* Categories Column */}
-                        <div className="w-[200px] flex-shrink-0 border-r border-gray-200 bg-white">
+                        <ul className="w-[200px] border-r border-gray-200">
                           {displayCategories.length === 0 ? (
-                            <div className="px-4 py-2 text-sm text-gray-500">No categories</div>
+                            <li className="px-4 py-3 text-sm text-gray-500">
+                              {loading ? "Loading..." : "No categories"}
+                            </li>
                           ) : (
-                            displayCategories.map((category) => {
-                              const isHovered = hoveredCategory === category.name
-                              return (
+                            displayCategories.map((category) => (
+                              <li 
+                                key={category.id}
+                                onMouseEnter={() => setHoveredCategory(category.name)}
+                              >
                                 <div
-                                  key={category.id}
-                                  ref={(el) => {
-                                    if (el) {
-                                      categoryRefs.current.set(category.name, el)
-                                    } else {
-                                      categoryRefs.current.delete(category.name)
-                                    }
-                                  }}
-                                  className="relative"
-                                  style={{ minHeight: '48px' }}
-                                  onMouseEnter={() => {
-                                    if (hoverTimeoutRef.current) {
-                                      clearTimeout(hoverTimeoutRef.current)
-                                      hoverTimeoutRef.current = null
-                                    }
-                                    setHoveredCategory(category.name)
-                                  }}
-                                  onMouseLeave={() => {
-                                    hoverTimeoutRef.current = setTimeout(() => {
-                                      setHoveredCategory(null)
-                                    }, 300)
-                                  }}
+                                  className={cn(
+                                    "block px-4 py-3 cursor-pointer transition-colors text-sm font-medium uppercase tracking-wide",
+                                    hoveredCategory === category.name 
+                                      ? "bg-[hsl(210,50%,25%)] text-white" 
+                                      : "text-gray-900 hover:bg-gray-50"
+                                  )}
                                 >
-                                  <div
-                                    className={`px-4 py-3 cursor-pointer transition-colors ${
-                                      isHovered ? "bg-gray-50" : "hover:bg-gray-50"
-                                    }`}
-                                  >
-                                    <div className="font-medium text-sm text-gray-900 uppercase tracking-wide">
-                                      {category.name}
-                                    </div>
+                                  <div className="flex items-center justify-between">
+                                    <span>{category.name}</span>
+                                    {category.courses && category.courses.length > 0 && (
+                                      <span className={cn(
+                                        "ml-2",
+                                        hoveredCategory === category.name ? "text-white/70" : "text-gray-400"
+                                      )}>›</span>
+                                    )}
                                   </div>
                                 </div>
-                              )
-                            })
+                              </li>
+                            ))
                           )}
-                        </div>
-                      </div>
-                      
-                      {/* Courses Panel - Rendered via Portal outside viewport */}
-                      {typeof window !== 'undefined' && hoveredCategory && menuPosition && menuContentRef.current && (() => {
-                        const category = displayCategories.find(cat => cat.name === hoveredCategory)
+                        </ul>
                         
-                        if (!category) {
-                          return null
-                        }
-                        
-                        if (!category.courses || category.courses.length === 0) {
-                          return createPortal(
-                            <div 
-                              className="fixed bg-white border-l border-gray-200 shadow-xl min-w-[220px] px-4 py-3 text-sm text-gray-500 rounded-r-md z-[10001]"
-                              style={{
-                                left: `${menuContentRef.current.getBoundingClientRect().left + menuPosition.left}px`,
-                                top: `${menuContentRef.current.getBoundingClientRect().top + menuPosition.top}px`,
-                              }}
-                              onMouseEnter={() => setHoveredCategory(hoveredCategory)}
-                              onMouseLeave={() => {
-                                setTimeout(() => {
-                                  setHoveredCategory(null)
-                                }, 200)
-                              }}
-                            >
-                              No courses available
-                            </div>,
-                            document.body
-                          )
-                        }
-
-                        return createPortal(
-                          <div
-                            ref={coursesPanelRef}
-                            className="fixed bg-white border-l border-gray-200 shadow-xl min-w-[220px] rounded-r-md z-[10001]"
-                            style={{
-                              left: `${menuContentRef.current.getBoundingClientRect().left + menuPosition.left}px`,
-                              top: `${menuContentRef.current.getBoundingClientRect().top + menuPosition.top}px`,
-                              maxHeight: '500px',
-                              overflowY: 'auto',
-                            }}
-                            onMouseEnter={() => {
-                              if (hoverTimeoutRef.current) {
-                                clearTimeout(hoverTimeoutRef.current)
-                                hoverTimeoutRef.current = null
-                              }
+                        {/* Courses Column - Shows when hovering a category */}
+                        <ul 
+                          className={cn(
+                            "w-[250px] max-h-[400px] overflow-y-auto transition-opacity duration-150",
+                            hoveredCategory && coursesToShow.length > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
+                          )}
+                          onMouseEnter={() => {
+                            // Keep showing courses when hovering over courses panel
+                            if (hoveredCategory) {
                               setHoveredCategory(hoveredCategory)
-                            }}
-                            onMouseLeave={() => {
-                              hoverTimeoutRef.current = setTimeout(() => {
-                                setHoveredCategory(null)
-                              }, 300)
-                            }}
-                          >
-                            {category.courses.map((course, index) => (
+                            }
+                          }}
+                        >
+                          {coursesToShow.map((course, index) => (
+                            <li key={`${course.href}-${index}`}>
                               <Link
-                                key={`${course.href}-${index}`}
                                 href={course.href}
-                                className="block px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors text-sm border-b border-gray-100 last:border-b-0"
+                                className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                               >
                                 {course.name}
                               </Link>
-                            ))}
-                          </div>,
-                          document.body
-                        )
-                      })()}
+                            </li>
+                          ))}
+                          {coursesToShow.length === 0 && hoveredCategory && (
+                            <li className="px-4 py-3 text-sm text-gray-500">
+                              No courses available
+                            </li>
+                          )}
+                        </ul>
+                      </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
               
               <Link 
-                href="/academic-alliance" 
-                className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                href="/compare" 
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex items-center gap-1 flex-shrink-0 px-1 xl:px-2"
               >
-                ACADEMIC ALLIANCE
+                <GitCompare className="h-4 w-4 flex-shrink-0" />
+                COMPARE
+              </Link>
+              
+              <Link 
+                href="/academic-alliance" 
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
+              >
+                ALLIANCE
               </Link>
               
               <Link 
                 href="/career-counseling" 
-                className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
               >
-                CAREER COUNCELLING
+                COUNSEL
+              </Link>
+              
+              <Link 
+                href="/scholarships" 
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
+              >
+                SCHOLARSHIPS
+              </Link>
+              
+              <Link 
+                href="/fee-calculator" 
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
+              >
+                FEE CALC
               </Link>
               
               <Link 
                 href="/contact" 
-                className="hover:text-red-400 transition-colors font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap flex-shrink-0 px-1 xl:px-2"
               >
-                CONTACT US
+                CONTACT
               </Link>
             </nav>
 
-            {/* Right Section - Utilities */}
-            <div className="flex items-center gap-3 xl:gap-4 flex-shrink-0 ml-auto">
+            {/* Right Utilities */}
+            <div className="flex items-center gap-1 xl:gap-2 absolute right-2 xl:right-4 flex-shrink-0">
               <button
-                className="w-9 h-9 border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors flex-shrink-0"
+                className="w-8 h-8 xl:w-9 xl:h-9 border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors flex-shrink-0"
                 aria-label="Search"
               >
                 <Search className="h-4 w-4 text-white" />
               </button>
             
-              <div className="h-7 w-[1px] bg-white/40 flex-shrink-0" />
+              <div className="h-6 xl:h-7 w-[1px] bg-white/40 flex-shrink-0" />
             
               <Link 
                 href="/colleges" 
-                className="hidden xl:flex items-center gap-2 text-white hover:text-red-400 transition-colors text-xs font-medium uppercase tracking-wide whitespace-nowrap flex-shrink-0"
+                className="flex items-center gap-1 text-white hover:text-red-400 transition-colors text-xs font-medium uppercase tracking-wide whitespace-nowrap flex-shrink-0"
               >
-                <Home className="h-4 w-4" />
-                <span>SEARCH COLLEGES</span>
+                <Home className="h-4 w-4 flex-shrink-0" />
+                SEARCH
               </Link>
             
               <a 
@@ -272,24 +231,17 @@ export function Header() {
                 className="flex items-center overflow-hidden rounded-full hover:opacity-90 transition-opacity shadow-md flex-shrink-0"
                 aria-label="Call Now"
               >
-                <div className="bg-red-600 px-3 py-2.5 flex items-center justify-center">
+                <div className="bg-red-600 px-3 py-2 flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
                 </div>
-                <div className="bg-white px-4 py-2.5 flex items-center">
+                <div className="bg-white px-3 xl:px-4 py-2 flex items-center">
                   <span className="text-gray-800 font-semibold text-xs uppercase tracking-wide">
                     CALL NOW
                   </span>
                 </div>
               </a>
             
-              <Link 
-                href="/auth/signin"
-                className="flex items-center gap-2 text-white hover:text-red-400 transition-colors text-xs font-medium uppercase tracking-wide whitespace-nowrap flex-shrink-0"
-                aria-label="Admin Login"
-              >
-                <LogIn className="h-4 w-4" />
-                <span className="hidden xl:inline">ADMIN LOGIN</span>
-              </Link>
+              <HeaderAuthButton />
             </div>
           </div>
         </div>

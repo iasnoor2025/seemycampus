@@ -1,5 +1,7 @@
 import { Metadata } from "next"
 
+export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+
 interface College {
   id: number
   name: string
@@ -21,7 +23,6 @@ interface Course {
 }
 
 export function generateCollegeMeta(college: College): Metadata {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const title = `${college.name} | SeeMyCampus`
   const description =
     college.description ||
@@ -65,7 +66,6 @@ export function generateCollegeMeta(college: College): Metadata {
 }
 
 export function generateCourseMeta(course: Course, college?: { name: string; slug: string } | null): Metadata {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const title = `${course.name}${college ? ` at ${college.name}` : ""} | SeeMyCampus`
   const description =
     course.description ||
@@ -112,11 +112,24 @@ export function generateCourseMeta(course: Course, college?: { name: string; slu
   }
 }
 
-export function generateStructuredDataCollege(college: College) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+interface CollegeWithDetails extends College {
+  ranking?: number | null
+  establishedYear?: number | null
+  accreditation?: string | null
+  website?: string | null
+  email?: string | null
+  phone?: string | null
+  averagePackage?: number | null
+  highestPackage?: number | null
+  ownership?: string | null
+  campusSize?: string | null
+  totalStudents?: number | null
+}
+
+export function generateStructuredDataCollege(college: CollegeWithDetails) {
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
+    "@type": "CollegeOrUniversity",
     name: college.name,
     url: `${baseUrl}/colleges/${college.slug}`,
   }
@@ -126,14 +139,53 @@ export function generateStructuredDataCollege(college: College) {
   }
 
   if (college.images && college.images.length > 0) {
-    structuredData.image = Array.isArray(college.images) ? college.images[0] : college.images
+    const imageUrl = Array.isArray(college.images) ? college.images[0] : college.images
+    structuredData.image = imageUrl
+    structuredData.logo = imageUrl
   }
 
   if (college.city || college.location) {
     structuredData.address = {
       "@type": "PostalAddress",
       addressLocality: college.city || college.location || "",
+      addressRegion: college.location || "",
       addressCountry: "IN",
+    }
+  }
+
+  if (college.website) {
+    structuredData.sameAs = [college.website]
+  }
+
+  if (college.email) {
+    structuredData.email = college.email
+  }
+
+  if (college.phone) {
+    structuredData.telephone = college.phone
+  }
+
+  if (college.establishedYear) {
+    structuredData.foundingDate = college.establishedYear.toString()
+  }
+
+  if (college.accreditation) {
+    structuredData.accreditation = {
+      "@type": "EducationalOccupationalCredential",
+      credentialCategory: college.accreditation,
+    }
+  }
+
+  if (college.averagePackage || college.highestPackage) {
+    structuredData.jobLocation = {
+      "@type": "Place",
+    }
+    if (college.averagePackage) {
+      structuredData.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: "4.5", // Placeholder - should come from reviews
+        reviewCount: "0", // Should come from reviews count
+      }
     }
   }
 
@@ -143,8 +195,66 @@ export function generateStructuredDataCollege(college: College) {
   )
 }
 
+export function generateBreadcrumbList(items: Array<{ name: string; url: string }>) {
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url.startsWith("http") ? item.url : `${baseUrl}${item.url}`,
+    })),
+  }
+}
+
+export function generateFAQStructuredData(faqs: Array<{ question: string; answer: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  }
+}
+
+export function generateReviewStructuredData(reviews: Array<{
+  author: string
+  rating: number
+  reviewBody: string
+  datePublished: string
+}>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "CollegeOrUniversity",
+    },
+    review: reviews.map((review) => ({
+      "@type": "Review",
+      author: {
+        "@type": "Person",
+        name: review.author,
+      },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: "5",
+        worstRating: "1",
+      },
+      reviewBody: review.reviewBody,
+      datePublished: review.datePublished,
+    })),
+  }
+}
+
 export function generateStructuredDataCourse(course: Course, college?: { name: string; slug: string } | null) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Course",

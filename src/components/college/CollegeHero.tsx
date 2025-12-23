@@ -1,10 +1,14 @@
+"use client"
+
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { MapPin, Globe, Mail, Phone } from "lucide-react"
+import { MapPin, Globe, Mail, Phone, GitCompare } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface CollegeHeroProps {
   name: string
+  collegeId?: number
   location?: string | null
   city?: string | null
   website?: string | null
@@ -16,6 +20,7 @@ interface CollegeHeroProps {
 
 export function CollegeHero({
   name,
+  collegeId,
   location,
   city,
   website,
@@ -24,8 +29,41 @@ export function CollegeHero({
   images,
   brochureUrl,
 }: CollegeHeroProps) {
+  const router = useRouter()
   const imageUrl = images && images.length > 0 ? images[0] : "/placeholder-college.jpg"
   const displayLocation = city || location || "Location not specified"
+
+  const handleCompare = () => {
+    if (!collegeId) return
+    
+    // Get existing comparison colleges from localStorage
+    const saved = localStorage.getItem("comparison_colleges")
+    let collegeIds: number[] = []
+    
+    if (saved) {
+      try {
+        collegeIds = JSON.parse(saved)
+        if (!Array.isArray(collegeIds)) collegeIds = []
+      } catch (e) {
+        collegeIds = []
+      }
+    }
+    
+    // Add this college if not already in list and under limit
+    if (!collegeIds.includes(collegeId) && collegeIds.length < 4) {
+      collegeIds.push(collegeId)
+      localStorage.setItem("comparison_colleges", JSON.stringify(collegeIds))
+    } else if (collegeIds.includes(collegeId)) {
+      // Already in comparison, just navigate
+    } else {
+      alert("You can compare up to 4 colleges at once. Please remove one from the comparison page.")
+      router.push("/compare")
+      return
+    }
+    
+    // Navigate to comparison page
+    router.push(`/compare?colleges=${collegeIds.join(",")}`)
+  }
 
   return (
     <div className="relative w-full h-[400px] mb-8">
@@ -69,11 +107,23 @@ export function CollegeHero({
             </div>
           )}
         </div>
-        {brochureUrl && (
-          <Link href={brochureUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="secondary">Download Brochure</Button>
-          </Link>
-        )}
+        <div className="flex gap-3">
+          {collegeId && (
+            <Button 
+              variant="secondary" 
+              onClick={handleCompare}
+              className="flex items-center gap-2"
+            >
+              <GitCompare className="h-4 w-4" />
+              Add to Compare
+            </Button>
+          )}
+          {brochureUrl && (
+            <Link href={brochureUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary">Download Brochure</Button>
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )

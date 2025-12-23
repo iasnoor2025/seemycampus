@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Building2, Edit, Trash2, Eye, Plus } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Building2, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 import {
   Table,
   TableBody,
@@ -36,8 +37,23 @@ interface College {
   email: string | null
   phone: string | null
   isAcademicAlliance: boolean
+  images: string[] | null
   createdAt: Date | string
   updatedAt: Date | string
+}
+
+// Helper function to get college initials
+function getInitials(name: string): string {
+  const words = name.split(" ").filter(word => word.length > 0)
+  if (words.length === 0) return "CO"
+  
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase()
+  }
+  
+  const first = words[0][0]?.toUpperCase() || ""
+  const last = words[words.length - 1][0]?.toUpperCase() || ""
+  return (first + last).slice(0, 2) || "CO"
 }
 
 export function CollegesList() {
@@ -48,14 +64,21 @@ export function CollegesList() {
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteCollegeId, setDeleteCollegeId] = useState<number | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(20) // Items per page
 
   const fetchColleges = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/dashboard/colleges?limit=1000")
+      // Fetch all colleges for client-side filtering and pagination
+      const response = await fetch("/api/dashboard/colleges?all=true")
       if (response.ok) {
         const data = await response.json()
         setColleges(data.colleges || [])
+        setTotalCount(data.pagination?.totalCount || data.colleges?.length || 0)
+      } else {
+        console.error("Failed to fetch colleges:", response.status, response.statusText)
       }
     } catch (error) {
       console.error("Error fetching colleges:", error)
@@ -105,11 +128,31 @@ export function CollegesList() {
     fetchColleges()
   }
 
-  const filteredColleges = colleges.filter((college) =>
-    college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    college.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    college.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter and sort colleges
+  const filteredAndSortedColleges = useMemo(() => {
+    const filtered = colleges.filter((college) =>
+      college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      college.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      college.city?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    
+    // Sort by name alphabetically
+    return filtered.sort((a, b) => a.name.localeCompare(b.name))
+  }, [colleges, searchTerm])
+
+  // Paginate filtered results
+  const paginatedColleges = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return filteredAndSortedColleges.slice(startIndex, endIndex)
+  }, [filteredAndSortedColleges, currentPage, pageSize])
+
+  const totalFilteredPages = Math.ceil(filteredAndSortedColleges.length / pageSize)
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   if (loading) {
     return (
@@ -141,7 +184,7 @@ export function CollegesList() {
         </div>
 
         {/* Table */}
-        {filteredColleges.length === 0 ? (
+        {paginatedColleges.length === 0 && filteredAndSortedColleges.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground border rounded-md">
             <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No colleges found</p>
@@ -154,6 +197,7 @@ export function CollegesList() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[100px]">Logo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>City</TableHead>
@@ -164,8 +208,48 @@ export function CollegesList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredColleges.map((college) => (
-                  <TableRow key={college.id}>
+                {paginatedColleges.map((college) => {
+                  const logoUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
+                    ? college.images[0] 
+                    : null
+                  const hasValidLogo = logoUrl && (logoUrl.startsWith("http://") || logoUrl.startsWith("https://"))
+                  
+                  return (
+                    <TableRow key={college.id}>
+                    <TableCell>
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-sm border border-gray-200">
+                        {hasValidLogo ? (
+                          <>
+                            <Image
+                              src={logoUrl}
+                              alt={college.name}
+                              fill
+                              className="object-contain p-2 bg-white"
+                              onError={(e) => {
+                                // Hide image on error, show initials
+                                const target = e.target as HTMLImageElement
+                                target.style.display = "none"
+                                const parent = target.parentElement
+                                if (parent) {
+                                  const fallback = parent.querySelector(".logo-fallback") as HTMLElement
+                                  if (fallback) fallback.style.display = "flex"
+                                }
+                              }}
+                            />
+                            <div 
+                              className="logo-fallback absolute inset-0 flex items-center justify-center text-white font-bold text-sm"
+                              style={{ display: "none" }}
+                            >
+                              {getInitials(college.name)}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                            {getInitials(college.name)}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">{college.name}</TableCell>
                     <TableCell>{college.location || "-"}</TableCell>
                     <TableCell>{college.city || "-"}</TableCell>
@@ -209,10 +293,71 @@ export function CollegesList() {
                         </Button>
                       </div>
                     </TableCell>
-                  </TableRow>
-                ))}
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && filteredAndSortedColleges.length > 0 && totalFilteredPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredAndSortedColleges.length)} of {filteredAndSortedColleges.length} colleges
+              {searchTerm && ` (filtered from ${totalCount} total)`}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalFilteredPages) }, (_, i) => {
+                  let pageNum: number
+                  if (totalFilteredPages <= 5) {
+                    pageNum = i + 1
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1
+                  } else if (currentPage >= totalFilteredPages - 2) {
+                    pageNum = totalFilteredPages - 4 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+                  
+                  const isActive = pageNum === currentPage
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  )
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalFilteredPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </div>
         )}
       </div>

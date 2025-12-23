@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, X, Filter } from "lucide-react"
+import { useDebounce } from "@/lib/hooks/useDebounce"
 
 interface CollegeFiltersProps {
   onFilterChange: (filters: FilterState) => void
@@ -60,17 +61,30 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
     academicAlliance: null,
   })
 
+  // Debounce search input
+  const debouncedSearch = useDebounce(filters.search, 500)
+
+  // Effect to trigger search when debounced value changes
+  useEffect(() => {
+    const newFilters = { ...filters, search: debouncedSearch }
+    onFilterChange(newFilters)
+    onSearchChange(debouncedSearch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
+
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
-    onFilterChange(newFilters)
+    // For non-search filters, update immediately
+    if (key !== "search") {
+      onFilterChange(newFilters)
+    }
   }
 
   const handleSearchChange = (value: string) => {
-    const newFilters = { ...filters, search: value }
-    setFilters(newFilters)
-    onFilterChange(newFilters)
-    onSearchChange(value)
+    // Update local state immediately for responsive UI
+    setFilters((prev) => ({ ...prev, search: value }))
+    // Debounced search will trigger via useEffect
   }
 
   const clearFilters = () => {

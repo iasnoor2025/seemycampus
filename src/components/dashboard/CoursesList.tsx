@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { BookOpen, Edit, Trash2, Eye, Plus } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { BookOpen, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -43,6 +43,8 @@ interface College {
   name: string
 }
 
+const ITEMS_PER_PAGE = 20
+
 export function CoursesList() {
   const [courses, setCourses] = useState<Course[]>([])
   const [colleges, setColleges] = useState<College[]>([])
@@ -53,6 +55,7 @@ export function CoursesList() {
   const [selectedCollege, setSelectedCollege] = useState<string>("")
   const [deleteCourseId, setDeleteCourseId] = useState<number | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const fetchCourses = async () => {
     try {
@@ -131,12 +134,61 @@ export function CoursesList() {
     return college?.name || "Unknown"
   }
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
-  })
+  // Filter courses based on search term
+  const filteredCourses = useMemo(() => {
+    return courses.filter((course) => {
+      const matchesSearch =
+        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      return matchesSearch
+    }).sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
+  }, [courses, searchTerm])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE)
+  const paginatedCourses = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredCourses.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [filteredCourses, currentPage])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedCollege])
+
+  // Page navigation
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = []
+    const maxVisible = 5
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      pages.push(1)
+      if (currentPage > 3) {
+        pages.push("...")
+      }
+      const start = Math.max(2, currentPage - 1)
+      const end = Math.min(totalPages - 1, currentPage + 1)
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+      if (currentPage < totalPages - 2) {
+        pages.push("...")
+      }
+      pages.push(totalPages)
+    }
+    return pages
+  }
 
   if (loading) {
     return (
@@ -179,6 +231,12 @@ export function CoursesList() {
           </Button>
         </div>
 
+        {/* Results Count */}
+        <div className="text-sm text-muted-foreground">
+          Showing {paginatedCourses.length} of {filteredCourses.length} courses
+          {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+        </div>
+
         {/* Table */}
         {filteredCourses.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground border rounded-md">
@@ -191,70 +249,142 @@ export function CoursesList() {
             </p>
           </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>College</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Study Mode</TableHead>
-                  <TableHead>Fees</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCourses.map((course) => (
-                  <TableRow key={course.id}>
-                    <TableCell className="font-medium">{course.name}</TableCell>
-                    <TableCell>{getCollegeName(course.collegeId)}</TableCell>
-                    <TableCell>{course.duration || "-"}</TableCell>
-                    <TableCell>{course.level || "-"}</TableCell>
-                    <TableCell>{course.studyMode || "-"}</TableCell>
-                    <TableCell>
-                      {course.fees
-                        ? `${course.feesCurrency || "INR"} ${course.fees.toLocaleString()}`
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            window.open(`/courses/${course.slug}`, "_blank")
-                          }
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(course)}
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeleteCourseId(course.id)
-                            setShowDeleteDialog(true)
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>College</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Study Mode</TableHead>
+                    <TableHead>Fees</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCourses.map((course, index) => (
+                    <TableRow key={course.id}>
+                      <TableCell className="text-muted-foreground">
+                        {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                      </TableCell>
+                      <TableCell className="font-medium max-w-[300px] truncate" title={course.name}>
+                        {course.name}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate" title={getCollegeName(course.collegeId)}>
+                        {getCollegeName(course.collegeId)}
+                      </TableCell>
+                      <TableCell>{course.duration || "-"}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          course.level === "undergraduate" 
+                            ? "bg-green-100 text-green-700" 
+                            : course.level === "graduate" 
+                            ? "bg-blue-100 text-blue-700"
+                            : course.level === "diploma"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {course.level || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell>{course.studyMode || "-"}</TableCell>
+                      <TableCell>
+                        {course.fees
+                          ? `${course.feesCurrency || "INR"} ${course.fees.toLocaleString()}`
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              window.open(`/courses/${course.slug}`, "_blank")
+                            }
+                            title="View"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(course)}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setDeleteCourseId(course.id)
+                              setShowDeleteDialog(true)
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {getPageNumbers().map((page, index) => {
+                    if (page === "...") {
+                      return (
+                        <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      )
+                    }
+                    const pageNum = page as number
+                    const isActive = pageNum === currentPage
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(pageNum)}
+                        className={isActive ? "bg-primary" : ""}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

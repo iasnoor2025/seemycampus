@@ -8,8 +8,8 @@ export function TopBar() {
   }
 
   return (
-    <div className="bg-red-600 text-white py-2 text-sm relative">
-      <div className="container mx-auto px-4 max-w-[1400px] relative">
+    <div className="bg-red-600 text-white py-2 text-sm relative overflow-x-hidden w-full">
+      <div className="w-full px-4 relative overflow-x-hidden">
         <p className="text-center">
         For admissions or other details, call us on{" "}
         <a href="tel:+918960147776" className="font-semibold hover:underline">

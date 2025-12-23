@@ -17,7 +17,7 @@ export const colleges = pgTable("colleges", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   isAcademicAlliance: boolean("is_academic_alliance").default(false),
-  // Additional fields inspired by collegedunia
+  // Additional fields for comprehensive college data
   ranking: integer("ranking"), // College ranking
   establishedYear: integer("established_year"), // Year college was established
   accreditation: varchar("accreditation", { length: 255 }), // AICTE, UGC, etc.
@@ -53,6 +53,7 @@ export const courses = pgTable("courses", {
 // Student answers (quiz responses)
 export const studentAnswers = pgTable("student_answers", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }), // Link to user if logged in
   interests: jsonb("interests").$type<string[]>().default([]),
   preferredLocation: varchar("preferred_location", { length: 255 }),
   budgetMin: integer("budget_min"),
@@ -85,6 +86,7 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified"),
   image: varchar("image", { length: 500 }),
   password: varchar("password", { length: 255 }), // hashed password
+  role: varchar("role", { length: 50 }).default("student"), // admin, student
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -158,6 +160,16 @@ export const heroSlides = pgTable("hero_slides", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Hero Rotating Texts table
+export const heroRotatingTexts = pgTable("hero_rotating_texts", {
+  id: serial("id").primaryKey(),
+  text: varchar("text", { length: 500 }).notNull(),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // College Reviews table
 export const collegeReviews = pgTable("college_reviews", {
   id: serial("id").primaryKey(),
@@ -201,6 +213,7 @@ export const testimonials = pgTable("testimonials", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   testimonial: text("testimonial").notNull(),
+  photoUrl: varchar("photo_url", { length: 500 }), // Photo URL for testimonial
   avatarColor: varchar("avatar_color", { length: 50 }).default("blue"), // blue, purple, green, etc.
   date: timestamp("date").defaultNow().notNull(), // Date of testimonial
   displayOrder: integer("display_order").default(0),
@@ -224,10 +237,46 @@ export const studyGoals = pgTable("study_goals", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Saved Colleges table (for student favorites)
+export const savedColleges = pgTable("saved_colleges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Scholarships table
+export const scholarships = pgTable("scholarships", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  provider: varchar("provider", { length: 255 }), // Organization providing the scholarship
+  amount: integer("amount"), // Scholarship amount
+  amountCurrency: varchar("amount_currency", { length: 10 }).default("INR"),
+  amountType: varchar("amount_type", { length: 50 }), // fixed, percentage, full_tuition, etc.
+  eligibilityCriteria: text("eligibility_criteria"), // Detailed eligibility requirements
+  applicationDeadline: timestamp("application_deadline"), // Application deadline
+  applicationStartDate: timestamp("application_start_date"), // When applications open
+  applicationUrl: varchar("application_url", { length: 500 }), // External application link
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  category: varchar("category", { length: 100 }), // merit-based, need-based, sports, etc.
+  level: varchar("level", { length: 50 }), // undergraduate, graduate, diploma, etc.
+  course: varchar("course", { length: 255 }), // Specific course if applicable
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "set null" }), // Optional college-specific scholarship
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),
   reviews: many(collegeReviews),
+  savedBy: many(savedColleges),
+  scholarships: many(scholarships),
 }));
 
 export const coursesRelations = relations(courses, ({ one }) => ({
@@ -238,6 +287,10 @@ export const coursesRelations = relations(courses, ({ one }) => ({
 }));
 
 export const studentAnswersRelations = relations(studentAnswers, ({ one }) => ({
+  user: one(users, {
+    fields: [studentAnswers.userId],
+    references: [users.id],
+  }),
   lead: one(leads, {
     fields: [studentAnswers.id],
     references: [leads.studentAnswerId],
@@ -254,6 +307,9 @@ export const leadsRelations = relations(leads, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
+  studentAnswers: many(studentAnswers),
+  savedColleges: many(savedColleges),
+  reviews: many(collegeReviews),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -294,5 +350,23 @@ export const collegeReviewsRelations = relations(collegeReviews, ({ one }) => ({
 
 export const usersReviewsRelations = relations(users, ({ many }) => ({
   reviews: many(collegeReviews),
+}));
+
+export const savedCollegesRelations = relations(savedColleges, ({ one }) => ({
+  user: one(users, {
+    fields: [savedColleges.userId],
+    references: [users.id],
+  }),
+  college: one(colleges, {
+    fields: [savedColleges.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+export const scholarshipsRelations = relations(scholarships, ({ one }) => ({
+  college: one(colleges, {
+    fields: [scholarships.collegeId],
+    references: [colleges.id],
+  }),
 }));
 

@@ -70,7 +70,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance } = body
+    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images } = body
 
     const [updatedCollege] = await db
       .update(colleges)
@@ -86,6 +86,7 @@ export async function PUT(
         email,
         phone,
         isAcademicAlliance,
+        images: images || [],
         updatedAt: new Date(),
       })
       .where(eq(colleges.id, collegeId))

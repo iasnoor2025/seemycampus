@@ -29,6 +29,54 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+function cleanCourseNameForDisplay(name: string): string {
+  if (!name) return name
+  
+  // Remove common metadata patterns that might still exist
+  let cleaned = name
+  
+  // Split on common metadata keywords and take the first part
+  const metadataPatterns = [
+    /Total Fees/i,
+    /\d+\s*Courses?/i,
+    /\d+\s*Years?/i,
+    /Check Detailed/i,
+    /Eligibility:/i,
+    /Brochure/i,
+    /Apply Now/i,
+    /View \d+ Courses/i,
+    /Based on \d+ views/i,
+    /\d+ Students have/i,
+    /Application Date:/i,
+    /Post Graduation/i,
+    /Graduation\s*\+/i,
+    /UGC NET/i,
+    /CEED/i,
+    /PET/i,
+    /NMIMS CET/i,
+    /MH-CET/i,
+    /JEE/i,
+    /Entrance Test/i,
+    /View$/i,
+    /Today$/i,
+  ]
+  
+  for (const pattern of metadataPatterns) {
+    const match = cleaned.search(pattern)
+    if (match > 0 && match < cleaned.length * 0.8) {
+      // If metadata appears before 80% of the string, truncate there
+      cleaned = cleaned.substring(0, match).trim()
+      break
+    }
+  }
+  
+  // Remove trailing special characters and common words
+  cleaned = cleaned.replace(/[^\w\s()[\]-]+$/g, "").trim()
+  cleaned = cleaned.replace(/\s+(View|Courses?|Years?|Today|Graduation)$/gi, "").trim()
+  
+  return cleaned || name
+}
+
 export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
   const { slug } = await params
   const course = await db
@@ -279,8 +327,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                   {/* Course Name */}
                   <div className="col-span-5">
                     <Link href={`/courses/${course.slug}`} className="hover:text-red-600 transition-colors">
-                      <h3 className="text-base font-semibold text-gray-900">
-                        {course.name}
+                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2" title={course.name}>
+                        {cleanCourseNameForDisplay(course.name)}
                       </h3>
                     </Link>
                   </div>

@@ -10,6 +10,7 @@ interface Testimonial {
   id: number
   name: string
   testimonial: string
+  photoUrl: string | null
   avatarColor: string
   date: string
 }
@@ -143,7 +144,22 @@ export function TestimonialsSection() {
                     <CardContent className="p-6">
                       <div className="flex flex-col items-center mb-4">
                         <div className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden flex items-center justify-center">
-                          <div className={`w-full h-full bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} flex items-center justify-center text-white text-2xl font-bold`}>
+                          {testimonial.photoUrl ? (
+                            <img
+                              src={testimonial.photoUrl}
+                              alt={testimonial.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback to avatar if image fails to load
+                                e.currentTarget.style.display = "none"
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                if (fallback) fallback.style.display = "flex"
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className={`w-full h-full bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} flex items-center justify-center text-white text-2xl font-bold ${testimonial.photoUrl ? "hidden" : ""}`}
+                          >
                             {getInitials(testimonial.name)}
                           </div>
                         </div>

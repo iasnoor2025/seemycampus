@@ -6,11 +6,24 @@ import { MessageList } from "./MessageList"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
+import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 
 export interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  suggestions?: CollegeSuggestion[]
+}
+
+export interface CollegeSuggestion {
+  id: number
+  name: string
+  slug: string
+  location: string | null
+  city: string | null
+  description: string | null
+  ranking: number | null
 }
 
 export function ChatInterface() {
@@ -60,6 +73,7 @@ export function ChatInterface() {
           role: "assistant",
           content: data.response,
           timestamp: new Date(),
+          suggestions: data.suggestions || [],
         }
         setMessages((prev) => [...prev, assistantMessage])
       } else {
