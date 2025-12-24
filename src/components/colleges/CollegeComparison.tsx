@@ -271,63 +271,188 @@ export function CollegeComparison() {
         </CardContent>
       </Card>
 
-      {/* Comparison Table */}
+      {/* Comparison - Mobile Card View */}
       {selectedColleges.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>College Comparison</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Side-by-side comparison of selected colleges
+        <>
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-4">
+            <h2 className="text-xl font-bold">College Comparison</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Compare selected colleges
             </p>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-4 font-semibold sticky left-0 bg-background z-10 min-w-[200px]">
-                      Criteria
-                    </th>
-                    {selectedColleges.map((college) => (
-                      <th key={college.id} className="text-left p-4 font-semibold min-w-[250px] border-l">
-                        <div className="space-y-2">
-                          <div className="relative w-full h-32 mb-2 rounded overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700">
-                            {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
-                              <div className="relative w-full h-full">
-                                <Image
-                                  src={Array.isArray(college.images) ? college.images[0] : college.images}
-                                  alt={college.name}
-                                  fill
-                                  className="object-contain rounded bg-white p-2"
-                                  onError={() => {
-                                    setImageErrors(prev => new Set(prev).add(college.id))
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-white font-bold text-2xl">
-                                {getInitials(college.name)}
-                              </div>
-                            )}
-                          </div>
-                          <Link href={`/colleges/${college.slug}`} className="hover:underline">
-                            <p className="font-bold text-lg">{college.name}</p>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeCollege(college.id)}
-                            className="text-destructive"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
+            
+            {selectedColleges.map((college) => (
+              <Card key={college.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start gap-3">
+                    {/* Logo */}
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex-shrink-0">
+                      {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
+                        <Image
+                          src={Array.isArray(college.images) ? college.images[0] : college.images}
+                          alt={college.name}
+                          width={64}
+                          height={64}
+                          className="object-contain w-full h-full bg-white p-1"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(college.id))
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                          {getInitials(college.name)}
                         </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/colleges/${college.slug}`} className="hover:underline">
+                        <CardTitle className="text-base line-clamp-2">{college.name}</CardTitle>
+                      </Link>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        📍 {college.city || college.location || "N/A"}{college.state && `, ${college.state}`}
+                      </p>
+                    </div>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeCollege(college.id)}
+                      className="text-destructive flex-shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Ranking</p>
+                        <p className="font-medium">{college.ranking ? `#${college.ranking}` : "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Established</p>
+                        <p className="font-medium">{college.establishedYear || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Accreditation</p>
+                        <p className="font-medium">{college.accreditation || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Ownership</p>
+                        <p className="font-medium">{college.ownership || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Students</p>
+                        <p className="font-medium">{college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Hostel Fees</p>
+                        <p className="font-medium">{formatCurrency(college.hostelFees)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Avg Package</p>
+                        <p className="font-medium">{formatCurrency(college.averagePackage)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Highest Package</p>
+                        <p className="font-medium">{formatCurrency(college.highestPackage)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Campus Size</p>
+                        <p className="font-medium">{college.campusSize || "N/A"}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Entrance Exams */}
+                  {college.entranceExams && college.entranceExams.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-muted-foreground text-xs mb-1">Entrance Exams</p>
+                      <div className="flex flex-wrap gap-1">
+                        {college.entranceExams.slice(0, 4).map((exam, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {exam}
+                          </Badge>
+                        ))}
+                        {college.entranceExams.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{college.entranceExams.length - 4}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Link href={`/colleges/${college.slug}`} className="block mt-4">
+                    <Button variant="outline" className="w-full">
+                      View Full Details
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <Card className="hidden md:block">
+            <CardHeader>
+              <CardTitle>College Comparison</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Side-by-side comparison of selected colleges
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4 font-semibold sticky left-0 bg-background z-10 min-w-[150px] lg:min-w-[200px]">
+                        Criteria
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+                      {selectedColleges.map((college) => (
+                        <th key={college.id} className="text-left p-4 font-semibold min-w-[200px] lg:min-w-[250px] border-l">
+                          <div className="space-y-2">
+                            <div className="relative w-full h-24 lg:h-32 mb-2 rounded overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700">
+                              {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
+                                <div className="relative w-full h-full">
+                                  <Image
+                                    src={Array.isArray(college.images) ? college.images[0] : college.images}
+                                    alt={college.name}
+                                    fill
+                                    className="object-contain rounded bg-white p-2"
+                                    onError={() => {
+                                      setImageErrors(prev => new Set(prev).add(college.id))
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl lg:text-2xl">
+                                  {getInitials(college.name)}
+                                </div>
+                              )}
+                            </div>
+                            <Link href={`/colleges/${college.slug}`} className="hover:underline">
+                              <p className="font-bold text-sm lg:text-lg line-clamp-2">{college.name}</p>
+                            </Link>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeCollege(college.id)}
+                              className="text-destructive"
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
                   {/* Location */}
                   <tr className="border-b">
                     <td className="p-4 font-medium sticky left-0 bg-background z-10">
@@ -578,6 +703,7 @@ export function CollegeComparison() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       {selectedColleges.length === 0 && (

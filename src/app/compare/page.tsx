@@ -37,16 +37,16 @@ export const metadata: Metadata = {
 
 export default function ComparePage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-6">
         <Link href="/colleges">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <Button variant="ghost" className="mb-2 sm:mb-4 text-sm">
+            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
             Back to Colleges
           </Button>
         </Link>
-        <h1 className="text-4xl font-bold mb-2">Compare Colleges</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">Compare Colleges</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Select up to 4 colleges to compare side-by-side and make an informed decision.
         </p>
       </div>

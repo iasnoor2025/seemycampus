@@ -181,96 +181,156 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                 </p>
               </div>
 
-              {/* Table Header */}
-              <div className="px-6 mb-4">
-                <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
-                  <div className="col-span-2 text-center">PREVIEW</div>
-                  <div className="col-span-4">COLLEGE NAME</div>
-                  <div className="col-span-2">LOCATION</div>
-                  <div className="col-span-3">COURSES</div>
-                  <div className="col-span-1 text-center">VIEW</div>
-                </div>
+            {/* Desktop Table Header */}
+            <div className="hidden md:block px-6 mb-4">
+              <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+                <div className="col-span-2 text-center">PREVIEW</div>
+                <div className="col-span-4">COLLEGE NAME</div>
+                <div className="col-span-2">LOCATION</div>
+                <div className="col-span-3">COURSES</div>
+                <div className="col-span-1 text-center">VIEW</div>
               </div>
+            </div>
 
-              <div className="space-y-0">
-                {collegesList.map((college, index) => {
-                  // Get courses for this college that match the menu course name
-                  const collegeCourses = coursesWithColleges
-                    .filter(({ college: c }) => c.id === college.id)
-                    .map(({ course }) => course)
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4 px-4">
+              {collegesList.map((college) => {
+                const collegeCourses = coursesWithColleges
+                  .filter(({ college: c }) => c.id === college.id)
+                  .map(({ course }) => course)
 
-                  return (
-                    <div
-                      key={college.id}
-                      className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                        index !== collegesList.length - 1 ? "border-b border-gray-200" : ""
-                      } hover:bg-gray-50 transition-colors`}
-                    >
-                      {/* Preview - Logo */}
-                      <div className="col-span-2 flex justify-center">
+                return (
+                  <div key={college.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                    <div className="flex gap-3">
+                      {/* Logo */}
+                      <div className="flex-shrink-0">
                         {college.images && college.images.length > 0 ? (
                           <Image
                             src={college.images[0]}
                             alt={`${college.name} logo`}
-                            width={80}
-                            height={80}
+                            width={60}
+                            height={60}
                             className="rounded-full object-cover border-2 border-gray-200"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
+                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
                             {getInitials(college.name)}
                           </div>
                         )}
                       </div>
-
-                      {/* College Name */}
-                      <div className="col-span-4">
+                      
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
                         <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {college.name}
-                          </h3>
+                          <h3 className="font-semibold text-gray-900 line-clamp-2">{college.name}</h3>
                         </Link>
-                      </div>
-
-                      {/* Location */}
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-700">
-                          {college.location || college.city || "Location not specified"}
+                        <p className="text-sm text-gray-600 mt-1">
+                          📍 {college.location || college.city || "Location not specified"}
                         </p>
-                      </div>
-
-                      {/* Courses */}
-                      <div className="col-span-3">
-                        <div className="flex flex-wrap gap-1">
+                        
+                        {/* Courses */}
+                        <div className="flex flex-wrap gap-1 mt-2">
                           {collegeCourses.slice(0, 2).map((course) => (
-                            <Link
-                              key={course.id}
-                              href={`/courses/${course.slug}`}
-                              className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
-                            >
+                            <span key={course.id} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {course.name}
-                            </Link>
+                            </span>
                           ))}
                           {collegeCourses.length > 2 && (
-                            <span className="text-xs text-gray-500 px-2 py-1">
-                              +{collegeCourses.length - 2} more
-                            </span>
+                            <span className="text-xs text-gray-500">+{collegeCourses.length - 2} more</span>
                           )}
                         </div>
                       </div>
+                    </div>
+                    
+                    <Link href={`/colleges/${college.slug}`} className="block mt-3">
+                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                        VIEW COLLEGE
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
 
-                      {/* View Button */}
-                      <div className="col-span-1 flex justify-center">
-                        <Link href={`/colleges/${college.slug}`}>
-                          <Button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs">
-                            VIEW
-                          </Button>
-                        </Link>
+            {/* Desktop Table View */}
+            <div className="hidden md:block space-y-0">
+              {collegesList.map((college, index) => {
+                const collegeCourses = coursesWithColleges
+                  .filter(({ college: c }) => c.id === college.id)
+                  .map(({ course }) => course)
+
+                return (
+                  <div
+                    key={college.id}
+                    className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
+                      index !== collegesList.length - 1 ? "border-b border-gray-200" : ""
+                    } hover:bg-gray-50 transition-colors`}
+                  >
+                    {/* Preview - Logo */}
+                    <div className="col-span-2 flex justify-center">
+                      {college.images && college.images.length > 0 ? (
+                        <Image
+                          src={college.images[0]}
+                          alt={`${college.name} logo`}
+                          width={80}
+                          height={80}
+                          className="rounded-full object-cover border-2 border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
+                          {getInitials(college.name)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* College Name */}
+                    <div className="col-span-4">
+                      <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
+                        <h3 className="text-base font-semibold text-gray-900">
+                          {college.name}
+                        </h3>
+                      </Link>
+                    </div>
+
+                    {/* Location */}
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-700">
+                        {college.location || college.city || "Location not specified"}
+                      </p>
+                    </div>
+
+                    {/* Courses */}
+                    <div className="col-span-3">
+                      <div className="flex flex-wrap gap-1">
+                        {collegeCourses.slice(0, 2).map((course) => (
+                          <Link
+                            key={course.id}
+                            href={`/courses/${course.slug}`}
+                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                          >
+                            {course.name}
+                          </Link>
+                        ))}
+                        {collegeCourses.length > 2 && (
+                          <span className="text-xs text-gray-500 px-2 py-1">
+                            +{collegeCourses.length - 2} more
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+
+                    {/* View Button */}
+                    <div className="col-span-1 flex justify-center">
+                      <Link href={`/colleges/${college.slug}`}>
+                        <Button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs">
+                          VIEW
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
 
               {/* Pagination */}
               <div className="px-6">
@@ -306,8 +366,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
               </p>
             </div>
 
-            {/* Table Header */}
-            <div className="px-6 mb-4">
+            {/* Desktop Table Header */}
+            <div className="hidden md:block px-6 mb-4">
               <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
                 <div className="col-span-5">COURSE NAME</div>
                 <div className="col-span-4">COLLEGE</div>
@@ -316,7 +376,37 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
               </div>
             </div>
 
-            <div className="space-y-0">
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3 px-4">
+              {matchingCourses.map(({ course, college }) => (
+                <div key={course.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                  <Link href={`/courses/${course.slug}`} className="hover:text-red-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2" title={course.name}>
+                      {cleanCourseNameForDisplay(course.name)}
+                    </h3>
+                  </Link>
+                  
+                  {college && (
+                    <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
+                      <p className="text-sm text-gray-700 mb-1">🏫 {college.name}</p>
+                    </Link>
+                  )}
+                  
+                  <p className="text-sm text-gray-600 mb-3">
+                    📍 {college?.location || college?.city || "Location not specified"}
+                  </p>
+                  
+                  <Link href={`/courses/${course.slug}`} className="block">
+                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                      VIEW COURSE
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block space-y-0">
               {matchingCourses.map(({ course, college }, index) => (
                 <div
                   key={course.id}

@@ -62,7 +62,7 @@ export function HeroCarousel() {
 
   if (loading) {
     return (
-      <section className="relative bg-[hsl(210,50%,25%)] py-20 text-white min-h-[600px] flex items-center">
+      <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center">
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">Loading...</div>
@@ -74,7 +74,7 @@ export function HeroCarousel() {
   if (slides.length === 0) {
     // Fallback to default content if no slides
     return (
-      <section className="relative bg-[hsl(210,50%,25%)] py-20 text-white min-h-[600px] flex items-center">
+      <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center">
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -106,7 +106,7 @@ export function HeroCarousel() {
   const currentSlide = slides[currentIndex]
 
   return (
-    <section className="relative bg-[hsl(210,50%,25%)] py-20 text-white min-h-[600px] flex items-center overflow-hidden">
+    <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image

@@ -37,7 +37,7 @@ export default function ContactPage() {
   return (
     <>
       {/* Hero Section - Contact Us Banner */}
-      <section className="relative py-20 bg-gradient-to-r from-[hsl(210,50%,25%)] to-[hsl(210,50%,30%)] text-white overflow-hidden">
+      <section className="relative py-20 bg-gradient-to-r from-[#18254a] to-[#1e3a5f] text-white overflow-hidden">
         {/* Background Image with Blur Effect - Office Setting */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
           <div 

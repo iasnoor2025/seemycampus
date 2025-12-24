@@ -13,7 +13,7 @@ export function HeaderClient() {
   if (!mounted) {
     // Return a placeholder header during SSR
     return (
-      <header className="bg-[hsl(210,50%,25%)] text-white sticky top-0 z-50 shadow-lg">
+      <header className="bg-[#18254a] text-white sticky top-0 z-50 shadow-lg">
         <div className="w-full px-6">
           <div className="flex items-center justify-between h-16 max-w-[1400px] mx-auto">
             <div className="h-16 w-16 bg-white/20 rounded animate-pulse" />

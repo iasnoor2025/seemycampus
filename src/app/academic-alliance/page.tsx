@@ -36,7 +36,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
   return (
     <>
       {/* Hero Section - Academic Alliance Banner */}
-      <section className="relative py-20 bg-gradient-to-r from-[hsl(210,50%,25%)] to-[hsl(210,50%,30%)] text-white overflow-hidden">
+      <section className="relative py-20 bg-gradient-to-r from-[#18254a] to-[#1e3a5f] text-white overflow-hidden">
         {/* Background Image with Blur Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 0h100v100H0z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E")` }}></div>
@@ -260,7 +260,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
             
             {/* Icon - Handshake */}
             <div className="mb-6 flex items-center">
-              <Handshake className="h-12 w-12 text-[hsl(210,50%,25%)]" />
+              <Handshake className="h-12 w-12 text-[#18254a]" />
             </div>
 
             {/* Sub-heading */}
@@ -310,7 +310,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
               <Card className="bg-white shadow-md">
                 <CardHeader>
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[hsl(210,50%,25%)] rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-[#18254a] rounded-full flex items-center justify-center">
                       <Users className="h-6 w-6 text-white" />
                     </div>
                     <CardTitle className="text-xl">For Students</CardTitle>
@@ -341,7 +341,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
               <Card className="bg-white shadow-md">
                 <CardHeader>
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[hsl(210,50%,25%)] rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-[#18254a] rounded-full flex items-center justify-center">
                       <Building2 className="h-6 w-6 text-white" />
                     </div>
                     <CardTitle className="text-xl">For Institutions</CardTitle>

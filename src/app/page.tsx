@@ -50,110 +50,69 @@ export default function Home() {
       {/* Top Featured Colleges */}
       <FeaturedColleges />
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-gray-100">
+      {/* FAQ Section - Compact Professional Design */}
+      <section className="py-10 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-12">Frequently Asked Questions</h2>
-          <div className="max-w-5xl mx-auto space-y-6">
-            {/* FAQ 01 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">01</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  How do I secure admission into an MBA college?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Enhance your MBA admission journey by gaining work experience, acing the GMAT / GRE / CAT / XAT / MAT / ATMA / CMAT / SNAP / NMAT / IIFT and thorough school research. Complete applications meticulously, apply in the first round, and benefit from Seemycampus's expert support for a successful admission process.
-                </p>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* FAQ Items */}
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">How do I secure MBA admission?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus.</p>
+                </div>
               </div>
             </div>
 
-            {/* FAQ 02 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">02</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  What criteria are considered for MBA admission?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  For successful MBA admission, meet criteria like accredited degree GMAT/GRE/CAT/XAT/MAT/ATMA/CMAT/SNAP/NMAT/IIFT scores, and work experience. Reputed colleges may add GPA, essays, recommendations, and interviews. Enhance chances with proven track record, resourcefulness, time-management, and realistic expectations. Seek Seemycampus's expert assistance for a smoother admission process.
-                </p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">What criteria for MBA admission?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews.</p>
+                </div>
               </div>
             </div>
 
-            {/* FAQ 03 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">03</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  What steps should I follow to gain admission to an MBA course?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Systematically secure MBA admission by researching and selecting aligned schools, building a strong profile with work experience and GMAT/GRE/CAT/XAT/MAT/ATMA/CMAT/SNAP/NMAT/IIFT emphasizing qualities beyond formalities, and seeking guidance from platforms like Seemycampus.
-                </p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">Steps for MBA admission?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus.</p>
+                </div>
               </div>
             </div>
 
-            {/* FAQ 04 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">04</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  What is the process for admission to a BBA program?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Reputed BBA programs vary in admission processes. Generally, a recognized 12th-grade completion with minimum percentages suffices. Enhance chances with transcripts, essays, recommendations, interviews, or entrance exams. Platforms like Seemycampus provide current BBA insights.
-                </p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">BBA program admission process?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews.</p>
+                </div>
               </div>
             </div>
 
-            {/* FAQ 05 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">05</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  How can I secure admission in a BBA program?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Admission to BBA programs typically hinges on 12th-grade marks (50-60%). Research minimum percentage requirements, then complete the application, submit transcripts, essays, recommendation letters, and attend interviews. Entrance exams are common. Platforms like Seemycampus offer reliable information on 60,000+ institutions, including BBA programs.
-                </p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">How to secure BBA admission?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions.</p>
+                </div>
               </div>
             </div>
 
-            {/* FAQ 06 */}
-            <div className="flex gap-0 bg-white rounded-lg overflow-hidden shadow-sm">
-              <div className="bg-[hsl(210,50%,25%)] w-24 flex flex-col items-center justify-between py-6 px-4">
-                <span className="text-white text-xs font-semibold">FAQ</span>
-                <span className="text-white text-4xl font-bold">06</span>
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  What are the top BBA colleges I can consider with 93% in Class 12th?
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Explore top BBA colleges like Christ University, Loyola College, St. Xavier's, NMIMS, and Symbiosis. For personalized guidance, check Seemycampus, aiding in informed decisions and career choices.
-                </p>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">Top BBA colleges for 93%?</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance.</p>
+                </div>
               </div>
             </div>
           </div>

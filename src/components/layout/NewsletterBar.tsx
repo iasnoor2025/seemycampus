@@ -17,7 +17,7 @@ export function NewsletterBar() {
   return (
     <div className="bg-white py-4">
       <div className="container mx-auto px-4">
-        <div className="bg-[hsl(210,50%,25%)] text-white py-4 px-6 rounded-lg">
+        <div className="bg-[#18254a] text-white py-4 px-6 rounded-lg">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <h3 className="text-lg md:text-xl font-bold text-white">
               Subscribe to our Newsletter

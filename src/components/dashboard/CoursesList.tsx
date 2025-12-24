@@ -202,39 +202,43 @@ export function CoursesList() {
     <>
       <div className="space-y-6">
         {/* Header with Add Button and Filters */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             />
             <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
-          <select
-            value={selectedCollege}
-            onChange={(e) => setSelectedCollege(e.target.value)}
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">All Colleges</option>
-            {colleges.map((college) => (
-              <option key={college.id} value={college.id}>
-                {college.name}
-              </option>
-            ))}
-          </select>
-          <Button className="flex items-center gap-2" onClick={handleAdd}>
-            <Plus className="h-4 w-4" />
-            Add Course
-          </Button>
+          <div className="flex gap-2 sm:gap-4">
+            <select
+              value={selectedCollege}
+              onChange={(e) => setSelectedCollege(e.target.value)}
+              className="flex-1 sm:flex-none px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm min-w-0"
+            >
+              <option value="">All Colleges</option>
+              {colleges.map((college) => (
+                <option key={college.id} value={college.id}>
+                  {college.name}
+                </option>
+              ))}
+            </select>
+            <Button className="flex items-center gap-1 sm:gap-2 whitespace-nowrap" onClick={handleAdd}>
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Course</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         {/* Results Count */}
-        <div className="text-sm text-muted-foreground">
-          Showing {paginatedCourses.length} of {filteredCourses.length} courses
-          {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+        <div className="text-xs sm:text-sm text-muted-foreground">
+          <span className="hidden sm:inline">Showing </span>
+          <span>{paginatedCourses.length} of {filteredCourses.length} courses</span>
+          {totalPages > 1 && <span className="hidden sm:inline"> (Page {currentPage} of {totalPages})</span>}
         </div>
 
         {/* Table */}
@@ -250,17 +254,91 @@ export function CoursesList() {
           </div>
         ) : (
           <>
-            <div className="rounded-md border">
+            {/* Mobile Card View */}
+            <div className="block md:hidden space-y-3">
+              {paginatedCourses.map((course, index) => (
+                <div key={course.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-muted-foreground">
+                          #{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          course.level === "undergraduate" 
+                            ? "bg-green-100 text-green-700" 
+                            : course.level === "graduate" 
+                            ? "bg-blue-100 text-blue-700"
+                            : course.level === "diploma"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {course.level || "-"}
+                        </span>
+                      </div>
+                      <h3 className="font-medium text-sm line-clamp-2" title={course.name}>
+                        {course.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1" title={getCollegeName(course.collegeId)}>
+                        {getCollegeName(course.collegeId)}
+                      </p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                        {course.duration && <span>📅 {course.duration}</span>}
+                        {course.studyMode && <span>📚 {course.studyMode}</span>}
+                        {course.fees && (
+                          <span>💰 {course.feesCurrency || "INR"} {course.fees.toLocaleString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => window.open(`/courses/${course.slug}`, "_blank")}
+                        title="View"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(course)}
+                        title="Edit"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setDeleteCourseId(course.id)
+                          setShowDeleteDialog(true)
+                        }}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px]">#</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>College</TableHead>
-                    <TableHead>Duration</TableHead>
+                    <TableHead className="hidden lg:table-cell">College</TableHead>
+                    <TableHead className="hidden xl:table-cell">Duration</TableHead>
                     <TableHead>Level</TableHead>
-                    <TableHead>Study Mode</TableHead>
-                    <TableHead>Fees</TableHead>
+                    <TableHead className="hidden xl:table-cell">Study Mode</TableHead>
+                    <TableHead className="hidden lg:table-cell">Fees</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -270,15 +348,15 @@ export function CoursesList() {
                       <TableCell className="text-muted-foreground">
                         {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                       </TableCell>
-                      <TableCell className="font-medium max-w-[300px] truncate" title={course.name}>
+                      <TableCell className="font-medium max-w-[200px] lg:max-w-[300px] truncate" title={course.name}>
                         {course.name}
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate" title={getCollegeName(course.collegeId)}>
+                      <TableCell className="hidden lg:table-cell max-w-[150px] xl:max-w-[200px] truncate" title={getCollegeName(course.collegeId)}>
                         {getCollegeName(course.collegeId)}
                       </TableCell>
-                      <TableCell>{course.duration || "-"}</TableCell>
+                      <TableCell className="hidden xl:table-cell">{course.duration || "-"}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
                           course.level === "undergraduate" 
                             ? "bg-green-100 text-green-700" 
                             : course.level === "graduate" 
@@ -290,17 +368,18 @@ export function CoursesList() {
                           {course.level || "-"}
                         </span>
                       </TableCell>
-                      <TableCell>{course.studyMode || "-"}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden xl:table-cell">{course.studyMode || "-"}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {course.fees
                           ? `${course.feesCurrency || "INR"} ${course.fees.toLocaleString()}`
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() =>
                               window.open(`/courses/${course.slug}`, "_blank")
                             }
@@ -311,6 +390,7 @@ export function CoursesList() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleEdit(course)}
                             title="Edit"
                           >
@@ -319,6 +399,7 @@ export function CoursesList() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8"
                             onClick={() => {
                               setDeleteCourseId(course.id)
                               setShowDeleteDialog(true)
@@ -337,51 +418,81 @@ export function CoursesList() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-1">
-                  {getPageNumbers().map((page, index) => {
-                    if (page === "...") {
-                      return (
-                        <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
-                          ...
-                        </span>
-                      )
-                    }
-                    const pageNum = page as number
-                    const isActive = pageNum === currentPage
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(pageNum)}
-                        className={isActive ? "bg-primary" : ""}
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+                {/* Mobile: Simple prev/next with page indicator */}
+                <div className="flex sm:hidden items-center gap-2 w-full justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex-1"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Prev
+                  </Button>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                {/* Desktop: Full pagination */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map((page, index) => {
+                      if (page === "...") {
+                        return (
+                          <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+                            ...
+                          </span>
+                        )
+                      }
+                      const pageNum = page as number
+                      const isActive = pageNum === currentPage
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={isActive ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(pageNum)}
+                          className={isActive ? "bg-primary" : ""}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
             )}
           </>

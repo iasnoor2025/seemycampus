@@ -39,7 +39,7 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero Section - About Us Banner */}
-      <section className="relative py-20 bg-gradient-to-r from-[hsl(210,50%,25%)] to-[hsl(210,50%,30%)] text-white overflow-hidden">
+      <section className="relative py-20 bg-gradient-to-r from-[#18254a] to-[#1e3a5f] text-white overflow-hidden">
         {/* Background Image with Blur Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 0h100v100H0z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E")` }}></div>
@@ -156,7 +156,7 @@ export default function AboutPage() {
             
             {/* Icon - Graduation Cap */}
             <div className="mb-6 flex items-center">
-              <GraduationCap className="h-12 w-12 text-[hsl(210,50%,25%)]" />
+              <GraduationCap className="h-12 w-12 text-[#18254a]" />
             </div>
 
             {/* Sub-heading */}

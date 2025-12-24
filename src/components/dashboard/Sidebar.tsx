@@ -94,7 +94,7 @@ export function Sidebar() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-64 bg-[hsl(210,50%,25%)] text-white border-r border-white/10">
+    <div className="flex flex-col h-screen w-64 bg-[#18254a] text-white border-r border-white/10">
       {/* Logo Section */}
       <div className="p-6 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2">
