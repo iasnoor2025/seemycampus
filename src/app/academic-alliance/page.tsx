@@ -1,12 +1,13 @@
 import { Metadata } from "next"
 import Link from "next/link"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Handshake, GraduationCap, Users, Award, ChevronRight, TrendingUp, Globe, Target } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { getCollegesPaginated } from "@/lib/colleges"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
+import { InstagramFeed } from "@/components/home/InstagramFeed"
 
 export const metadata: Metadata = {
   title: "Academic Alliance | SeeMyCampus",
@@ -387,14 +388,9 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-8">
-            {/* Left Column - Image */}
-            <div className="relative h-[500px] rounded-lg overflow-hidden">
-              <Image
-                src="/images/guidance-form-image.jpg"
-                alt="Student receiving guidance"
-                fill
-                className="object-cover rounded-lg"
-              />
+            {/* Left Column - Instagram Feed */}
+            <div className="relative">
+              <InstagramFeed />
             </div>
 
             {/* Right Column - Contact Form */}

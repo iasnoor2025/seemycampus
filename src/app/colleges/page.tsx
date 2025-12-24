@@ -1,9 +1,9 @@
 import { getAllColleges } from "@/lib/colleges"
 import { Metadata } from "next"
-import Image from "next/image"
 import { Suspense } from "react"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { CollegesListClient } from "@/components/colleges/CollegesListClient"
+import { InstagramFeed } from "@/components/home/InstagramFeed"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -64,14 +64,9 @@ export default async function CollegesPage() {
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-8">
-            {/* Left Column - Image */}
-            <div className="relative h-[500px] rounded-lg overflow-hidden">
-              <Image
-                src="/images/guidance-form-image.jpg"
-                alt="Student receiving guidance"
-                fill
-                className="object-cover rounded-lg"
-              />
+            {/* Left Column - Instagram Feed */}
+            <div className="relative">
+              <InstagramFeed />
             </div>
 
             {/* Right Column - Contact Form */}

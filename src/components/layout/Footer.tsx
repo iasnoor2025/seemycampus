@@ -181,7 +181,7 @@ export function Footer() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-gray-700 text-sm">
-              Seemycampus 2015, All Rights Reserved
+              Seemycampus {new Date().getFullYear() === 2015 ? '2015' : `2015-${new Date().getFullYear()}`}, All Rights Reserved
             </p>
             <div className="flex items-center gap-3">
               <a

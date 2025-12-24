@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, Flag, BookOpen, Lightbulb, GraduationCap, ChevronRight, TrendingUp } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
-import Image from "next/image"
+import { InstagramFeed } from "@/components/home/InstagramFeed"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -202,16 +202,9 @@ export default function AboutPage() {
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Left Column - Image */}
+            {/* Left Column - Instagram Feed */}
             <div className="relative">
-              <div className="relative w-full h-[600px] bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <GraduationCap className="h-24 w-24 mx-auto mb-4 opacity-50" />
-                    <p className="text-sm">Guidance Image Placeholder</p>
-                  </div>
-                </div>
-              </div>
+              <InstagramFeed />
             </div>
 
             {/* Right Column - Contact Form */}

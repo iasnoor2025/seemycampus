@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar"
 import { HeaderClient } from "./HeaderClient"
 import { Footer } from "./Footer"
 import { SocialIcons } from "./SocialIcons"
+import { ScrollToTop } from "./ScrollToTop"
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -21,6 +22,7 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
       <main className="overflow-x-hidden">{children}</main>
       <SocialIcons />
       <Footer />
+      <ScrollToTop />
     </div>
   )
 }
