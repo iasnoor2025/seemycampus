@@ -63,11 +63,16 @@ export function LeadsList() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null)
-  const [editFormData, setEditFormData] = useState({
+  const [editFormData, setEditFormData] = useState<{
+    name: string
+    email: string
+    phone: string
+    source: "form" | "quiz" | "chat" | "direct"
+  }>({
     name: "",
     email: "",
     phone: "",
-    source: "form" as const,
+    source: "form",
   })
   const [isSaving, setIsSaving] = useState(false)
 
@@ -114,7 +119,7 @@ export function LeadsList() {
       name: lead.name,
       email: lead.email,
       phone: lead.phone || "",
-      source: (lead.source as "form" | "quiz" | "chat" | "direct") || "form",
+      source: (lead.source as "form" | "quiz" | "chat" | "direct") || ("form" as const),
     })
     setEditDialogOpen(true)
   }
@@ -606,7 +611,7 @@ export function LeadsList() {
               <Label htmlFor="edit-source">Source</Label>
               <Select
                 value={editFormData.source}
-                onValueChange={(value) => setEditFormData({ ...editFormData, source: value as typeof editFormData.source })}
+                onValueChange={(value: string | null) => setEditFormData({ ...editFormData, source: (value || "form") as "form" | "quiz" | "chat" | "direct" })}
               >
                 <SelectTrigger id="edit-source">
                   <SelectValue />
