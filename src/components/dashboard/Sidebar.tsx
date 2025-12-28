@@ -14,7 +14,9 @@ import {
   Image as ImageIcon,
   MessageSquare,
   Award,
-  Calendar
+  Calendar,
+  BookOpen,
+  Heart
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -69,6 +71,16 @@ const menuItems = [
     title: "Events",
     href: "/dashboard/events",
     icon: Calendar,
+  },
+  {
+    title: "Blog",
+    href: "/dashboard/blog",
+    icon: BookOpen,
+  },
+  {
+    title: "Counseling",
+    href: "/dashboard/counseling",
+    icon: Heart,
   },
   {
     title: "Students",

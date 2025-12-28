@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { BlogList } from "@/components/blog/BlogList"
+import { BlogListWithFilters } from "@/components/blog/BlogListWithFilters"
 
 export const metadata: Metadata = {
   title: "Blog | SeeMyCampus",
@@ -18,17 +18,7 @@ export default function BlogPage() {
           </p>
         </div>
 
-        {/* Featured Posts */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Featured Posts</h2>
-          <BlogList featured={true} limit={3} />
-        </div>
-
-        {/* All Posts */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">All Posts</h2>
-          <BlogList limit={12} />
-        </div>
+        <BlogListWithFilters />
       </div>
     </div>
   )

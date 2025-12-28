@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { counselors } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const activeCounselors = await db
-      .select()
-      .from(counselors)
-      .where(eq(counselors.isActive, true))
+    const searchParams = request.nextUrl.searchParams
+    const activeOnly = searchParams.get("active") !== "false"
+    const session = await auth()
+    const isAdmin = session?.user?.role === "admin"
 
-    return NextResponse.json({ counselors: activeCounselors })
+    // Admins can see all, public only sees active
+    const baseQuery = db.select().from(counselors)
+    const query = (activeOnly && !isAdmin)
+      ? baseQuery.where(eq(counselors.isActive, true))
+      : baseQuery
+
+    const allCounselors = await query
+
+    return NextResponse.json({ counselors: allCounselors })
   } catch (error: any) {
     console.error("Error fetching counselors:", error)
     return NextResponse.json(

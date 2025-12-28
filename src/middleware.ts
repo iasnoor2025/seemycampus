@@ -14,16 +14,23 @@ export default auth((req) => {
 
   // URL Canonicalization: Force HTTPS and preferred domain
   const hostname = req.headers.get("host") || ""
-  const preferredHost = process.env.NEXT_PUBLIC_PREFERRED_HOST || "seemycampus.com"
+  const preferredHost = process.env.NEXT_PUBLIC_PREFERRED_HOST
   
-  // Redirect www to non-www (or vice versa based on preferred host)
-  if (hostname.startsWith("www.") && !preferredHost.startsWith("www.")) {
-    url.hostname = preferredHost
-    return NextResponse.redirect(url, 301)
+  // Only redirect if preferred host is set and different
+  if (preferredHost && hostname !== preferredHost) {
+    // Check if it's a www/non-www difference
+    const hostnameWithoutWww = hostname.replace(/^www\./, '')
+    const preferredWithoutWww = preferredHost.replace(/^www\./, '')
+    
+    if (hostnameWithoutWww === preferredWithoutWww) {
+      // Only www/non-www difference - redirect
+      url.hostname = preferredHost
+      return NextResponse.redirect(url, 301)
+    }
   }
 
-  // Force HTTPS in production
-  if (process.env.NODE_ENV === "production" && url.protocol === "http:") {
+  // Force HTTPS in production (only if not already HTTPS)
+  if (process.env.NODE_ENV === "production" && req.nextUrl.protocol === "http:") {
     url.protocol = "https:"
     return NextResponse.redirect(url, 301)
   }

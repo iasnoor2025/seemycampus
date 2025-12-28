@@ -6,8 +6,17 @@ const path = require('path');
 async function runAudit(url) {
   console.log(`🔍 Running SEO audit for: ${url}\n`);
   
-  // Launch Chrome
-  const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
+  // Launch Chrome with flags to handle SSL issues
+  const chrome = await chromeLauncher.launch({ 
+    chromeFlags: [
+      '--headless',
+      '--ignore-certificate-errors',
+      '--ignore-certificate-errors-spki-list',
+      '--ignore-ssl-errors',
+      '--disable-web-security',
+      '--allow-running-insecure-content'
+    ] 
+  });
   const options = {
     logLevel: 'info',
     output: 'json',

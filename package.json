@@ -69,6 +69,7 @@
     "drizzle-kit": "^0.20.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.0",
+    "jsdom": "^27.4.0",
     "lighthouse": "^12.8.2",
     "tsx": "^4.21.0"
   }

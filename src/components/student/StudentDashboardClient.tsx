@@ -6,6 +6,7 @@ import { SavedCollegesTab } from "./SavedCollegesTab"
 import { QuizHistoryTab } from "./QuizHistoryTab"
 import { RecommendationsTab } from "./RecommendationsTab"
 import { TimelineTab } from "./TimelineTab"
+import { CounselingBookingsTab } from "./CounselingBookingsTab"
 import { Loader2 } from "lucide-react"
 
 export function StudentDashboardClient() {
@@ -25,11 +26,12 @@ export function StudentDashboardClient() {
 
   return (
     <Tabs defaultValue="saved" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 mb-6">
+      <TabsList className="grid w-full grid-cols-5 mb-6">
         <TabsTrigger value="saved">Saved Colleges</TabsTrigger>
         <TabsTrigger value="quiz">Quiz History</TabsTrigger>
         <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
+        <TabsTrigger value="counseling">Counseling</TabsTrigger>
       </TabsList>
 
       <TabsContent value="saved" className="mt-6">
@@ -46,6 +48,10 @@ export function StudentDashboardClient() {
 
       <TabsContent value="timeline" className="mt-6">
         <TimelineTab />
+      </TabsContent>
+
+      <TabsContent value="counseling" className="mt-6">
+        <CounselingBookingsTab />
       </TabsContent>
     </Tabs>
   )
