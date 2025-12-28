@@ -212,7 +212,7 @@ export default async function EventPage({ params }: EventPageProps) {
             <div className="mb-8">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Topics</h3>
               <div className="flex flex-wrap gap-2">
-                {event.tags.map((tag, index) => (
+                {event.tags.map((tag: string, index: number) => (
                   <Badge key={index} variant="outline">
                     {tag}
                   </Badge>

@@ -98,7 +98,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
                 {post.category && (
                   <Badge variant="secondary">{post.category}</Badge>
                 )}
-                {post.tags && post.tags.map((tag, index) => (
+                {post.tags && post.tags.map((tag: string, index: number) => (
                   <Badge key={index} variant="outline">
                     {tag}
                   </Badge>
@@ -151,7 +151,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Tags</h3>
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag, index) => (
+                  {post.tags.map((tag: string, index: number) => (
                     <Badge key={index} variant="outline">
                       {tag}
                     </Badge>

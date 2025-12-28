@@ -199,7 +199,7 @@ export function EventForm({ event, onClose }: EventFormProps) {
               <Label htmlFor="type">Event Type *</Label>
               <Select
                 value={formData.type || "webinar"}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
+                onValueChange={(value: string | null) => setFormData({ ...formData, type: value || "webinar" })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -344,7 +344,7 @@ export function EventForm({ event, onClose }: EventFormProps) {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {formData.tags?.map((tag, index) => (
+                {formData.tags?.map((tag: string, index: number) => (
                   <span
                     key={index}
                     className="px-2 py-1 bg-gray-100 rounded text-sm flex items-center gap-1"

@@ -20,6 +20,7 @@ interface Event {
   id: number
   title: string
   slug: string
+  description: string | null
   type: string
   startDate: string
   endDate: string | null
@@ -27,8 +28,12 @@ interface Event {
   maxAttendees: number | null
   currentAttendees: number
   platform: string | null
+  meetingLink: string | null
   location: string | null
   organizer: string | null
+  organizerEmail: string | null
+  imageUrl: string | null
+  tags: string[]
   isActive: boolean
   isPublic: boolean
 }

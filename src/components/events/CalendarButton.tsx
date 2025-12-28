@@ -55,7 +55,7 @@ export function CalendarButton({ event }: CalendarButtonProps) {
           Add to Calendar
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent>
         <DropdownMenuItem onClick={handleDownloadICal}>
           <Download className="mr-2 h-4 w-4" />
           Download .ics file

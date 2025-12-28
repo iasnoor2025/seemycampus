@@ -15,11 +15,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get("categoryId")
 
-    let query = db.select().from(menuCourses)
-
-    if (categoryId) {
-      query = query.where(eq(menuCourses.categoryId, parseInt(categoryId))) as typeof query
-    }
+    const baseQuery = db.select().from(menuCourses)
+    const query = categoryId
+      ? baseQuery.where(eq(menuCourses.categoryId, parseInt(categoryId)))
+      : baseQuery
 
     const coursesList = await query
       .orderBy(asc(menuCourses.displayOrder), asc(menuCourses.name))

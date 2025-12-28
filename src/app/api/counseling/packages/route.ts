@@ -9,11 +9,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const activeOnly = searchParams.get("active") !== "false"
 
-    let query = db.select().from(counselingPackages)
-
-    if (activeOnly) {
-      query = query.where(eq(counselingPackages.isActive, true))
-    }
+    const baseQuery = db.select().from(counselingPackages)
+    const query = activeOnly
+      ? baseQuery.where(eq(counselingPackages.isActive, true))
+      : baseQuery
 
     const packages = await query
 

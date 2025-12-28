@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "100")
     const search = searchParams.get("search")
 
-    let query = db.select().from(blogPosts)
-
     // Build where conditions
     const conditions = []
 
@@ -40,9 +38,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions))
-    }
+    const baseQuery = db.select().from(blogPosts)
+    const query = conditions.length > 0 
+      ? baseQuery.where(and(...conditions))
+      : baseQuery
 
     let posts = await query.orderBy(desc(blogPosts.publishedAt || blogPosts.createdAt)).limit(limit)
 

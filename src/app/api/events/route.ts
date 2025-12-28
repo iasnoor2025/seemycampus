@@ -11,16 +11,19 @@ export async function GET(request: NextRequest) {
     const upcoming = searchParams.get("upcoming") === "true"
     const limit = parseInt(searchParams.get("limit") || "100")
 
-    let query = db.select().from(events).where(eq(events.isActive, true))
+    const conditions = [eq(events.isActive, true)]
 
     if (type) {
-      query = query.where(and(eq(events.isActive, true), eq(events.type, type)))
+      conditions.push(eq(events.type, type))
     }
 
     if (upcoming) {
       const now = new Date()
-      query = query.where(and(eq(events.isActive, true), gte(events.startDate, now)))
+      conditions.push(gte(events.startDate, now))
     }
+
+    const baseQuery = db.select().from(events)
+    const query = baseQuery.where(and(...conditions))
 
     const allEvents = await query.orderBy(desc(events.startDate)).limit(limit)
 

@@ -210,8 +210,8 @@ export function CounselingBookingModal({ packageData, onClose }: CounselingBooki
             <div>
               <Label htmlFor="preferredTime">Preferred Time</Label>
               <Select
-                value={formData.preferredTime}
-                onValueChange={(value) => setFormData({ ...formData, preferredTime: value })}
+                value={formData.preferredTime || undefined}
+                onValueChange={(value: string | null) => setFormData({ ...formData, preferredTime: value || "" })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select time" />
@@ -230,8 +230,8 @@ export function CounselingBookingModal({ packageData, onClose }: CounselingBooki
               <div>
                 <Label htmlFor="counselorId">Preferred Counselor (Optional)</Label>
                 <Select
-                  value={formData.counselorId}
-                  onValueChange={(value) => setFormData({ ...formData, counselorId: value })}
+                  value={formData.counselorId || undefined}
+                  onValueChange={(value: string | null) => setFormData({ ...formData, counselorId: value || "" })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select counselor" />

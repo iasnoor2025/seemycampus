@@ -91,7 +91,7 @@ export function ShareButton({
           {showLabel && "Share"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent className="w-48">
         <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
           {copied ? (
             <Check className="h-4 w-4 mr-2 text-green-600" />

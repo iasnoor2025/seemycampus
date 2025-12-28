@@ -71,11 +71,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    let query = db.select().from(colleges)
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query
-    }
+    const baseQuery = db.select().from(colleges)
+    const query = conditions.length > 0
+      ? baseQuery.where(and(...conditions))
+      : baseQuery
 
     // Get colleges with pagination
     const collegesList = await query

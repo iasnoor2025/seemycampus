@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Home, Phone, Mail, Globe, ChevronRight, Facebook, Instagram, Linkedin } from "lucide-react"
+import { Mail, Globe, ChevronRight, Facebook, Instagram, Linkedin } from "lucide-react"
 import Image from "next/image"
 
 export function Footer() {
@@ -148,16 +148,6 @@ export function Footer() {
             <div>
               <h3 className="text-lg font-bold mb-4 text-white">Contact us</h3>
               <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3 text-white">
-                  <Home className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>B-127 Sector 2 Noida 201301 U.P</span>
-                </li>
-                <li className="flex items-center gap-3 text-white">
-                  <Phone className="h-5 w-5 text-white flex-shrink-0" />
-                  <a href="tel:+919648983131" className="hover:text-gray-200 transition-colors">
-                    +91 96489 83131
-                  </a>
-                </li>
                 <li className="flex items-center gap-3 text-white">
                   <Mail className="h-5 w-5 text-white flex-shrink-0" />
                   <a href="mailto:info@seemycampus.com" className="hover:text-gray-200 transition-colors">
