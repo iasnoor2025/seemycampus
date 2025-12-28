@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { User, Mail, Building, MapPin, Pencil, Phone, Calendar, FileText } from "lucide-react"
+import { User, Mail, Building, MapPin, Pencil, Phone, Calendar, FileText, CheckCircle, AlertCircle } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -18,11 +19,77 @@ export function ContactForm() {
     entranceExam: "",
     examScore: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null)
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log("Form submitted:", formData)
+    setIsSubmitting(true)
+    setSubmitStatus(null)
+
+    try {
+      // Prepare lead data
+      const leadData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.contactNumber || undefined,
+        source: "form" as const,
+        quizData: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          classYear: formData.classYear,
+          boardUniversity: formData.boardUniversity,
+          city: formData.city,
+          interestedCourses: formData.interestedCourses,
+          entranceExam: formData.entranceExam,
+          examScore: formData.examScore,
+        },
+      }
+
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(leadData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to submit form")
+      }
+
+      setSubmitStatus("success")
+      toast({
+        title: "Form submitted successfully!",
+        description: "We'll get back to you soon.",
+      })
+
+      // Reset form
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        classYear: "",
+        boardUniversity: "",
+        contactNumber: "",
+        city: "",
+        interestedCourses: "",
+        entranceExam: "",
+        examScore: "",
+      })
+    } catch (error) {
+      console.error("Form submission error:", error)
+      setSubmitStatus("error")
+      toast({
+        title: "Submission failed",
+        description: error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,11 +260,26 @@ export function ContactForm() {
         <div className="pt-4">
           <Button
             type="submit"
-            className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 py-6 text-lg font-medium"
+            disabled={isSubmitting}
+            className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-900 py-6 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </div>
+
+        {/* Success/Error Messages */}
+        {submitStatus === "success" && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800">
+            <CheckCircle className="h-5 w-5" />
+            <span>Form submitted successfully! We'll get back to you soon.</span>
+          </div>
+        )}
+        {submitStatus === "error" && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800">
+            <AlertCircle className="h-5 w-5" />
+            <span>Failed to submit form. Please try again.</span>
+          </div>
+        )}
       </form>
     </div>
   )

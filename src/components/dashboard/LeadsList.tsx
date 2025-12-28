@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Mail, Phone, Calendar, CheckCircle, Clock, XCircle, Search } from "lucide-react"
+import { FileText, Mail, Phone, Calendar, CheckCircle, Clock, XCircle, Search, User, Building, MapPin, GraduationCap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -20,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface Lead {
   id: number
@@ -38,6 +46,8 @@ export function LeadsList() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const fetchLeads = async () => {
     try {
@@ -269,10 +279,165 @@ export function LeadsList() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {lead.quizData && (
-                      <Button variant="ghost" size="sm">
-                        View Details
-                      </Button>
+                    {(lead.quizData || lead.source === "form") && (
+                      <Dialog open={dialogOpen && selectedLead?.id === lead.id} onOpenChange={(open) => {
+                        setDialogOpen(open)
+                        if (!open) setSelectedLead(null)
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedLead(lead)
+                              setDialogOpen(true)
+                            }}
+                          >
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Lead Details</DialogTitle>
+                            <DialogDescription>
+                              Complete information for {lead.name}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-6 mt-4">
+                            {/* Basic Information */}
+                            <div className="space-y-4">
+                              <h3 className="font-semibold text-lg">Basic Information</h3>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground">Name</div>
+                                  <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">{lead.name}</span>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground">Email</div>
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="h-4 w-4 text-muted-foreground" />
+                                    <a href={`mailto:${lead.email}`} className="text-blue-600 hover:underline">
+                                      {lead.email}
+                                    </a>
+                                  </div>
+                                </div>
+                                {lead.phone && (
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-muted-foreground">Phone</div>
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="h-4 w-4 text-muted-foreground" />
+                                      <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline">
+                                        {lead.phone}
+                                      </a>
+                                    </div>
+                                  </div>
+                                )}
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground">Source</div>
+                                  <span className="text-sm capitalize">{lead.source || "N/A"}</span>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground">Status</div>
+                                  <span className={`text-sm px-2 py-1 rounded ${getStatusColor(lead.status)}`}>
+                                    {lead.status || "new"}
+                                  </span>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground">Submitted</div>
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    {new Date(lead.createdAt).toLocaleString()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Contact Form Details */}
+                            {lead.source === "form" && lead.quizData && (
+                              <div className="space-y-4 border-t pt-4">
+                                <h3 className="font-semibold text-lg">Contact Form Details</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {lead.quizData.firstName && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">First Name</div>
+                                      <div className="font-medium">{lead.quizData.firstName}</div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.lastName && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">Last Name</div>
+                                      <div className="font-medium">{lead.quizData.lastName}</div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.classYear && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">Class/Year</div>
+                                      <div className="flex items-center gap-2">
+                                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                                        <span>{lead.quizData.classYear}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.boardUniversity && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">Board/University</div>
+                                      <div className="flex items-center gap-2">
+                                        <Building className="h-4 w-4 text-muted-foreground" />
+                                        <span>{lead.quizData.boardUniversity}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.city && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">City</div>
+                                      <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                                        <span>{lead.quizData.city}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.interestedCourses && (
+                                    <div className="space-y-1 col-span-2">
+                                      <div className="text-sm text-muted-foreground">Interested Courses</div>
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                        <span>{lead.quizData.interestedCourses}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.entranceExam && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">Entrance Exam</div>
+                                      <div>{lead.quizData.entranceExam}</div>
+                                    </div>
+                                  )}
+                                  {lead.quizData.examScore && (
+                                    <div className="space-y-1">
+                                      <div className="text-sm text-muted-foreground">Exam Score</div>
+                                      <div>{lead.quizData.examScore}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Quiz Data (for quiz leads) */}
+                            {lead.source === "quiz" && lead.quizData && (
+                              <div className="space-y-4 border-t pt-4">
+                                <h3 className="font-semibold text-lg">Quiz Responses</h3>
+                                <div className="bg-muted p-4 rounded-lg">
+                                  <pre className="text-sm overflow-auto">
+                                    {JSON.stringify(lead.quizData, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </TableCell>
                 </TableRow>
