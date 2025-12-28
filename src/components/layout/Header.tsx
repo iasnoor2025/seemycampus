@@ -84,6 +84,7 @@ export function Header() {
     { href: "/career-counseling", label: "COUNSELING" },
     { href: "/scholarships", label: "SCHOLARSHIPS" },
     { href: "/events", label: "EVENTS" },
+    { href: "/blog", label: "BLOG" },
     { href: "/entrance-exams", label: "TIMELINE" },
     { href: "/fee-calculator", label: "FEE CALC" },
     { href: "/contact", label: "CONTACT" },

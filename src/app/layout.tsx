@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout"
 import { SessionProvider } from "@/components/providers/SessionProvider"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -122,6 +123,7 @@ export default function RootLayout({
       <body className={`${inter.className} overflow-x-hidden`}>
         <SessionProvider>
         <ConditionalLayout>{children}</ConditionalLayout>
+        <Toaster />
         </SessionProvider>
       </body>
     </html>

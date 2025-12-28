@@ -26,6 +26,10 @@
 13. **Entrance Exams**: Exam information and dates
 14. **Events & Webinars**: Event listings and registrations
 15. **Event Registrations**: User registrations for events
+16. **Blog Posts**: Blog articles, tips, and guides with SEO optimization
+17. **Counseling Packages**: Premium counseling service packages
+18. **Counselors**: Counselor profiles and information
+19. **Counseling Bookings**: Student counseling session bookings
 
 #### Key Relationships
 - Colleges → Courses (one-to-many)

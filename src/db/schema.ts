@@ -249,6 +249,85 @@ export const eventRegistrations = pgTable("event_registrations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Counseling Packages table
+export const counselingPackages = pgTable("counseling_packages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // Basic, Premium, VIP
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  price: integer("price").notNull(),
+  currency: varchar("currency", { length: 10 }).default("INR"),
+  duration: integer("duration").notNull(), // Duration in minutes
+  sessions: integer("sessions").notNull(), // Number of sessions included
+  features: jsonb("features").$type<string[]>().default([]), // List of features
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Counselors table
+export const counselors = pgTable("counselors", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  phone: varchar("phone", { length: 50 }),
+  bio: text("bio"),
+  specialization: jsonb("specialization").$type<string[]>().default([]), // Areas of expertise
+  experience: integer("experience"), // Years of experience
+  qualifications: jsonb("qualifications").$type<string[]>().default([]),
+  imageUrl: varchar("image_url", { length: 500 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Counseling Bookings table
+export const counselingBookings = pgTable("counseling_bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  packageId: integer("package_id").references(() => counselingPackages.id).notNull(),
+  counselorId: integer("counselor_id").references(() => counselors.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  preferredDate: timestamp("preferred_date"),
+  preferredTime: varchar("preferred_time", { length: 50 }), // e.g., "10:00 AM"
+  status: varchar("status", { length: 50 }).default("pending"), // pending, confirmed, completed, cancelled
+  paymentStatus: varchar("payment_status", { length: 50 }).default("pending"), // pending, paid, refunded
+  paymentId: varchar("payment_id", { length: 255 }), // Payment gateway transaction ID
+  amount: integer("amount").notNull(),
+  currency: varchar("currency", { length: 10 }).default("INR"),
+  notes: text("notes"), // Student notes or requirements
+  counselorNotes: text("counselor_notes"), // Counselor's notes
+  sessionLink: varchar("session_link", { length: 500 }), // Meeting link for the session
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Blog Posts table
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  excerpt: text("excerpt"), // Short description for listings
+  content: text("content").notNull(), // Full blog content (can be markdown or HTML)
+  authorId: integer("author_id").references(() => users.id), // Author user ID
+  authorName: varchar("author_name", { length: 255 }), // Author name (if not linked to user)
+  category: varchar("category", { length: 100 }), // blog, tip, guide
+  tags: jsonb("tags").$type<string[]>().default([]), // Blog tags
+  featuredImage: varchar("featured_image", { length: 500 }), // Featured image URL
+  seoTitle: varchar("seo_title", { length: 255 }), // SEO title
+  seoDescription: text("seo_description"), // SEO meta description
+  publishedAt: timestamp("published_at"), // Publication date
+  isPublished: boolean("is_published").default(false),
+  isFeatured: boolean("is_featured").default(false),
+  viewCount: integer("view_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Testimonials table
 export const testimonials = pgTable("testimonials", {
   id: serial("id").primaryKey(),
