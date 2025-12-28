@@ -21,7 +21,13 @@ interface BlogPost {
   id: number
   title: string
   slug: string
+  excerpt: string | null
+  content: string
   category: string | null
+  tags: string[]
+  featuredImage: string | null
+  seoTitle: string | null
+  seoDescription: string | null
   authorName: string | null
   isPublished: boolean
   isFeatured: boolean

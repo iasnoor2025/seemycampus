@@ -86,6 +86,7 @@ export function Header() {
     { href: "/events", label: "EVENTS" },
     { href: "/blog", label: "BLOG" },
     { href: "/essay-assistant", label: "ESSAY AI" },
+    { href: "/career-path", label: "CAREER PATH" },
     { href: "/entrance-exams", label: "TIMELINE" },
     { href: "/fee-calculator", label: "FEE CALC" },
     { href: "/contact", label: "CONTACT" },

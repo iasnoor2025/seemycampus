@@ -188,7 +188,7 @@ export function EssayAssistant() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="essayType">Essay Type *</Label>
-                <Select value={essayType} onValueChange={setEssayType}>
+                <Select value={essayType} onValueChange={(value: string | null) => setEssayType(value || "sop")}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

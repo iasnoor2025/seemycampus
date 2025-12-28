@@ -21,10 +21,13 @@ interface CounselingPackage {
   id: number
   name: string
   slug: string
+  description: string | null
   price: number
   currency: string
   duration: number
   sessions: number
+  features: string[]
+  displayOrder: number
   isActive: boolean
 }
 
@@ -32,8 +35,12 @@ interface Counselor {
   id: number
   name: string
   email: string
+  phone: string | null
+  bio: string | null
   specialization: string[]
+  qualifications: string[]
   experience: number | null
+  imageUrl: string | null
   isActive: boolean
 }
 

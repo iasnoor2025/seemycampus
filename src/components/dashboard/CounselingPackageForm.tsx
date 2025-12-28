@@ -191,10 +191,10 @@ export function CounselingPackageForm({ packageData, onClose }: CounselingPackag
 
             <div>
               <Label htmlFor="currency">Currency</Label>
-              <Select
-                value={formData.currency || "INR"}
-                onValueChange={(value) => setFormData({ ...formData, currency: value })}
-              >
+                <Select
+                  value={formData.currency || "INR"}
+                  onValueChange={(value: string | null) => setFormData({ ...formData, currency: value || "INR" })}
+                >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
