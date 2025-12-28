@@ -208,6 +208,47 @@ export const entranceExams = pgTable("entrance_exams", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Events & Webinars table
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).default("webinar"), // webinar, workshop, info_session, campus_tour
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  registrationDeadline: timestamp("registration_deadline"),
+  maxAttendees: integer("max_attendees"),
+  currentAttendees: integer("current_attendees").default(0),
+  platform: varchar("platform", { length: 100 }), // Zoom, Google Meet, Microsoft Teams, In-person
+  meetingLink: varchar("meeting_link", { length: 500 }),
+  location: varchar("location", { length: 255 }), // For in-person events
+  organizer: varchar("organizer", { length: 255 }), // Organizer name/college
+  organizerEmail: varchar("organizer_email", { length: 255 }),
+  imageUrl: varchar("image_url", { length: 500 }),
+  recordingUrl: varchar("recording_url", { length: 500 }), // For past webinars
+  isActive: boolean("is_active").default(true),
+  isPublic: boolean("is_public").default(true),
+  tags: jsonb("tags").$type<string[]>().default([]), // Topics, categories
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Event Registrations table
+export const eventRegistrations = pgTable("event_registrations", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }), // Optional - for logged-in users
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  status: varchar("status", { length: 50 }).default("registered"), // registered, attended, cancelled
+  reminderSent: boolean("reminder_sent").default(false),
+  attended: boolean("attended").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Testimonials table
 export const testimonials = pgTable("testimonials", {
   id: serial("id").primaryKey(),

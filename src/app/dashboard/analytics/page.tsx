@@ -6,6 +6,8 @@ import { BarChart3, Users, Building2, GraduationCap, FileText, TrendingUp, Calen
 import { db } from "@/db"
 import { colleges, courses, leads, studentAnswers } from "@/db/schema"
 import { SimpleBarChart, ConversionFunnel } from "@/components/dashboard/AnalyticsCharts"
+import { TimeSeriesChart } from "@/components/dashboard/TimeSeriesChart"
+import { ExportButton } from "@/components/dashboard/ExportButton"
 
 export const metadata: Metadata = {
   title: "Analytics | Dashboard | SeeMyCampus",
@@ -107,13 +109,82 @@ export default async function AnalyticsPage() {
     (student) => new Date(student.createdAt) >= sevenDaysAgo
   ).length
 
+  // Time series data for leads (last 30 days)
+  const thirtyDaysAgo = getDateNDaysAgo(30)
+  const recentLeadsForChart = allLeads.filter(
+    (lead) => new Date(lead.createdAt) >= thirtyDaysAgo
+  )
+
+  // Group leads by date (last 30 days)
+  const leadsByDate: Record<string, number> = {}
+  for (let i = 0; i < 30; i++) {
+    const date = getDateNDaysAgo(30 - i)
+    const dateStr = date.toISOString().split("T")[0]
+    leadsByDate[dateStr] = 0
+  }
+
+  recentLeadsForChart.forEach((lead) => {
+    const dateStr = new Date(lead.createdAt).toISOString().split("T")[0]
+    if (leadsByDate[dateStr] !== undefined) {
+      leadsByDate[dateStr]++
+    }
+  })
+
+  const leadsTimeSeries = Object.entries(leadsByDate).map(([date, count]) => ({
+    date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    value: count,
+    label: new Date(date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+  }))
+
+  // Time series data for quiz submissions (last 30 days)
+  const recentStudentsForChart = allStudents.filter(
+    (student) => new Date(student.createdAt) >= thirtyDaysAgo
+  )
+
+  const studentsByDate: Record<string, number> = {}
+  for (let i = 0; i < 30; i++) {
+    const date = getDateNDaysAgo(30 - i)
+    const dateStr = date.toISOString().split("T")[0]
+    studentsByDate[dateStr] = 0
+  }
+
+  recentStudentsForChart.forEach((student) => {
+    const dateStr = new Date(student.createdAt).toISOString().split("T")[0]
+    if (studentsByDate[dateStr] !== undefined) {
+      studentsByDate[dateStr]++
+    }
+  })
+
+  const studentsTimeSeries = Object.entries(studentsByDate).map(([date, count]) => ({
+    date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    value: count,
+    label: new Date(date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+  }))
+
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Analytics Dashboard</h1>
-        <p className="text-muted-foreground">
-          Comprehensive platform statistics and insights
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Analytics Dashboard</h1>
+          <p className="text-muted-foreground">
+            Comprehensive platform statistics and insights
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <ExportButton
+            data={allLeads.map(lead => ({
+              id: lead.id,
+              name: lead.name,
+              email: lead.email,
+              phone: lead.phone || "",
+              source: lead.source || "",
+              status: lead.status || "",
+              createdAt: new Date(lead.createdAt).toISOString(),
+            }))}
+            filename="leads"
+            label="Export Leads"
+          />
+        </div>
       </div>
 
       {/* Main Stats */}
@@ -255,6 +326,20 @@ export default async function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Time Series Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <TimeSeriesChart
+          title="Leads Over Time (Last 30 Days)"
+          data={leadsTimeSeries}
+          color="bg-blue-600"
+        />
+        <TimeSeriesChart
+          title="Quiz Submissions Over Time (Last 30 Days)"
+          data={studentsTimeSeries}
+          color="bg-green-600"
+        />
       </div>
 
       {/* Quick Stats Grid */}

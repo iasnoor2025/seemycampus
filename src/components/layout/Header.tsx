@@ -83,6 +83,7 @@ export function Header() {
     { href: "/academic-alliance", label: "ALLIANCE" },
     { href: "/career-counseling", label: "COUNSELING" },
     { href: "/scholarships", label: "SCHOLARSHIPS" },
+    { href: "/events", label: "EVENTS" },
     { href: "/entrance-exams", label: "TIMELINE" },
     { href: "/fee-calculator", label: "FEE CALC" },
     { href: "/contact", label: "CONTACT" },

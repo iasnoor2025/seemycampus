@@ -63,7 +63,7 @@ export function ShareButton({
   }
 
   const nativeShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function") {
       try {
         await navigator.share({
           title,
@@ -82,7 +82,7 @@ export function ShareButton({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={variant} className={className} onClick={(e) => {
-          if (navigator.share && window.innerWidth < 768) {
+          if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function" && window.innerWidth < 768) {
             e.preventDefault()
             nativeShare()
           }

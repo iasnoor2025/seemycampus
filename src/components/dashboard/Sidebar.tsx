@@ -13,7 +13,8 @@ import {
   GraduationCap,
   Image as ImageIcon,
   MessageSquare,
-  Award
+  Award,
+  Calendar
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -63,6 +64,11 @@ const menuItems = [
     title: "Scholarships",
     href: "/dashboard/scholarships",
     icon: Award,
+  },
+  {
+    title: "Events",
+    href: "/dashboard/events",
+    icon: Calendar,
   },
   {
     title: "Students",

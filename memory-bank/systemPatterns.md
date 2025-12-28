@@ -24,6 +24,8 @@
 11. **Testimonials**: Student testimonials
 12. **Study Goals**: Predefined study goal categories
 13. **Entrance Exams**: Exam information and dates
+14. **Events & Webinars**: Event listings and registrations
+15. **Event Registrations**: User registrations for events
 
 #### Key Relationships
 - Colleges → Courses (one-to-many)
@@ -69,7 +71,14 @@
 - **RelatedContent**: Internal linking component showing related colleges, courses, scholarships, and exams
 - **SimpleBarChart**: Bar chart component for analytics visualization
 - **ConversionFunnel**: Funnel visualization component for lead conversion tracking
+- **TimeSeriesChart**: Time-series chart component for historical trend visualization
 - **MetricCard**: Metric display card with trend indicators
+- **ExportButton**: CSV export functionality for data export
+- **Email Templates**: Template system for marketing automation (welcome, follow-up, reminder, conversion)
+- **CalendarButton**: Calendar integration component (iCal, Google, Outlook)
+- **EventsList**: Public events listing component with filters
+- **EventRegistrationForm**: Event registration form component
+- **EventForm**: Admin event management form component
 
 ### API Route Patterns
 
