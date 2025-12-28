@@ -9,7 +9,10 @@ import { CollegeHero } from "@/components/college/CollegeHero"
 import { CourseCard } from "@/components/course/CourseCard"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 import { CollegeReviews } from "@/components/college/CollegeReviews"
-import { generateCollegeMeta, generateStructuredDataCollege } from "@/lib/seo/generateMeta"
+import { CollegeEntranceExams } from "@/components/college/CollegeEntranceExams"
+import { RelatedContent } from "@/components/seo/RelatedContent"
+import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList } from "@/lib/seo/generateMeta"
+import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
 import { db } from "@/db"
 import { categories, studyGoals } from "@/db/schema"
 import { eq, or, asc } from "drizzle-orm"
@@ -385,11 +388,29 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   const { courses, ...college } = collegeData
   const structuredData = generateStructuredDataCollege(college)
 
+  // Fetch related content for internal linking
+  const [relatedColleges, relatedScholarships, relatedExams] = await Promise.all([
+    getRelatedColleges(college.id, college.location, college.city, 5),
+    getRelatedScholarships(college.id, 5),
+    getRelatedExams(Array.isArray(college.entranceExams) ? college.entranceExams : null, 5),
+  ])
+
+  // Generate breadcrumb structured data
+  const breadcrumbData = generateBreadcrumbList([
+    { name: "Home", url: "/" },
+    { name: "Colleges", url: "/colleges" },
+    { name: college.name, url: `/colleges/${college.slug}` },
+  ])
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
       <div className="container mx-auto px-4 py-8">
         <CollegeHero
@@ -407,12 +428,40 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         {college.description && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">About</h2>
-            <p className="text-muted-foreground whitespace-pre-line">{college.description}</p>
+            <div className="text-muted-foreground whitespace-pre-line prose prose-sm max-w-none">
+              <p>{college.description}</p>
+              {courses && courses.length > 0 && (
+                <p className="mt-4 text-sm">
+                  This college offers{" "}
+                  {courses.slice(0, 3).map((course, idx) => (
+                    <span key={course.id}>
+                      <a
+                        href={`/courses/${course.slug}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                      >
+                        {course.name}
+                      </a>
+                      {idx < Math.min(courses.length, 3) - 1 && ", "}
+                      {idx === Math.min(courses.length, 3) - 2 && courses.length > 3 && ", and "}
+                    </span>
+                  ))}
+                  {courses.length > 3 && ` and ${courses.length - 3} more courses`}.
+                  {" "}
+                  <a
+                    href={`/colleges/${college.slug}#courses`}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
+                    View all courses
+                  </a>
+                  .
+                </p>
+              )}
+            </div>
           </div>
         )}
 
         {courses && courses.length > 0 && (
-          <div>
+          <div id="courses">
             <h2 className="text-2xl font-bold mb-6">Available Courses</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => (
@@ -438,6 +487,18 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
             <p className="text-muted-foreground">No courses available at this time.</p>
           </div>
         )}
+
+        {/* Entrance Exams Section */}
+        <CollegeEntranceExams entranceExams={college.entranceExams} />
+
+        {/* Related Content Section */}
+        <RelatedContent
+          relatedColleges={relatedColleges}
+          relatedScholarships={relatedScholarships}
+          relatedExams={relatedExams}
+          currentLocation={college.location}
+          currentCity={college.city}
+        />
 
         {/* Reviews Section */}
         <div className="mt-12">

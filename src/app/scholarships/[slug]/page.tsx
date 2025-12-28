@@ -4,7 +4,10 @@ import { format } from "date-fns"
 import { Calendar, DollarSign, GraduationCap, Building2, Mail, Phone, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { baseUrl } from "@/lib/seo/generateMeta"
+import { baseUrl, generateBreadcrumbList } from "@/lib/seo/generateMeta"
+import { ShareButton } from "@/components/ui/ShareButton"
+import { RelatedContent } from "@/components/seo/RelatedContent"
+import { getRelatedScholarships } from "@/lib/relatedContent"
 
 interface ScholarshipPageProps {
   params: Promise<{ slug: string }>
@@ -56,6 +59,16 @@ export default async function ScholarshipPage({ params }: ScholarshipPageProps) 
     notFound()
   }
 
+  // Fetch related content
+  const relatedScholarships = await getRelatedScholarships(scholarship.collegeId, 5)
+
+  // Generate breadcrumb structured data
+  const breadcrumbData = generateBreadcrumbList([
+    { name: "Home", url: "/" },
+    { name: "Scholarships", url: "/scholarships" },
+    { name: scholarship.title, url: `/scholarships/${slug}` },
+  ])
+
   const formatAmount = () => {
     if (!scholarship.amount) return "Amount not specified"
     
@@ -90,22 +103,37 @@ export default async function ScholarshipPage({ params }: ScholarshipPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
+      />
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {scholarship.title}
-            </h1>
-            {scholarship.provider && (
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <Building2 className="h-5 w-5" />
-                <span className="text-lg">{scholarship.provider}</span>
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                  {scholarship.title}
+                </h1>
+                {scholarship.provider && (
+                  <div className="flex items-center gap-2 text-gray-600 mb-2">
+                    <Building2 className="h-5 w-5" />
+                    <span className="text-lg">{scholarship.provider}</span>
+                  </div>
+                )}
               </div>
-            )}
+              <div className="flex-shrink-0">
+                <ShareButton 
+                  title={scholarship.title}
+                  text={`Check out this scholarship: ${scholarship.title} on SeeMyCampus!`}
+                />
+              </div>
+            </div>
             {isDeadlinePassed() && (
-              <div className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium">
+              <div className="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium mt-2">
                 Application Deadline Passed
               </div>
             )}
@@ -277,9 +305,15 @@ export default async function ScholarshipPage({ params }: ScholarshipPageProps) 
               </a>
             </div>
           )}
+
+          {/* Related Content */}
+          <RelatedContent
+            relatedScholarships={relatedScholarships}
+          />
         </div>
       </div>
     </div>
+    </>
   )
 }
 

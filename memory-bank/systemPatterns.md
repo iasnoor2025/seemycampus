@@ -51,16 +51,25 @@
 - **CollegeCard**: College display card with save/compare functionality
 - **RecommendationList**: Display recommended colleges
 - **LeadsList**: Admin lead management
-- **StudentDashboardClient**: Student dashboard with tabs
+- **StudentDashboardClient**: Student dashboard with tabs (Saved, Quiz History, Recommendations, Timeline)
 - **SavedCollegesTab**: Display and manage saved colleges
 - **QuizHistoryTab**: Display quiz history
 - **RecommendationsTab**: Display recommendation history
+- **TimelineTab**: Display entrance exam timeline in student dashboard
 - **CollegeComparison**: Side-by-side college comparison tool
 - **ScholarshipsListClient**: Public scholarships listing with search/filters
 - **ScholarshipCard**: Scholarship display card
 - **ScholarshipsList**: Admin scholarships management
 - **ScholarshipForm**: Admin scholarship form (CRUD)
 - **FeeCalculatorClient**: Interactive fee calculator component
+- **EntranceExamCard**: Display entrance exam information card
+- **ExamsTimeline**: Public entrance exams timeline with search and visual timeline
+- **CollegeEntranceExams**: Display entrance exams accepted by a college
+- **ShareButton**: Social media sharing component (Twitter, Facebook, LinkedIn, Copy Link)
+- **RelatedContent**: Internal linking component showing related colleges, courses, scholarships, and exams
+- **SimpleBarChart**: Bar chart component for analytics visualization
+- **ConversionFunnel**: Funnel visualization component for lead conversion tracking
+- **MetricCard**: Metric display card with trend indicators
 
 ### API Route Patterns
 
@@ -84,6 +93,9 @@
 - `/api/scholarships/[slug]` - Get scholarship by slug
 - `/api/dashboard/scholarships` - Admin scholarships management (GET, POST)
 - `/api/dashboard/scholarships/[id]` - Admin scholarship CRUD (GET, PUT, DELETE)
+- `/api/entrance-exams` - List all active entrance exams (GET)
+- `/api/entrance-exams/[slug]` - Get entrance exam by slug (GET)
+- `/api/instagram/feed` - Instagram feed API (GET)
 
 ### AI Integration Pattern
 
@@ -105,17 +117,24 @@
 - Open Graph tags
 - Twitter cards
 - Canonical URLs
-- Structured data (to be enhanced in Phase 2)
+- Structured data (CollegeOrUniversity, Course, BreadcrumbList, FAQPage, Review)
+- Internal linking strategy with RelatedContent component
 
 #### URL Structure
 - `/colleges/[slug]` - College detail pages
 - `/courses/[slug]` - Course detail pages
 - `/colleges/[category]/[subcategory]` - Category filtering
-- `/student/dashboard` - Student dashboard (Saved, Quiz History, Recommendations)
+- `/student/dashboard` - Student dashboard (Saved, Quiz History, Recommendations, Timeline)
 - `/compare` - College comparison tool
 - `/scholarships` - Scholarships listing page
 - `/scholarships/[slug]` - Scholarship detail page
 - `/fee-calculator` - Fee calculator tool
+- `/entrance-exams` - Entrance exams timeline page
+- `/entrance-exams/[slug]` - Individual entrance exam detail page
+- `/compare` - College comparison tool
+- `/fee-calculator` - Fee calculator tool
+- `/quiz` - Student preferences quiz
+- `/recommendations` - College recommendations page
 
 ### Authentication Pattern
 - NextAuth.js v5 with Drizzle adapter

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { MapPin, Globe, Mail, Phone, GitCompare } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { ShareButton } from "@/components/ui/ShareButton"
 
 interface CollegeHeroProps {
   name: string
@@ -123,6 +124,11 @@ export function CollegeHero({
               <Button variant="secondary">Download Brochure</Button>
             </Link>
           )}
+          <ShareButton 
+            title={name} 
+            text={`Check out ${name} on SeeMyCampus!`}
+            variant="secondary"
+          />
         </div>
       </div>
     </div>

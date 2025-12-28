@@ -83,6 +83,7 @@ export function Header() {
     { href: "/academic-alliance", label: "ALLIANCE" },
     { href: "/career-counseling", label: "COUNSELING" },
     { href: "/scholarships", label: "SCHOLARSHIPS" },
+    { href: "/entrance-exams", label: "TIMELINE" },
     { href: "/fee-calculator", label: "FEE CALC" },
     { href: "/contact", label: "CONTACT" },
   ]
@@ -202,6 +203,10 @@ export function Header() {
               
               <Link href="/scholarships" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
                 SCHOLARSHIPS
+              </Link>
+              
+              <Link href="/entrance-exams" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
+                TIMELINE
               </Link>
               
               <Link href="/fee-calculator" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">

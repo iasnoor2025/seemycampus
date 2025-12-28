@@ -46,6 +46,9 @@
 - `OPENAI_API_KEY`: OpenAI API key (if using OpenAI)
 - `OPENAI_MODEL`: OpenAI model name
 - `AI_MODEL`: Custom AI model name
+- `INSTAGRAM_ACCESS_TOKEN`: Instagram Graph API long-lived access token (optional)
+- `INSTAGRAM_USER_ID`: Instagram User ID for Graph API (optional)
+- `NEXT_PUBLIC_BASE_URL`: Public base URL for SEO and sharing (optional)
 
 ### Database
 - **ORM**: Drizzle ORM
@@ -62,6 +65,10 @@
 - `npm run db:migrate`: Apply database migrations
 - `npm run db:studio`: Open Drizzle Studio
 - `npm run db:seed`: Seed database with initial data
+- `npm run db:seed:exams`: Seed entrance exams data
+- `npm run db:seed:logos`: Seed college logos from web
+- `npm run db:seed:hero-texts`: Seed hero rotating texts
+- `npm run db:seed:comprehensive`: Seed comprehensive college data
 
 ## Project Structure
 ```
@@ -75,6 +82,8 @@ seemycampus/
 │   │   ├── dashboard/    # Admin dashboard components
 │   │   ├── layout/       # Layout components (Header, Footer)
 │   │   ├── quiz/         # Quiz components
+│   │   ├── entrance-exams/ # Entrance exam components
+│   │   ├── student/       # Student dashboard components
 │   │   └── ui/           # shadcn/ui components
 │   ├── db/               # Database schema, migrations, seed
 │   └── lib/              # Utilities and business logic
