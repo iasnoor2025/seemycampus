@@ -60,7 +60,7 @@ export function Footer() {
                       width={120}
                       height={120}
                       className="w-full h-full object-contain p-1"
-                      unoptimized
+                      quality={85}
                     />
                   </div>
                 </div>

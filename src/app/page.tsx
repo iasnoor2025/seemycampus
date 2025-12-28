@@ -53,7 +53,7 @@ export default function Home() {
       {/* FAQ Section - Compact Professional Design */}
       <section className="py-10 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions About College Admissions and Courses</h2>
           <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* FAQ Items */}
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">

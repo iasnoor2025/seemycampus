@@ -200,7 +200,8 @@ export function HeroSection() {
                   fill
                   className="object-cover"
                   priority={index === 0}
-                  unoptimized
+                  quality={85}
+                  sizes="100vw"
                 />
               </div>
             ))
@@ -275,7 +276,7 @@ export function HeroSection() {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
-              Select Your Study Goal
+              Select Your Study Goal - Find Colleges and Courses in India
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">

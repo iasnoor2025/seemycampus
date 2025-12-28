@@ -62,7 +62,7 @@ export function FeaturedColleges() {
   return (
     <section className="py-16 bg-red-900">
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Top Featured Colleges</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Top Featured Colleges in India - MBA, BBA, Engineering & More</h2>
         
         {/* Category Navigation Tabs */}
         <div className="flex flex-wrap gap-0 mb-0">

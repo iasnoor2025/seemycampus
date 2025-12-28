@@ -115,7 +115,8 @@ export function HeroCarousel() {
           fill
           className="object-cover"
           priority={currentIndex === 0}
-          unoptimized
+          quality={85}
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40"></div>
       </div>
@@ -147,7 +148,8 @@ export function HeroCarousel() {
                 alt={currentSlide.title || "Hero slide"}
                 fill
                 className="object-cover"
-                unoptimized
+                quality={85}
+                sizes="(max-width: 1024px) 0vw, 50vw"
               />
             </div>
           </div>
