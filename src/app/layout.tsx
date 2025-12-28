@@ -12,10 +12,10 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "SeeMyCampus - Find Your Perfect College | Admissions Counseling Platform",
+    default: "SeeMyCampus - Find Your Perfect College",
     template: "%s | SeeMyCampus",
   },
-  description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+  description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
   keywords: ["college admissions", "course finder", "education counseling", "college recommendations", "MBA", "BBA", "Engineering", "Medical", "Law", "Design", "college search", "admission guidance", "career counseling", "India colleges"],
   authors: [{ name: "SeeMyCampus" }],
   creator: "SeeMyCampus",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     url: baseUrl,
     siteName: "SeeMyCampus",
     title: "SeeMyCampus - Find Your Perfect College",
-    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     images: [
       {
         url: `${baseUrl}/main-logo-xxxx.png`,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SeeMyCampus - Find Your Perfect College",
-    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     images: [`${baseUrl}/main-logo-xxxx.png`],
     creator: "@seemycampus",
   },
@@ -61,6 +61,11 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: baseUrl,
+  },
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
   },
   verification: {
     // Add verification codes when available
@@ -80,7 +85,7 @@ export default function RootLayout({
     name: "SeeMyCampus",
     url: baseUrl,
     logo: `${baseUrl}/main-logo-xxxx.png`,
-    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     address: {
       "@type": "PostalAddress",
       addressCountry: "IN",
@@ -111,6 +116,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-x-hidden">
       <head>
+        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+        <link rel="alternate icon" href="/logo.svg" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

@@ -8,12 +8,12 @@ import { InstagramFeed } from "@/components/home/InstagramFeed"
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
 export const metadata: Metadata = {
-  title: "SeeMyCampus - Find Your Perfect College | Admissions Counseling Platform",
-  description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses. Find over 60,000 institutions and 375,000+ courses.",
+  title: "SeeMyCampus - Find Your Perfect College",
+  description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
   keywords: ["college admissions", "course finder", "education counseling", "college recommendations", "MBA", "BBA", "Engineering", "Medical", "Law", "Design", "college search India", "admission guidance"],
   openGraph: {
     title: "SeeMyCampus - Find Your Perfect College",
-    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     url: baseUrl,
     siteName: "SeeMyCampus",
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SeeMyCampus - Find Your Perfect College",
-    description: "Seemycampus is student's go-to platform providing holistic approach on all aspects of education, simplifying the college selection process for Indian students pursuing undergraduate (UG) and postgraduate (PG) courses.",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     images: [`${baseUrl}/main-logo-xxxx.png`],
   },
   alternates: {
