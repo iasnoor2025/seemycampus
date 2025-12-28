@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { studentAnswers, leads } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, or } from "drizzle-orm"
 import { quizSchema } from "@/lib/quiz"
 import { auth } from "@/lib/auth"
+import { createLead } from "@/lib/leads/capture"
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +32,36 @@ export async function POST(request: NextRequest) {
       })
       .returning()
 
-    // Create a lead (anonymous for now, can be updated later)
+    // Try to get email/phone from request headers or body (set by contact form)
+    const contactEmail = body.contactEmail || request.headers.get("x-contact-email")
+    const contactPhone = body.contactPhone || request.headers.get("x-contact-phone")
+    const contactName = body.contactName || request.headers.get("x-contact-name")
+
+    // Check if we have contact info from the form
+    if (contactEmail && !contactEmail.includes("quiz_")) {
+      // Use createLead to merge with existing lead if it exists
+      const lead = await createLead({
+        name: contactName || "Anonymous",
+        email: contactEmail,
+        phone: contactPhone || undefined,
+        source: "quiz",
+        quizData: validatedData,
+        studentAnswerId: studentAnswer.id,
+        phoneVerified: false,
+      })
+
+      return NextResponse.json(
+        {
+          success: true,
+          quizId: studentAnswer.id,
+          leadId: lead.id,
+          merged: true,
+        },
+        { status: 201 }
+      )
+    }
+
+    // No contact info - create anonymous lead (will be merged later if contact form is filled)
     const [lead] = await db
       .insert(leads)
       .values({
@@ -49,6 +79,7 @@ export async function POST(request: NextRequest) {
         success: true,
         quizId: studentAnswer.id,
         leadId: lead.id,
+        merged: false,
       },
       { status: 201 }
     )

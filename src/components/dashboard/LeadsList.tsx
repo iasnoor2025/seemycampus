@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Mail, Phone, Calendar, CheckCircle, Clock, XCircle, Search, User, Building, MapPin, GraduationCap } from "lucide-react"
+import { FileText, Mail, Phone, Calendar, CheckCircle, Clock, XCircle, Search, User, Building, MapPin, GraduationCap, Edit, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -27,7 +27,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Label } from "@/components/ui/label"
 
 interface Lead {
   id: number
@@ -48,6 +60,16 @@ export function LeadsList() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    source: "form" as const,
+  })
+  const [isSaving, setIsSaving] = useState(false)
 
   const fetchLeads = async () => {
     try {
@@ -83,6 +105,76 @@ export function LeadsList() {
       }
     } catch (error) {
       console.error("Error updating lead status:", error)
+    }
+  }
+
+  const handleEdit = (lead: Lead) => {
+    setSelectedLead(lead)
+    setEditFormData({
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone || "",
+      source: (lead.source as "form" | "quiz" | "chat" | "direct") || "form",
+    })
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedLead) return
+
+    setIsSaving(true)
+    try {
+      const response = await fetch(`/api/leads/${selectedLead.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...editFormData,
+          quizData: selectedLead.quizData, // Preserve existing quizData
+        }),
+      })
+
+      if (response.ok) {
+        setEditDialogOpen(false)
+        setSelectedLead(null)
+        fetchLeads()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to update lead")
+      }
+    } catch (error) {
+      console.error("Error updating lead:", error)
+      alert("Failed to update lead")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteClick = (lead: Lead) => {
+    setLeadToDelete(lead)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!leadToDelete) return
+
+    try {
+      const response = await fetch(`/api/leads/${leadToDelete.id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        setDeleteDialogOpen(false)
+        setLeadToDelete(null)
+        fetchLeads()
+      } else {
+        const error = await response.json()
+        alert(error.error || "Failed to delete lead")
+      }
+    } catch (error) {
+      console.error("Error deleting lead:", error)
+      alert("Failed to delete lead")
     }
   }
 
@@ -278,24 +370,25 @@ export function LeadsList() {
                       {new Date(lead.createdAt).toLocaleDateString()}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    {(lead.quizData || lead.source === "form") && (
-                      <Dialog open={dialogOpen && selectedLead?.id === lead.id} onOpenChange={(open) => {
-                        setDialogOpen(open)
-                        if (!open) setSelectedLead(null)
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedLead(lead)
-                              setDialogOpen(true)
-                            }}
-                          >
-                            View Details
-                          </Button>
-                        </DialogTrigger>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      {(lead.quizData || lead.source === "form") && (
+                        <Dialog open={dialogOpen && selectedLead?.id === lead.id} onOpenChange={(open) => {
+                          setDialogOpen(open)
+                          if (!open) setSelectedLead(null)
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedLead(lead)
+                                setDialogOpen(true)
+                              }}
+                            >
+                              View
+                            </Button>
+                          </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Lead Details</DialogTitle>
@@ -438,7 +531,25 @@ export function LeadsList() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                    )}
+                      )}
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(lead)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(lead)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -451,6 +562,102 @@ export function LeadsList() {
           <p className="text-muted-foreground">No leads found</p>
         </div>
       )}
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Lead</DialogTitle>
+            <DialogDescription>
+              Update lead information below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-source">Source</Label>
+              <Select
+                value={editFormData.source}
+                onValueChange={(value) => setEditFormData({ ...editFormData, source: value as typeof editFormData.source })}
+              >
+                <SelectTrigger id="edit-source">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="form">Form</SelectItem>
+                  <SelectItem value="quiz">Quiz</SelectItem>
+                  <SelectItem value="chat">Chat</SelectItem>
+                  <SelectItem value="direct">Direct</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false)
+                setSelectedLead(null)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the lead for{" "}
+              <strong>{leadToDelete?.name}</strong> ({leadToDelete?.email}).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setLeadToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 import { ChevronRight, Home } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { InstagramFeed } from "@/components/home/InstagramFeed"
@@ -87,7 +88,9 @@ export default function ContactPage() {
             </div>
 
             {/* Right Column - Contact Form */}
-            <ContactForm />
+            <Suspense fallback={<div>Loading form...</div>}>
+              <ContactForm />
+            </Suspense>
           </div>
         </div>
       </section>

@@ -5,6 +5,7 @@ export const leadSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   source: z.enum(["quiz", "chat", "form", "direct"]).default("direct"),
+  phoneVerified: z.boolean().optional(),
   quizData: z.record(z.any()).optional(),
   studentAnswerId: z.number().optional(),
 })

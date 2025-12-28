@@ -45,12 +45,23 @@ export function QuizForm() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
+      // Get contact info from localStorage if available (from contact form)
+      const contactEmail = localStorage.getItem("contactFormEmail")
+      const contactPhone = localStorage.getItem("contactFormPhone")
+      const contactName = localStorage.getItem("contactFormName")
+
       const response = await fetch("/api/quiz/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // Include contact info if available to merge with existing lead
+          ...(contactEmail && { contactEmail }),
+          ...(contactPhone && { contactPhone }),
+          ...(contactName && { contactName }),
+        }),
       })
 
       if (!response.ok) {

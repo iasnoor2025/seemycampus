@@ -74,8 +74,19 @@ export const leads = pgTable("leads", {
   studentAnswerId: integer("student_answer_id").references(() => studentAnswers.id),
   source: varchar("source", { length: 50 }).default("quiz"), // quiz, chat, form, etc.
   status: varchar("status", { length: 50 }).default("new"), // new, contacted, qualified, converted
+  phoneVerified: boolean("phone_verified").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Phone verification OTP table
+export const phoneVerifications = pgTable("phone_verifications", {
+  id: serial("id").primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  verified: boolean("verified").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Users table (for NextAuth)

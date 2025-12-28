@@ -2,13 +2,14 @@
 
 import { useState } from "react"
 import { Share2, Check, Copy, Twitter, Facebook, Linkedin } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 interface ShareButtonProps {
   title: string
@@ -80,16 +81,17 @@ export function ShareButton({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant={variant} className={className} onClick={(e) => {
+      <DropdownMenuTrigger
+        className={cn(buttonVariants({ variant }), className)}
+        onClick={(e) => {
           if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function" && window.innerWidth < 768) {
             e.preventDefault()
             nativeShare()
           }
-        }}>
-          <Share2 className={`h-4 w-4 ${showLabel ? "mr-2" : ""}`} />
-          {showLabel && "Share"}
-        </Button>
+        }}
+      >
+        <Share2 className={`h-4 w-4 ${showLabel ? "mr-2" : ""}`} />
+        {showLabel && "Share"}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48">
         <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">

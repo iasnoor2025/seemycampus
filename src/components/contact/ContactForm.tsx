@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input"
 import { User, Mail, Building, MapPin, Pencil, Phone, Calendar, FileText, CheckCircle, AlertCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
-export function ContactForm() {
+interface ContactFormProps {
+  onSuccess?: () => void
+}
+
+export function ContactForm({ onSuccess }: ContactFormProps) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -66,6 +70,10 @@ export function ContactForm() {
         description: "We'll get back to you soon.",
       })
 
+      // Store contact form submission status in localStorage
+      localStorage.setItem("contactFormSubmitted", "true")
+      localStorage.setItem("contactFormEmail", formData.email)
+
       // Reset form
       setFormData({
         firstName: "",
@@ -79,6 +87,13 @@ export function ContactForm() {
         entranceExam: "",
         examScore: "",
       })
+
+      // Call onSuccess callback if provided (for inline forms)
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess()
+        }, 1000) // Give user time to see success message
+      }
     } catch (error) {
       console.error("Form submission error:", error)
       setSubmitStatus("error")

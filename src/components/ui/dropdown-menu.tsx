@@ -20,6 +20,9 @@ const DropdownMenuTrigger = React.forwardRef<
   }
   
   if (asChild) {
+    // When asChild is true, Menu.Trigger will render a button
+    // We need to merge the child's props with Menu.Trigger's button
+    // The child (Button component) should use asChild to avoid rendering its own button
     return (
       <Menu.Trigger>
         <Slot ref={ref} {...triggerProps}>

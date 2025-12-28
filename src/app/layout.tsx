@@ -4,6 +4,7 @@ import "./globals.css"
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout"
 import { SessionProvider } from "@/components/providers/SessionProvider"
 import { Toaster } from "@/components/ui/toaster"
+import { ContactFormPopup } from "@/components/contact/ContactFormPopup"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -140,6 +141,7 @@ export default function RootLayout({
         <SessionProvider>
         <ConditionalLayout>{children}</ConditionalLayout>
         <Toaster />
+        <ContactFormPopup />
         </SessionProvider>
       </body>
     </html>

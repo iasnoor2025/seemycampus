@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createLead, getAllLeads } from "@/lib/leads/capture"
+import { createLead, getAllLeads, getLeadByEmail } from "@/lib/leads/capture"
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +33,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "100")
     const offset = parseInt(searchParams.get("offset") || "0")
+    const email = searchParams.get("email")
+
+    // If email is provided, filter by email
+    if (email) {
+      const lead = await getLeadByEmail(email)
+      
+      return NextResponse.json({
+        success: true,
+        leads: lead ? [lead] : [],
+        count: lead ? 1 : 0,
+      })
+    }
 
     const leadsList = await getAllLeads(limit, offset)
 
