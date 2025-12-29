@@ -68,7 +68,7 @@ export function InquiryManagement() {
 
   const fetchColleges = async () => {
     try {
-      const response = await fetch("/api/dashboard/colleges")
+      const response = await fetch("/api/dashboard/colleges?all=true")
       if (response.ok) {
         const data = await response.json()
         setColleges(data.colleges || [])
@@ -213,7 +213,13 @@ export function InquiryManagement() {
             <div className="flex-1">
               <Select value={selectedCollege} onValueChange={setSelectedCollege}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select college" />
+                  <SelectValue placeholder="Select college">
+                    {(value: string | null) => {
+                      if (!value || value === "all") return "All Colleges"
+                      const college = colleges.find((c) => c.id.toString() === value)
+                      return college?.name || "Select college"
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Colleges</SelectItem>

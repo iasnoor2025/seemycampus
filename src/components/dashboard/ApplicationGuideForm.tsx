@@ -81,8 +81,15 @@ export function ApplicationGuideForm({
   const [newDoc, setNewDoc] = useState("")
   const [newPaymentMethod, setNewPaymentMethod] = useState("")
 
+  // Get selected course name for display
+  const selectedCourseName = formData.courseId 
+    ? courses.find((c) => c.id.toString() === formData.courseId)?.name 
+    : null
+
   useEffect(() => {
-    fetchCourses()
+    if (collegeId) {
+      fetchCourses()
+    }
   }, [collegeId])
 
   const fetchCourses = async () => {
@@ -220,7 +227,13 @@ export function ApplicationGuideForm({
               onValueChange={(value) => setFormData({ ...formData, courseId: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select course (optional)" />
+                <SelectValue placeholder="Select course (optional)">
+                  {(value: string | null) => {
+                    if (!value || value === "") return "Select course (optional)"
+                    const course = courses.find((c) => c.id.toString() === value)
+                    return course?.name || "Select course (optional)"
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">General (All Courses)</SelectItem>

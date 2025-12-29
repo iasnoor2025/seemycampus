@@ -15,6 +15,7 @@ import { CollegePlacements } from "@/components/college/CollegePlacements"
 import { CollegeInfrastructure } from "@/components/college/CollegeInfrastructure"
 import { ApplicationGuide } from "@/components/college/ApplicationGuide"
 import { InquiryForm } from "@/components/college/InquiryForm"
+import { CollegeNews } from "@/components/college/CollegeNews"
 import { RelatedContent } from "@/components/seo/RelatedContent"
 import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList } from "@/lib/seo/generateMeta"
 import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
@@ -523,6 +524,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         {/* Inquiry Form Section */}
         <div className="mt-12">
           <InquiryForm collegeSlug={slug} collegeName={college.name} />
+        </div>
+
+        {/* College News Section */}
+        <div className="mt-12">
+          <CollegeNews collegeSlug={slug} />
         </div>
 
         {/* Related Content Section */}

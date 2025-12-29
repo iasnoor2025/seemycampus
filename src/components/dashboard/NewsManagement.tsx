@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Search, Edit, Trash2, Loader2 } from "lucide-react"
-import { ApplicationGuideForm } from "./ApplicationGuideForm"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Search, Edit, Trash2, Loader2, Eye } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { NewsForm } from "./NewsForm"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,22 +18,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-interface ApplicationGuide {
+interface NewsItem {
   id: number
   collegeId: number
-  courseId: number | null
-  guideContent: string
-  requiredDocs: string[]
-  feeInfo: any
-  deadlines: any
-  tips: string | null
-  applicationUrl: string | null
-  contactInfo: any
-  course?: {
+  title: string
+  content: string
+  category: string
+  image: string | null
+  tags: string[]
+  isPublished: boolean
+  viewCount: number
+  publishedAt: string
+  college?: {
     name: string
-  } | null
+    slug: string
+  }
 }
 
 interface College {
@@ -40,16 +42,16 @@ interface College {
   slug: string
 }
 
-export function ApplicationGuideManagement() {
-  const [guides, setGuides] = useState<ApplicationGuide[]>([])
+export function NewsManagement() {
+  const [news, setNews] = useState<NewsItem[]>([])
   const [colleges, setColleges] = useState<College[]>([])
-  const [loading, setLoading] = useState(false)
-  const [loadingColleges, setLoadingColleges] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCollege, setSelectedCollege] = useState<string>("")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [showForm, setShowForm] = useState(false)
-  const [editingGuide, setEditingGuide] = useState<ApplicationGuide | null>(null)
-  const [deletingGuide, setDeletingGuide] = useState<number | null>(null)
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null)
+  const [deletingNews, setDeletingNews] = useState<number | null>(null)
   const [currentCollege, setCurrentCollege] = useState<College | null>(null)
 
   useEffect(() => {
@@ -58,16 +60,14 @@ export function ApplicationGuideManagement() {
 
   useEffect(() => {
     if (selectedCollege) {
-      fetchGuides()
+      fetchNews()
     } else {
-      setGuides([])
-      setLoading(false)
+      setNews([])
     }
-  }, [selectedCollege])
+  }, [selectedCollege, categoryFilter])
 
   const fetchColleges = async () => {
     try {
-      setLoadingColleges(true)
       const response = await fetch("/api/dashboard/colleges?all=true")
       if (response.ok) {
         const data = await response.json()
@@ -75,12 +75,10 @@ export function ApplicationGuideManagement() {
       }
     } catch (error) {
       console.error("Error fetching colleges:", error)
-    } finally {
-      setLoadingColleges(false)
     }
   }
 
-  const fetchGuides = async () => {
+  const fetchNews = async () => {
     if (!selectedCollege) return
 
     try {
@@ -89,39 +87,55 @@ export function ApplicationGuideManagement() {
       if (!college) return
 
       setCurrentCollege(college)
-      const response = await fetch(`/api/colleges/${college.slug}/application-guides`)
+      const params = new URLSearchParams()
+      if (categoryFilter !== "all") {
+        params.set("category", categoryFilter)
+      }
+
+      const response = await fetch(`/api/colleges/${college.slug}/news?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        setGuides((data.guides || []).map((g: any) => g.guide ? { ...g.guide, course: g.course } : g))
+        setNews(data.news || [])
       }
     } catch (error) {
-      console.error("Error fetching guides:", error)
+      console.error("Error fetching news:", error)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async () => {
-    if (!deletingGuide) return
+    if (!deletingNews) return
 
     try {
-      const response = await fetch(`/api/application-guides/${deletingGuide}`, {
+      const response = await fetch(`/api/news/${deletingNews}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
-        fetchGuides()
-        setDeletingGuide(null)
+        fetchNews()
+        setDeletingNews(null)
       }
     } catch (error) {
-      console.error("Error deleting guide:", error)
+      console.error("Error deleting news:", error)
     }
   }
 
-  const filteredGuides = guides.filter((guide) => {
-    const matchesSearch = !searchQuery || 
-      guide.guideContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      guide.course?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      admissions: "bg-blue-100 text-blue-800",
+      placements: "bg-green-100 text-green-800",
+      events: "bg-purple-100 text-purple-800",
+      achievements: "bg-yellow-100 text-yellow-800",
+      general: "bg-gray-100 text-gray-800",
+    }
+    return colors[category] || colors.general
+  }
+
+  const filteredNews = news.filter((item) => {
+    const matchesSearch = !searchQuery ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesSearch
   })
 
@@ -129,17 +143,17 @@ export function ApplicationGuideManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Application Guides</h1>
+          <h1 className="text-3xl font-bold">College News</h1>
           <p className="text-muted-foreground mt-1">
-            Manage application form guides and requirements for colleges
+            Manage news and updates for colleges
           </p>
         </div>
         <Button onClick={() => {
-          setEditingGuide(null)
+          setEditingNews(null)
           setShowForm(true)
         }} disabled={!selectedCollege}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Guide
+          Add News
         </Button>
       </div>
 
@@ -150,7 +164,7 @@ export function ApplicationGuideManagement() {
               <Select value={selectedCollege} onValueChange={setSelectedCollege}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select college">
-                    {(value) => {
+                    {(value: string | null) => {
                       if (!value) return "Select college"
                       const college = colleges.find((c) => c.id.toString() === value)
                       return college?.name || "Select college"
@@ -167,10 +181,37 @@ export function ApplicationGuideManagement() {
               </Select>
             </div>
             <div className="flex-1">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by category">
+                    {(value: string | null) => {
+                      if (!value || value === "all") return "All Categories"
+                      const categoryLabels: Record<string, string> = {
+                        admissions: "Admissions",
+                        placements: "Placements",
+                        events: "Events",
+                        achievements: "Achievements",
+                        general: "General",
+                      }
+                      return categoryLabels[value] || value
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="admissions">Admissions</SelectItem>
+                  <SelectItem value="placements">Placements</SelectItem>
+                  <SelectItem value="events">Events</SelectItem>
+                  <SelectItem value="achievements">Achievements</SelectItem>
+                  <SelectItem value="general">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search guides..."
+                  placeholder="Search news..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -180,42 +221,53 @@ export function ApplicationGuideManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {loadingColleges ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : loading ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : !selectedCollege ? (
             <div className="text-center py-8 text-muted-foreground">
-              Please select a college to view application guides
+              Please select a college to view news
             </div>
-          ) : filteredGuides.length === 0 ? (
+          ) : filteredNews.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "No guides found matching your search" : "No application guides yet. Create one to get started."}
+              {searchQuery ? "No news found matching your search" : "No news yet. Create one to get started."}
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredGuides.map((guide) => (
-                <Card key={guide.id}>
+              {filteredNews.map((item) => (
+                <Card key={item.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {guide.course?.name || "General Application Guide"}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {guide.guideContent.substring(0, 150)}...
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CardTitle className="text-lg">{item.title}</CardTitle>
+                          <Badge className={getCategoryColor(item.category)}>
+                            {item.category}
+                          </Badge>
+                          {!item.isPublished && (
+                            <Badge variant="outline">Draft</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                          {item.content.substring(0, 200)}...
                         </p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {item.viewCount || 0} views
+                          </div>
+                          <span>
+                            {new Date(item.publishedAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setEditingGuide(guide)
+                            setEditingNews(item)
                             setShowForm(true)
                           }}
                         >
@@ -224,39 +276,13 @@ export function ApplicationGuideManagement() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setDeletingGuide(guide.id)}
+                          onClick={() => setDeletingNews(item.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      {guide.requiredDocs.length > 0 && (
-                        <div>
-                          <span className="font-medium">Documents: </span>
-                          <span>{guide.requiredDocs.length}</span>
-                        </div>
-                      )}
-                      {guide.feeInfo?.amount && (
-                        <div>
-                          <span className="font-medium">Fee: </span>
-                          <span>{guide.feeInfo.currency || "₹"}{guide.feeInfo.amount.toLocaleString()}</span>
-                        </div>
-                      )}
-                      {guide.applicationUrl && (
-                        <div>
-                          <span className="font-medium">Has Application Link</span>
-                        </div>
-                      )}
-                      {guide.contactInfo && (
-                        <div>
-                          <span className="font-medium">Has Contact Info</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -265,28 +291,28 @@ export function ApplicationGuideManagement() {
       </Card>
 
       {showForm && currentCollege && (
-        <ApplicationGuideForm
-          guide={editingGuide || undefined}
+        <NewsForm
+          news={editingNews || undefined}
           collegeId={currentCollege.id}
           collegeSlug={currentCollege.slug}
           onClose={() => {
             setShowForm(false)
-            setEditingGuide(null)
+            setEditingNews(null)
           }}
           onSuccess={() => {
-            fetchGuides()
+            fetchNews()
             setShowForm(false)
-            setEditingGuide(null)
+            setEditingNews(null)
           }}
         />
       )}
 
-      <AlertDialog open={deletingGuide !== null} onOpenChange={() => setDeletingGuide(null)}>
+      <AlertDialog open={deletingNews !== null} onOpenChange={() => setDeletingNews(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Application Guide?</AlertDialogTitle>
+            <AlertDialogTitle>Delete News?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the application guide.
+              This action cannot be undone. This will permanently delete the news item.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

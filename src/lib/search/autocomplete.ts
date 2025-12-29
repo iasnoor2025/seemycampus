@@ -44,7 +44,7 @@ export async function getAutocompleteSuggestions(
           ilike(colleges.city, searchTerm)
         )!
       )
-      .limit(Math.ceil(limit * 0.5)) // 50% of results from colleges
+      .limit(limit) // Show all matching colleges up to limit
 
     collegeResults.forEach((college) => {
       suggestions.push({
@@ -58,8 +58,9 @@ export async function getAutocompleteSuggestions(
       })
     })
 
-    // Search courses
-    const courseResults = await db
+    // Search courses (only if we have space after colleges)
+    const remainingLimit = limit - suggestions.length
+    const courseResults = remainingLimit > 0 ? await db
       .select({
         id: courses.id,
         name: courses.name,
@@ -68,7 +69,8 @@ export async function getAutocompleteSuggestions(
       })
       .from(courses)
       .where(ilike(courses.name, searchTerm))
-      .limit(Math.ceil(limit * 0.3)) // 30% from courses
+      .limit(Math.min(remainingLimit, Math.ceil(limit * 0.3))) // 30% from courses if space available
+      : []
 
     courseResults.forEach((course) => {
       suggestions.push({
@@ -82,8 +84,9 @@ export async function getAutocompleteSuggestions(
       })
     })
 
-    // Search unique locations (cities and states)
-    const locationResults = await db
+    // Search unique locations (cities and states) - only if we have space
+    const remainingLimitAfterCourses = limit - suggestions.length
+    const locationResults = remainingLimitAfterCourses > 0 ? await db
       .selectDistinct({
         city: colleges.city,
         state: colleges.state,
@@ -97,7 +100,8 @@ export async function getAutocompleteSuggestions(
           ilike(colleges.location, searchTerm)
         )!
       )
-      .limit(Math.ceil(limit * 0.2)) // 20% from locations
+      .limit(Math.min(remainingLimitAfterCourses, Math.ceil(limit * 0.2))) // 20% from locations if space available
+      : []
 
     locationResults.forEach((loc) => {
       const locationText = loc.city || loc.state || loc.location

@@ -58,7 +58,7 @@ export function SearchAutocomplete({
   const fetchSuggestions = async (searchQuery: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/search/autocomplete?q=${encodeURIComponent(searchQuery)}&limit=8`)
+      const response = await fetch(`/api/search/autocomplete?q=${encodeURIComponent(searchQuery)}&limit=20`)
       if (response.ok) {
         const data = await response.json()
         setSuggestions(data.suggestions || [])
@@ -79,7 +79,9 @@ export function SearchAutocomplete({
   }
 
   const handleSelect = (suggestion: AutocompleteSuggestion) => {
-    setQuery(suggestion.text)
+    // Always set the query to the display text (name), never the ID
+    const displayText = suggestion.text || suggestion.id.replace(/^(college|course|location|exam)-/, "")
+    setQuery(displayText)
     setShowSuggestions(false)
 
     // Navigate based on type
@@ -89,11 +91,11 @@ export function SearchAutocomplete({
       router.push(`/courses/${suggestion.slug}`)
     } else {
       // For location or general search, navigate to colleges page with search query
-      router.push(`/colleges?search=${encodeURIComponent(suggestion.text)}`)
+      router.push(`/colleges?search=${encodeURIComponent(displayText)}`)
     }
 
     if (onSearch) {
-      onSearch(suggestion.text)
+      onSearch(displayText)
     }
   }
 

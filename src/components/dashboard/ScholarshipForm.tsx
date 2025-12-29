@@ -78,7 +78,7 @@ export function ScholarshipForm({ scholarship, onClose }: ScholarshipFormProps) 
 
   const fetchColleges = async () => {
     try {
-      const response = await fetch("/api/dashboard/colleges?limit=1000")
+      const response = await fetch("/api/dashboard/colleges?all=true")
       if (response.ok) {
         const data = await response.json()
         setColleges(data.colleges || [])

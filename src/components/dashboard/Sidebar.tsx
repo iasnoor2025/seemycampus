@@ -68,6 +68,12 @@ const allMenuItems = [
     roles: ["admin", "moderator", "staff"],
   },
   {
+    title: "News",
+    href: "/dashboard/news",
+    icon: BookOpen,
+    roles: ["admin", "moderator", "staff"],
+  },
+  {
     title: "Courses",
     href: "/dashboard/courses",
     icon: GraduationCap,

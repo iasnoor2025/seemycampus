@@ -717,6 +717,36 @@ export const collegeInquiriesRelations = relations(collegeInquiries, ({ one }) =
   }),
 }));
 
+// College News table - News & Updates
+export const collegeNews = pgTable("college_news", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // admissions, placements, events, achievements, general
+  image: varchar("image", { length: 500 }), // Featured image URL
+  author: integer("author").references(() => users.id, { onDelete: "set null" }),
+  tags: jsonb("tags").$type<string[]>().default([]), // Array of tags
+  publishedAt: timestamp("published_at").defaultNow().notNull(),
+  isPublished: boolean("is_published").default(true).notNull(),
+  viewCount: integer("view_count").default(0).notNull(),
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// College News Relations
+export const collegeNewsRelations = relations(collegeNews, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeNews.collegeId],
+    references: [colleges.id],
+  }),
+  authorUser: one(users, {
+    fields: [collegeNews.author],
+    references: [users.id],
+  }),
+}));
+
 // Update colleges relations to include new tables
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),
@@ -731,5 +761,6 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   faculty: many(collegeFaculty),
   applicationGuides: many(applicationGuides),
   inquiries: many(collegeInquiries),
+  news: many(collegeNews),
 }));
 

@@ -266,7 +266,13 @@ export function PlacementManagement() {
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="All Colleges" />
+              <SelectValue placeholder="All Colleges">
+                {(value: string | null) => {
+                  if (!value || value === "") return "All Colleges"
+                  const college = colleges.find((c) => c.id.toString() === value)
+                  return college?.name || "All Colleges"
+                }}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">All Colleges</SelectItem>
