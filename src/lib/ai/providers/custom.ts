@@ -14,8 +14,8 @@ export class CustomAIProvider implements AIProvider {
   async chat(
     messages: Array<{ role: "user" | "assistant" | "system"; content: string }>
   ): Promise<string> {
-    if (!this.config.apiUrl) {
-      throw new Error("AI API URL not configured")
+    if (!this.config.apiUrl || !this.config.apiKey) {
+      throw new Error("AI API not configured. Please set AI_API_URL and AI_API_KEY environment variables.")
     }
 
     try {

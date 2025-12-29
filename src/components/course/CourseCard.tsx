@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, GraduationCap, DollarSign } from "lucide-react"
+import { Clock, GraduationCap } from "lucide-react"
 
 interface CourseCardProps {
   id: number
@@ -57,7 +57,7 @@ export function CourseCard({
           )}
           {fees && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <DollarSign className="h-4 w-4" />
+              <span className="text-lg">₹</span>
               <span>{formatCurrency(fees, feesCurrency || "INR")}</span>
             </div>
           )}

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calendar, DollarSign, GraduationCap, Building2 } from "lucide-react"
+import { Calendar, GraduationCap, Building2 } from "lucide-react"
 import { format } from "date-fns"
 
 interface ScholarshipCardProps {
@@ -83,7 +83,7 @@ export function ScholarshipCard({ scholarship }: ScholarshipCardProps) {
         )}
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-gray-700">
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <span className="text-lg text-green-600">₹</span>
             <span className="font-medium">{formatAmount()}</span>
           </div>
           {scholarship.level && (

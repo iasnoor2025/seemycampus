@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calculator, DollarSign, TrendingUp, Info } from "lucide-react"
+import { Calculator, TrendingUp, Info } from "lucide-react"
 import {
   Alert,
   AlertDescription,
@@ -209,7 +209,7 @@ export function FeeCalculatorClient() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="INR">INR (₹)</SelectItem>
-                  <SelectItem value="USD">USD ($)</SelectItem>
+                  <SelectItem value="USD">USD (₹)</SelectItem>
                   <SelectItem value="EUR">EUR (€)</SelectItem>
                 </SelectContent>
               </Select>

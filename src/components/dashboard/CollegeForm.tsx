@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
+import { PlaceIdHelper } from "./PlaceIdHelper"
 
 interface College {
   id?: number
@@ -22,6 +23,7 @@ interface College {
   phone: string | null
   isAcademicAlliance: boolean
   images?: string[] | null
+  googlePlaceId?: string | null
 }
 
 interface CollegeFormProps {
@@ -43,6 +45,7 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
     phone: null,
     isAcademicAlliance: false,
     images: null,
+    googlePlaceId: null,
   })
   const [logoUrl, setLogoUrl] = useState("")
   const [loading, setLoading] = useState(false)
@@ -250,6 +253,15 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
                 value={formData.phone || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value || null })
+                }
+              />
+            </div>
+
+            <div>
+              <PlaceIdHelper
+                value={formData.googlePlaceId || ""}
+                onChange={(value) =>
+                  setFormData({ ...formData, googlePlaceId: value || null })
                 }
               />
             </div>

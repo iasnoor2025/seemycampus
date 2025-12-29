@@ -1,6 +1,7 @@
 "use client"
 
 import { Message } from "./ChatInterface"
+import { QuickReplies } from "./QuickReplies"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,93 +11,109 @@ import { GraduationCap, MapPin, ExternalLink } from "lucide-react"
 
 interface MessageListProps {
   messages: Message[]
+  onQuickReply?: (message: string) => void
+  disabled?: boolean
 }
 
-export function MessageList({ messages }: MessageListProps) {
+export function MessageList({ messages, onQuickReply, disabled = false }: MessageListProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {messages.map((message, index) => (
-        <div
-          key={index}
-          className={`flex ${
-            message.role === "user" ? "justify-end" : "justify-start"
-          }`}
-        >
+        <div key={index} className="space-y-2 sm:space-y-3">
           <div
-            className={`max-w-[80%] ${
-              message.role === "user" ? "order-2" : "order-1"
+            className={`flex ${
+              message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
-            <Card
-              className={
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
-              }
+            <div
+              className={`max-w-[85%] sm:max-w-[80%] ${
+                message.role === "user" ? "order-2" : "order-1"
+              }`}
             >
-              <CardContent className="p-3">
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                
-                {/* College Suggestions */}
-                {message.role === "assistant" && message.suggestions && message.suggestions.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs font-semibold mb-2 text-muted-foreground">
-                      Suggested Colleges:
-                    </p>
-                    <div className="space-y-2">
-                      {message.suggestions.map((college) => (
+              <Card
+                className={
+                  message.role === "user"
+                    ? "bg-gradient-to-br from-[#18254a] to-[#1a2d5a] text-white shadow-md border-0"
+                    : "bg-white border border-gray-200 shadow-sm"
+                }
+              >
+                <CardContent className="p-3 sm:p-4">
+                  <p className={`text-sm sm:text-sm whitespace-pre-wrap break-words leading-relaxed ${
+                    message.role === "user" ? "text-white" : "text-gray-800"
+                  }`}>{message.content}</p>
+                  
+                  {/* College Suggestions */}
+                  {message.role === "assistant" && message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-xs font-semibold mb-3 text-gray-600 uppercase tracking-wide">
+                        Suggested Colleges:
+                      </p>
+                      <div className="space-y-2">
+                        {message.suggestions.map((college) => (
                         <Link
                           key={college.id}
                           href={`/colleges/${college.slug}`}
-                          className="block"
+                          className="block group"
                         >
-                          <Card className="hover:bg-accent transition-colors cursor-pointer">
+                          <Card className="hover:bg-gray-50 hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-200 hover:border-[#18254a]/20">
                             <CardContent className="p-3">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <GraduationCap className="h-4 w-4 text-primary" />
-                                    <span className="font-semibold text-sm">{college.name}</span>
-                                    {college.ranking && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        Rank #{college.ranking}
-                                      </Badge>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <GraduationCap className="h-4 w-4 text-primary" />
+                                      <span className="font-semibold text-sm">{college.name}</span>
+                                      {college.ranking && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          Rank #{college.ranking}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {(college.city || college.location) && (
+                                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <MapPin className="h-3 w-3" />
+                                        {college.city || college.location}
+                                      </div>
+                                    )}
+                                    {college.description && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {college.description}
+                                      </p>
                                     )}
                                   </div>
-                                  {(college.city || college.location) && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <MapPin className="h-3 w-3" />
-                                      {college.city || college.location}
-                                    </div>
-                                  )}
-                                  {college.description && (
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                      {college.description}
-                                    </p>
-                                  )}
+                                  <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 </div>
-                                <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))}
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                <p
-                  className={`text-xs mt-2 ${
-                    message.role === "user"
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {format(message.timestamp, "HH:mm")}
-                </p>
-              </CardContent>
-            </Card>
+                  )}
+                  
+                  <p
+                    className={`text-xs mt-3 ${
+                      message.role === "user"
+                        ? "text-white/70"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {format(message.timestamp, "HH:mm")}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
+          
+          {/* Quick Replies */}
+          {message.role === "assistant" && message.showQuickReplies && onQuickReply && (
+            <div className="px-1 sm:px-0">
+              <QuickReplies 
+                onSelect={onQuickReply} 
+                disabled={disabled}
+                className="justify-start"
+              />
+            </div>
+          )}
         </div>
       ))}
     </div>

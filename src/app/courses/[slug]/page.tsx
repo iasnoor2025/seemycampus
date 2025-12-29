@@ -5,7 +5,7 @@ import { eq, ilike } from "drizzle-orm"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, GraduationCap, DollarSign, MapPin, ArrowLeft } from "lucide-react"
+import { Clock, GraduationCap, MapPin, ArrowLeft } from "lucide-react"
 import { Metadata } from "next"
 import { generateCourseMeta, generateStructuredDataCourse } from "@/lib/seo/generateMeta"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
@@ -542,7 +542,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                 )}
                 {course.fees && (
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-lg text-muted-foreground">₹</span>
                     <div>
                       <p className="text-sm font-medium">Fees</p>
                       <p className="text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { format } from "date-fns"
-import { Calendar, DollarSign, GraduationCap, Building2, Mail, Phone, ExternalLink } from "lucide-react"
+import { Calendar, GraduationCap, Building2, Mail, Phone, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { baseUrl, generateBreadcrumbList } from "@/lib/seo/generateMeta"
@@ -144,7 +144,7 @@ export default async function ScholarshipPage({ params }: ScholarshipPageProps) 
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
+                  <span className="text-lg">₹</span>
                   Scholarship Amount
                 </CardTitle>
               </CardHeader>

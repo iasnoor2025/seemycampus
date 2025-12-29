@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { collegeReviews, colleges } from "@/db/schema"
-import { eq, desc, and } from "drizzle-orm"
+import { eq, desc, and, isNotNull } from "drizzle-orm"
 
 // GET - Fetch reviews for a college
 export async function GET(
@@ -22,12 +22,12 @@ export async function GET(
       return NextResponse.json({ error: "College not found" }, { status: 404 })
     }
 
-    // Get approved reviews
+    // Get approved reviews (both internal and external)
     const reviews = await db
       .select()
       .from(collegeReviews)
       .where(and(eq(collegeReviews.collegeId, college.id), eq(collegeReviews.isApproved, true)))
-      .orderBy(desc(collegeReviews.createdAt))
+      .orderBy(desc(collegeReviews.externalDate || collegeReviews.createdAt))
 
     // Calculate average rating
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0)
@@ -98,6 +98,7 @@ export async function POST(
         reviewerEmail: reviewerEmail || null,
         course: course || null,
         batch: batch || null,
+        source: "internal", // Internal user-submitted reviews
         isApproved: false, // Requires admin approval
       })
       .returning()

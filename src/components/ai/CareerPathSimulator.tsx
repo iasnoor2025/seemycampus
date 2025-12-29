@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, TrendingUp, Target, BookOpen, DollarSign, ArrowRight, CheckCircle } from "lucide-react"
+import { Loader2, TrendingUp, Target, BookOpen, ArrowRight, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 interface CareerPath {

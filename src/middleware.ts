@@ -35,25 +35,21 @@ export default auth((req) => {
     return NextResponse.redirect(url, 301)
   }
 
-  // Protect admin routes - require admin role
+  // Protect admin routes - require login (role check happens in page component)
   if (pathname.startsWith("/admin")) {
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url))
-    }
-    const userRole = (req.auth?.user as any)?.role
-    if (userRole !== "admin") {
-      return NextResponse.redirect(new URL("/", req.url))
+      const signInUrl = new URL("/auth/signin", req.url)
+      signInUrl.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(signInUrl)
     }
   }
 
-  // Protect dashboard routes - require admin role
+  // Protect dashboard routes - require login (role check happens in layout/page components)
   if (pathname.startsWith("/dashboard")) {
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url))
-    }
-    const userRole = (req.auth?.user as any)?.role
-    if (userRole !== "admin") {
-      return NextResponse.redirect(new URL("/", req.url))
+      const signInUrl = new URL("/auth/signin", req.url)
+      signInUrl.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(signInUrl)
     }
   }
 

@@ -30,6 +30,7 @@ export const colleges = pgTable("colleges", {
   ownership: varchar("ownership", { length: 50 }), // Private, Government, Public
   campusSize: varchar("campus_size", { length: 100 }), // e.g., "50 acres"
   totalStudents: integer("total_students"), // Total student enrollment
+  googlePlaceId: varchar("google_place_id", { length: 255 }), // Google Maps Place ID for reviews
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -198,6 +199,11 @@ export const collegeReviews = pgTable("college_reviews", {
   isVerified: boolean("is_verified").default(false), // Admin verified
   isApproved: boolean("is_approved").default(false), // Admin approved for display
   helpfulCount: integer("helpful_count").default(0), // Number of helpful votes
+  // External review fields
+  source: varchar("source", { length: 50 }), // 'internal', 'google_maps', 'college_website', 'internet'
+  externalId: varchar("external_id", { length: 255 }), // External review ID for deduplication
+  externalUrl: varchar("external_url", { length: 500 }), // Link to original review
+  externalDate: timestamp("external_date"), // Original review date from external source
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

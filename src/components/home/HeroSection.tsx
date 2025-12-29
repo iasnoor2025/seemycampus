@@ -216,7 +216,7 @@ export function HeroSection() {
           <div className="max-w-4xl mx-auto text-center">
             {/* Main Heading - Typewriter animation with delete and type effect */}
             <div className="relative min-h-[50px] sm:min-h-[60px] md:min-h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1">
-              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words max-w-full">
+              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words lg:whitespace-nowrap max-w-full">
                 {displayText}
                 <span className="animate-pulse">|</span>
               </h1>

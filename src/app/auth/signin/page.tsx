@@ -46,7 +46,9 @@ function SignInForm() {
           setError("Invalid email or password")
         }
       } else {
-        router.push("/dashboard")
+        // Get callback URL from query params, default to /dashboard
+        const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard"
+        router.push(callbackUrl)
         router.refresh()
       }
     } catch (err) {

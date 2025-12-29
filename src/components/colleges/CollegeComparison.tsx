@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { X, Search, GraduationCap, MapPin, Building, DollarSign, Award, Users, Calendar, Globe, Mail, Phone } from "lucide-react"
+import { X, Search, GraduationCap, MapPin, Building, Award, Users, Calendar, Globe, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useDebounce } from "@/lib/hooks/useDebounce"
@@ -563,7 +563,7 @@ export function CollegeComparison() {
                   <tr className="border-b">
                     <td className="p-4 font-medium sticky left-0 bg-background z-10">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <span className="text-lg">₹</span>
                         Hostel Fees (per year)
                       </div>
                     </td>
@@ -578,7 +578,7 @@ export function CollegeComparison() {
                   <tr className="border-b">
                     <td className="p-4 font-medium sticky left-0 bg-background z-10">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <span className="text-lg">₹</span>
                         Average Package
                       </div>
                     </td>
@@ -593,7 +593,7 @@ export function CollegeComparison() {
                   <tr className="border-b">
                     <td className="p-4 font-medium sticky left-0 bg-background z-10">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <span className="text-lg">₹</span>
                         Highest Package
                       </div>
                     </td>

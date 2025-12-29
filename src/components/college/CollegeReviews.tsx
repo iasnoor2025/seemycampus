@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Star, ThumbsUp, Calendar, X } from "lucide-react"
+import { Star, ThumbsUp, Calendar, X, RefreshCw, ExternalLink, MapPin, Globe } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface Review {
   id: number
@@ -18,6 +19,9 @@ interface Review {
   batch: string | null
   helpfulCount: number
   createdAt: string
+  source: string | null
+  externalUrl: string | null
+  externalDate: string | null
 }
 
 interface CollegeReviewsProps {
@@ -30,6 +34,7 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
   const [totalReviews, setTotalReviews] = useState(0)
   const [ratingCounts, setRatingCounts] = useState<Record<number, number>>({})
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [formData, setFormData] = useState({
@@ -67,6 +72,55 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
   const showNotification = (message: string, type: "success" | "error") => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 5000)
+  }
+
+  const handleSyncExternal = async () => {
+    try {
+      setSyncing(true)
+      const response = await fetch(`/api/colleges/${collegeSlug}/reviews/sync-external`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        showNotification(
+          data.message || `Synced ${data.synced} external reviews`,
+          "success"
+        )
+        // Refresh reviews after sync
+        fetchReviews()
+      } else {
+        const error = await response.json()
+        showNotification(error.error || "Failed to sync external reviews", "error")
+      }
+    } catch (error) {
+      console.error("Error syncing external reviews:", error)
+      showNotification("Failed to sync external reviews", "error")
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const getSourceBadge = (source: string | null) => {
+    if (!source || source === "internal") return null
+
+    const sourceConfig = {
+      google_maps: { label: "Google Maps", icon: MapPin, color: "bg-blue-100 text-blue-800" },
+      college_website: { label: "College Website", icon: Globe, color: "bg-green-100 text-green-800" },
+      internet: { label: "Internet", icon: ExternalLink, color: "bg-purple-100 text-purple-800" },
+    }
+
+    const config = sourceConfig[source as keyof typeof sourceConfig]
+    if (!config) return null
+
+    const Icon = config.icon
+
+    return (
+      <Badge className={`${config.color} flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,9 +208,19 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">Reviews & Ratings</CardTitle>
-            <Button onClick={() => setShowForm(!showForm)}>
-              {showForm ? "Cancel" : "Write a Review"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleSyncExternal}
+                disabled={syncing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? "Syncing..." : "Sync External Reviews"}
+              </Button>
+              <Button onClick={() => setShowForm(!showForm)}>
+                {showForm ? "Cancel" : "Write a Review"}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -319,14 +383,15 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
             <Card key={review.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {renderStars(review.rating)}
                       {review.title && (
                         <span className="font-semibold text-lg">{review.title}</span>
                       )}
+                      {getSourceBadge(review.source)}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
                       {review.reviewerName && (
                         <span className="font-medium">{review.reviewerName}</span>
                       )}
@@ -334,8 +399,21 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
                       {review.batch && <span>Batch {review.batch}</span>}
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(review.createdAt).toLocaleDateString()}
+                        {review.externalDate
+                          ? new Date(review.externalDate).toLocaleDateString()
+                          : new Date(review.createdAt).toLocaleDateString()}
                       </span>
+                      {review.externalUrl && (
+                        <a
+                          href={review.externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View Original
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

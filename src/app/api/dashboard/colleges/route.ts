@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images } = body
+    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images, googlePlaceId } = body
 
     if (!name || !slug) {
       return NextResponse.json(
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         phone,
         isAcademicAlliance: isAcademicAlliance || false,
         images: images || [],
+        googlePlaceId: googlePlaceId || null,
       })
       .returning()
 

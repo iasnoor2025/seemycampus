@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { ChatInput } from "./ChatInput"
 import { MessageList } from "./MessageList"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,11 +10,28 @@ import { Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 
+const getWelcomeMessage = (pathname: string | null): string => {
+  if (pathname?.startsWith("/colleges/")) {
+    return "Hello! I can help you learn more about this college, compare it with others, or answer questions about admissions, courses, and fees. What would you like to know?"
+  }
+  if (pathname?.startsWith("/colleges")) {
+    return "Hello! I'm here to help you find the perfect college. I can help you search for colleges, compare options, understand admission requirements, or answer any questions about courses and programs. How can I assist you today?"
+  }
+  if (pathname?.startsWith("/courses")) {
+    return "Hello! I can help you explore courses, understand requirements, find colleges offering specific programs, or answer questions about career paths. What would you like to know?"
+  }
+  if (pathname?.startsWith("/scholarships")) {
+    return "Hello! I can help you find scholarship opportunities, understand eligibility criteria, or answer questions about financial aid. How can I assist you?"
+  }
+  return "Hello! I'm your AI assistant for SeeMyCampus. I can help you with:\n• Finding the right colleges and courses\n• Understanding admission requirements\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations\n\nWhat would you like to explore today?"
+}
+
 export interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
   suggestions?: CollegeSuggestion[]
+  showQuickReplies?: boolean
 }
 
 export interface CollegeSuggestion {
@@ -27,11 +45,13 @@ export interface CollegeSuggestion {
 }
 
 export function ChatInterface() {
+  const pathname = usePathname()
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm here to help you with questions about colleges, courses, and admissions. How can I assist you today?",
+      content: getWelcomeMessage(pathname),
       timestamp: new Date(),
+      showQuickReplies: true,
     },
   ])
   const [loading, setLoading] = useState(false)
@@ -63,30 +83,57 @@ export function ChatInterface() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: content }),
+        body: JSON.stringify({ 
+          message: content,
+          history: messages.slice(-10).map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          includeColleges: true,
+          context: {
+            pathname: pathname || "",
+          },
+        }),
       })
+
+      // Check if response is ok
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Server error: ${response.status}`)
+      }
 
       const data = await response.json()
 
-      if (data.success) {
+      // Handle both success and error responses gracefully
+      if (data.success || data.response) {
         const assistantMessage: Message = {
           role: "assistant",
-          content: data.response,
+          content: data.response || data.fallback || "I'm here to help! How can I assist you today?",
           timestamp: new Date(),
           suggestions: data.suggestions || [],
+          showQuickReplies: messages.length >= 2 && messages.length % 3 === 0,
         }
         setMessages((prev) => [...prev, assistantMessage])
       } else {
         throw new Error(data.error || "Failed to get response")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error:", error)
-      const errorMessage: Message = {
-        role: "assistant",
-        content: "I'm sorry, I'm having trouble processing your request. Please try again.",
-        timestamp: new Date(),
+      let errorMessage = "I'm sorry, I'm having trouble processing your request right now."
+      
+      if (error.message?.includes("rate limit") || error.message?.includes("429")) {
+        errorMessage = "I'm receiving too many requests. Please wait a moment and try again. You can also visit our help pages or contact support for immediate assistance."
+      } else if (error.message?.includes("network") || error.message?.includes("fetch")) {
+        errorMessage = "I'm having trouble connecting. Please check your internet connection and try again. You can also visit our FAQ page or contact support."
       }
-      setMessages((prev) => [...prev, errorMessage])
+      
+      const errorMsg: Message = {
+        role: "assistant",
+        content: errorMessage,
+        timestamp: new Date(),
+        showQuickReplies: true,
+      }
+      setMessages((prev) => [...prev, errorMsg])
     } finally {
       setLoading(false)
     }
@@ -96,8 +143,9 @@ export function ChatInterface() {
     setMessages([
       {
         role: "assistant",
-        content: "Chat cleared. How can I help you?",
+        content: getWelcomeMessage(pathname),
         timestamp: new Date(),
+        showQuickReplies: true,
       },
     ])
   }
@@ -117,7 +165,11 @@ export function ChatInterface() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
-          <MessageList messages={messages} />
+          <MessageList 
+            messages={messages} 
+            onQuickReply={handleSendMessage}
+            disabled={loading}
+          />
           {loading && (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <div className="h-2 w-2 bg-current rounded-full animate-bounce" />
@@ -128,7 +180,7 @@ export function ChatInterface() {
           )}
           <div ref={messagesEndRef} />
         </div>
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-3">
           <ChatInput onSend={handleSendMessage} disabled={loading} />
         </div>
       </CardContent>

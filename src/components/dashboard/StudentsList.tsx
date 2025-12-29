@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Calendar, MapPin, DollarSign, GraduationCap, Search } from "lucide-react"
+import { Users, Calendar, MapPin, GraduationCap, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -136,7 +136,7 @@ export function StudentsList() {
                   <TableCell>
                     {student.budgetMin && student.budgetMax ? (
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-lg text-muted-foreground">₹</span>
                         <span>
                           {student.budgetCurrency || "INR"}{" "}
                           {student.budgetMin.toLocaleString()} -{" "}
