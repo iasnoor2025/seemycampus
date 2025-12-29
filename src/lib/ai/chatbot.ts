@@ -85,13 +85,22 @@ export class Chatbot {
     }
   }
 
-  async sendMessage(userMessage: string, includeColleges: boolean = true): Promise<{ response: string; suggestions: CollegeSuggestion[] }> {
+  async sendMessage(
+    userMessage: string,
+    includeColleges: boolean = true,
+    history?: ChatMessage[]
+  ): Promise<{ response: string; suggestions: CollegeSuggestion[] }> {
     // Safety check
     if (!checkSafety(userMessage)) {
       return {
         response: "I'm here to help with educational questions about colleges and courses. For personal, financial, medical, or legal advice, please consult with appropriate professionals.",
         suggestions: []
       }
+    }
+
+    // Restore history if provided (for session management)
+    if (history && history.length > 0) {
+      this.conversationHistory = [...history]
     }
 
     // Search for relevant colleges if enabled
