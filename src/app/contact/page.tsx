@@ -89,7 +89,7 @@ export default function ContactPage() {
 
             {/* Right Column - Contact Form */}
             <Suspense fallback={<div>Loading form...</div>}>
-              <ContactForm />
+            <ContactForm />
             </Suspense>
           </div>
         </div>

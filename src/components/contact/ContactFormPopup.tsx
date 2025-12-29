@@ -56,8 +56,13 @@ export function ContactFormPopup() {
     checkContactFormStatus()
   }, [])
 
-  // Don't show popup on quiz or contact pages
-  const shouldShowPopup = !pathname?.includes("/quiz") && !pathname?.includes("/contact")
+  // Don't show popup on quiz, contact, dashboard, or admin pages
+  const shouldShowPopup = 
+    !pathname?.includes("/quiz") && 
+    !pathname?.includes("/contact") &&
+    !pathname?.includes("/dashboard") &&
+    !pathname?.includes("/admin") &&
+    !pathname?.includes("/auth")
 
   // Lock body scroll when popup is open
   useEffect(() => {

@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Phone, Search, Menu, X, ChevronRight, ChevronDown } from "lucide-react"
 import { Logo } from "./Logo"
-import { HeaderAuthButton } from "./HeaderAuthButton"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -245,8 +244,6 @@ export function Header() {
                   </span>
                 </div>
               </a>
-              
-              <HeaderAuthButton />
             </div>
 
             {/* Mobile Right Side */}
@@ -300,10 +297,6 @@ export function Header() {
         )}
       >
         <nav className="py-4">
-          {/* Auth Button at top */}
-          <div className="px-4 pb-4 border-b border-gray-200">
-            <HeaderAuthButton />
-          </div>
 
           {/* Navigation Links */}
           <ul className="py-2">
