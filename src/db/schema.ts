@@ -31,6 +31,10 @@ export const colleges = pgTable("colleges", {
   campusSize: varchar("campus_size", { length: 100 }), // e.g., "50 acres"
   totalStudents: integer("total_students"), // Total student enrollment
   googlePlaceId: varchar("google_place_id", { length: 255 }), // Google Maps Place ID for reviews
+  // JSONB fields for quick access to aggregated data
+  cutoffData: jsonb("cutoff_data").$type<Record<string, any>>(), // Aggregated cutoff data for quick access
+  placementData: jsonb("placement_data").$type<Record<string, any>>(), // Aggregated placement data for quick access
+  rankingData: jsonb("ranking_data").$type<Record<string, any>>(), // Aggregated ranking data for quick access
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -196,9 +200,15 @@ export const collegeReviews = pgTable("college_reviews", {
   review: text("review").notNull(),
   course: varchar("course", { length: 255 }), // Course they studied
   batch: varchar("batch", { length: 50 }), // Graduation year
-  isVerified: boolean("is_verified").default(false), // Admin verified
+  category: varchar("category", { length: 100 }), // academics, infrastructure, placements, campus_life, faculty
+  isVerified: boolean("is_verified").default(false), // Admin verified (verified student badge)
   isApproved: boolean("is_approved").default(false), // Admin approved for display
   helpfulCount: integer("helpful_count").default(0), // Number of helpful votes
+  notHelpfulCount: integer("not_helpful_count").default(0), // Number of not helpful votes
+  photos: jsonb("photos").$type<string[]>().default([]), // Photos uploaded with review
+  videoUrl: varchar("video_url", { length: 500 }), // Video review URL
+  replyFromCollege: text("reply_from_college"), // College's response to the review
+  replyDate: timestamp("reply_date"), // Date when college replied
   // External review fields
   source: varchar("source", { length: 50 }), // 'internal', 'google_maps', 'college_website', 'internet'
   externalId: varchar("external_id", { length: 255 }), // External review ID for deduplication
@@ -410,14 +420,57 @@ export const scholarships = pgTable("scholarships", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Relations
-export const collegesRelations = relations(colleges, ({ many }) => ({
-  courses: many(courses),
-  reviews: many(collegeReviews),
-  savedBy: many(savedColleges),
-  scholarships: many(scholarships),
-}));
+// Cutoffs table - Store entrance exam cutoff data
+export const cutoffs = pgTable("cutoffs", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  examName: varchar("exam_name", { length: 100 }).notNull(), // CAT, GMAT, JEE, NEET, etc.
+  courseName: varchar("course_name", { length: 255 }), // MBA, B.Tech, MBBS, etc.
+  year: integer("year").notNull(), // Year of cutoff (e.g., 2024)
+  category: varchar("category", { length: 50 }), // General, OBC, SC, ST, EWS, etc.
+  openingRank: integer("opening_rank"), // Opening rank for admission
+  closingRank: integer("closing_rank"), // Closing rank for admission
+  openingScore: integer("opening_score"), // Opening score/percentile
+  closingScore: integer("closing_score"), // Closing score/percentile
+  round: integer("round").default(1), // Round number (1, 2, 3, etc.)
+  quota: varchar("quota", { length: 50 }), // All India, State, Management, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
+// Placement Stats table - Detailed placement statistics
+export const placementStats = pgTable("placement_stats", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  year: integer("year").notNull(), // Placement year (e.g., 2024)
+  totalStudents: integer("total_students"), // Total students eligible for placement
+  placedStudents: integer("placed_students"), // Number of students placed
+  placementPercentage: integer("placement_percentage"), // Placement percentage
+  averagePackage: integer("average_package"), // Average package in INR
+  medianPackage: integer("median_package"), // Median package in INR
+  highestPackage: integer("highest_package"), // Highest package in INR
+  lowestPackage: integer("lowest_package"), // Lowest package in INR
+  topRecruiters: jsonb("top_recruiters").$type<string[]>().default([]), // List of top recruiting companies
+  departmentWiseData: jsonb("department_wise_data").$type<Record<string, any>>(), // Department-wise placement stats
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// College Rankings table - Multiple ranking sources
+export const collegeRankings = pgTable("college_rankings", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  rankingSource: varchar("ranking_source", { length: 100 }).notNull(), // NIRF, QS, Times, Outlook, etc.
+  year: integer("year").notNull(), // Year of ranking (e.g., 2024)
+  rank: integer("rank").notNull(), // Rank number
+  category: varchar("category", { length: 100 }), // Overall, Engineering, Management, Medical, etc.
+  score: integer("score"), // Ranking score if available
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional ranking metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Relations
 export const coursesRelations = relations(courses, ({ one }) => ({
   college: one(colleges, {
     fields: [courses.collegeId],
@@ -507,5 +560,176 @@ export const scholarshipsRelations = relations(scholarships, ({ one }) => ({
     fields: [scholarships.collegeId],
     references: [colleges.id],
   }),
+}));
+
+export const cutoffsRelations = relations(cutoffs, ({ one }) => ({
+  college: one(colleges, {
+    fields: [cutoffs.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+export const placementStatsRelations = relations(placementStats, ({ one }) => ({
+  college: one(colleges, {
+    fields: [placementStats.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+export const collegeRankingsRelations = relations(collegeRankings, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeRankings.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+// College Infrastructure table - Labs, library, facilities
+export const collegeInfrastructure = pgTable("college_infrastructure", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  facilityType: varchar("facility_type", { length: 100 }).notNull(), // lab, library, auditorium, sports, etc.
+  name: varchar("name", { length: 255 }).notNull(), // e.g., "Computer Lab 1", "Central Library"
+  description: text("description"), // Detailed description
+  capacity: integer("capacity"), // Capacity (e.g., number of students, seats)
+  images: jsonb("images").$type<string[]>().default([]), // Images of the facility
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata (equipment, features, etc.)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// College Hostels table - Hostel information
+export const collegeHostels = pgTable("college_hostels", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  hostelName: varchar("hostel_name", { length: 255 }).notNull(), // e.g., "Boys Hostel A", "Girls Hostel"
+  type: varchar("type", { length: 50 }).notNull(), // boys, girls, co-ed
+  capacity: integer("capacity"), // Number of rooms/beds
+  fees: integer("fees"), // Hostel fees per year
+  facilities: jsonb("facilities").$type<string[]>().default([]), // WiFi, AC, Mess, Laundry, etc.
+  rules: text("rules"), // Hostel rules and regulations
+  images: jsonb("images").$type<string[]>().default([]), // Images of the hostel
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// College Faculty table - Faculty information
+export const collegeFaculty = pgTable("college_faculty", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  designation: varchar("designation", { length: 100 }), // Professor, Associate Professor, Assistant Professor, etc.
+  department: varchar("department", { length: 255 }), // Department name
+  qualifications: text("qualifications"), // Educational qualifications
+  experience: integer("experience"), // Years of experience
+  email: varchar("email", { length: 255 }),
+  photo: varchar("photo", { length: 500 }), // Photo URL
+  bio: text("bio"), // Biography
+  achievements: jsonb("achievements").$type<string[]>().default([]), // Awards, publications, etc.
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Infrastructure Relations
+export const collegeInfrastructureRelations = relations(collegeInfrastructure, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeInfrastructure.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+export const collegeHostelsRelations = relations(collegeHostels, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeHostels.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+export const collegeFacultyRelations = relations(collegeFaculty, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeFaculty.collegeId],
+    references: [colleges.id],
+  }),
+}));
+
+// Application Guides table - Application form assistance
+export const applicationGuides = pgTable("application_guides", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: "cascade" }), // Optional - course-specific guide
+  guideContent: text("guide_content").notNull(), // Step-by-step application guide
+  requiredDocs: jsonb("required_docs").$type<string[]>().default([]), // List of required documents
+  feeInfo: jsonb("fee_info").$type<Record<string, any>>(), // Application fee details { amount, currency, paymentMethods, paymentLink }
+  deadlines: jsonb("deadlines").$type<Record<string, any>>(), // Important dates { applicationStart, applicationEnd, documentSubmission, etc. }
+  tips: text("tips"), // Form filling tips and common mistakes
+  applicationUrl: varchar("application_url", { length: 500 }), // Link to application form
+  contactInfo: jsonb("contact_info").$type<Record<string, any>>(), // Contact details for application queries
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Application Guides Relations
+export const applicationGuidesRelations = relations(applicationGuides, ({ one }) => ({
+  college: one(colleges, {
+    fields: [applicationGuides.collegeId],
+    references: [colleges.id],
+  }),
+  course: one(courses, {
+    fields: [applicationGuides.courseId],
+    references: [courses.id],
+  }),
+}));
+
+// College Inquiries table - Contact & Inquiry System
+export const collegeInquiries = pgTable("college_inquiries", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "set null" }), // Optional - can be anonymous
+  inquiryType: varchar("inquiry_type", { length: 100 }).notNull(), // admission, course, fee, scholarship, general
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, responded, resolved, closed
+  response: text("response"), // College/admin response
+  respondedBy: integer("responded_by").references(() => users.id, { onDelete: "set null" }), // Admin/college staff who responded
+  respondedAt: timestamp("responded_at"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// College Inquiries Relations
+export const collegeInquiriesRelations = relations(collegeInquiries, ({ one }) => ({
+  college: one(colleges, {
+    fields: [collegeInquiries.collegeId],
+    references: [colleges.id],
+  }),
+  student: one(users, {
+    fields: [collegeInquiries.studentId],
+    references: [users.id],
+  }),
+  responder: one(users, {
+    fields: [collegeInquiries.respondedBy],
+    references: [users.id],
+  }),
+}));
+
+// Update colleges relations to include new tables
+export const collegesRelations = relations(colleges, ({ many }) => ({
+  courses: many(courses),
+  reviews: many(collegeReviews),
+  savedBy: many(savedColleges),
+  scholarships: many(scholarships),
+  cutoffs: many(cutoffs),
+  placementStats: many(placementStats),
+  rankings: many(collegeRankings),
+  infrastructure: many(collegeInfrastructure),
+  hostels: many(collegeHostels),
+  faculty: many(collegeFaculty),
+  applicationGuides: many(applicationGuides),
+  inquiries: many(collegeInquiries),
 }));
 

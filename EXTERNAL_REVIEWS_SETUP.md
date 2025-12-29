@@ -170,7 +170,7 @@ External reviews are displayed in the Reviews & Ratings section with:
 ## Future Enhancements
 
 Potential improvements:
-- [ ] Integration with Indian education review sites (Shiksha, CollegeDunia)
+- [ ] Integration with Indian education review sites (Shiksha, education portals)
 - [ ] Scheduled automatic syncing (cron jobs)
 - [ ] Review sentiment analysis
 - [ ] Review moderation tools

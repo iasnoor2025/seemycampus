@@ -211,7 +211,7 @@ export async function fetchInternetReviews(
 ): Promise<ExternalReview[]> {
   // This is a simplified implementation
   // In production, you might want to:
-  // 1. Search review sites like Shiksha, CollegeDunia, etc.
+  // 1. Search review sites like Shiksha, education portals, etc.
   // 2. Use web scraping services
   // 3. Integrate with review aggregation APIs
 

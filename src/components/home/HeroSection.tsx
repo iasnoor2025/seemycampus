@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Search, GraduationCap, Briefcase, ShoppingCart, Palette, Stethoscope, Scale, BookOpen, ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { SearchAutocomplete } from "@/components/colleges/SearchAutocomplete"
 
 interface HeroSlide {
   id: number
@@ -162,8 +162,7 @@ export function HeroSection() {
     }
   }, [textIndex, charIndex, isDeleting])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSearch = () => {
     if (searchQuery.trim()) {
       router.push(`/colleges?search=${encodeURIComponent(searchQuery.trim())}`)
     }
@@ -232,27 +231,24 @@ export function HeroSection() {
             )}
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="mb-3 sm:mb-4 md:mb-6">
+            <div className="mb-3 sm:mb-4 md:mb-6">
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  <Input
-                    type="text"
+                <div className="flex-1">
+                  <SearchAutocomplete
                     placeholder="Search for colleges, exams, courses and more.."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base bg-white border-0 rounded-lg shadow-lg focus:ring-2 focus:ring-orange-500"
+                    size="lg"
+                    onSearch={(query) => setSearchQuery(query)}
                   />
                 </div>
                 <Button
-                  type="submit"
+                  onClick={handleSearch}
                   size="lg"
                   className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
                 >
                   Search
                 </Button>
               </div>
-            </form>
+            </div>
 
             {/* Expert Guidance Button */}
             <div className="flex justify-center">

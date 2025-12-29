@@ -44,6 +44,30 @@ const allMenuItems = [
     roles: ["admin", "moderator", "staff"],
   },
   {
+    title: "Cutoffs",
+    href: "/dashboard/cutoffs",
+    icon: Award,
+    roles: ["admin", "moderator", "staff"],
+  },
+  {
+    title: "Placements",
+    href: "/dashboard/placements",
+    icon: BarChart3,
+    roles: ["admin", "moderator", "staff"],
+  },
+  {
+    title: "Application Guides",
+    href: "/dashboard/application-guides",
+    icon: FileText,
+    roles: ["admin", "moderator", "staff"],
+  },
+  {
+    title: "Inquiries",
+    href: "/dashboard/inquiries",
+    icon: MessageSquare,
+    roles: ["admin", "moderator", "staff"],
+  },
+  {
     title: "Courses",
     href: "/dashboard/courses",
     icon: GraduationCap,

@@ -79,6 +79,7 @@ export function Header() {
     { href: "/", label: "HOME" },
     { href: "/about", label: "ABOUT US" },
     { href: "/compare", label: "COMPARE" },
+    { href: "/admission-predictor", label: "PREDICTOR" },
     { href: "/academic-alliance", label: "ALLIANCE" },
     { href: "/career-counseling", label: "COUNSELING" },
     { href: "/scholarships", label: "SCHOLARSHIPS" },

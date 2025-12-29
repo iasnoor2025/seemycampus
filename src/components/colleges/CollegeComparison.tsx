@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { X, Search, GraduationCap, MapPin, Building, Award, Users, Calendar, Globe, Mail, Phone } from "lucide-react"
+import { X, Search, GraduationCap, MapPin, Building, Award, Users, Calendar, Globe, Mail, Phone, TrendingUp, Briefcase } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useDebounce } from "@/lib/hooks/useDebounce"
@@ -53,6 +53,9 @@ export function CollegeComparison() {
   const [loading, setLoading] = useState(false)
   const [collegeDetails, setCollegeDetails] = useState<Record<number, College>>({})
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
+  const [cutoffsData, setCutoffsData] = useState<Record<number, any[]>>({})
+  const [placementsData, setPlacementsData] = useState<Record<number, any>>({})
+  const [rankingsData, setRankingsData] = useState<Record<number, any[]>>({})
 
   const MAX_COMPARISONS = 4
 
@@ -78,6 +81,56 @@ export function CollegeComparison() {
       }
     }
   }, [])
+
+  // Fetch additional data (cutoffs, placements, rankings) when colleges are selected
+  useEffect(() => {
+    if (selectedColleges.length > 0) {
+      selectedColleges.forEach((college) => {
+        fetchCutoffs(college.id)
+        fetchPlacements(college.id)
+        fetchRankings(college.id)
+      })
+    }
+  }, [selectedColleges])
+
+  const fetchCutoffs = async (collegeId: number) => {
+    try {
+      const response = await fetch(`/api/cutoffs?collegeId=${collegeId}&year=${new Date().getFullYear()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCutoffsData((prev) => ({ ...prev, [collegeId]: data.cutoffs || [] }))
+      }
+    } catch (error) {
+      console.error("Error fetching cutoffs:", error)
+    }
+  }
+
+  const fetchPlacements = async (collegeId: number) => {
+    try {
+      const response = await fetch(`/api/placements?collegeId=${collegeId}&year=${new Date().getFullYear()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setPlacementsData((prev) => ({
+          ...prev,
+          [collegeId]: data.placements?.[0] || null,
+        }))
+      }
+    } catch (error) {
+      console.error("Error fetching placements:", error)
+    }
+  }
+
+  const fetchRankings = async (collegeId: number) => {
+    try {
+      const response = await fetch(`/api/rankings?collegeId=${collegeId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setRankingsData((prev) => ({ ...prev, [collegeId]: data.rankings || [] }))
+      }
+    } catch (error) {
+      console.error("Error fetching rankings:", error)
+    }
+  }
 
   const fetchCollegesByIds = async (ids: number[]) => {
     try {
@@ -683,6 +736,101 @@ export function CollegeComparison() {
                         </p>
                       </td>
                     ))}
+                  </tr>
+
+                  {/* Placement Statistics */}
+                  <tr className="border-b bg-blue-50/50">
+                    <td className="p-4 font-medium sticky left-0 bg-blue-50/50 z-10">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Placement (Latest Year)
+                      </div>
+                    </td>
+                    {selectedColleges.map((college) => {
+                      const placement = placementsData[college.id]
+                      return (
+                        <td key={college.id} className="p-4 border-l bg-blue-50/50">
+                          {placement ? (
+                            <div className="space-y-1 text-sm">
+                              <div>Avg: {formatCurrency(placement.averagePackage)}</div>
+                              <div>Highest: {formatCurrency(placement.highestPackage)}</div>
+                              <div>%: {placement.placementPercentage || "N/A"}{placement.placementPercentage && "%"}</div>
+                            </div>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+
+                  {/* Cutoff Information */}
+                  <tr className="border-b bg-green-50/50">
+                    <td className="p-4 font-medium sticky left-0 bg-green-50/50 z-10">
+                      <div className="flex items-center gap-2">
+                        <Award className="h-4 w-4" />
+                        Recent Cutoffs
+                      </div>
+                    </td>
+                    {selectedColleges.map((college) => {
+                      const cutoffs = cutoffsData[college.id] || []
+                      const latestCutoff = cutoffs[0]
+                      return (
+                        <td key={college.id} className="p-4 border-l bg-green-50/50">
+                          {latestCutoff ? (
+                            <div className="space-y-1 text-sm">
+                              <div className="font-medium">{latestCutoff.examName}</div>
+                              <div>
+                                {latestCutoff.closingRank
+                                  ? `Rank: ${latestCutoff.closingRank.toLocaleString()}`
+                                  : latestCutoff.closingScore
+                                  ? `Score: ${latestCutoff.closingScore}`
+                                  : "N/A"}
+                              </div>
+                              {latestCutoff.category && (
+                                <div className="text-xs text-muted-foreground">
+                                  {latestCutoff.category}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+
+                  {/* Rankings */}
+                  <tr className="border-b bg-purple-50/50">
+                    <td className="p-4 font-medium sticky left-0 bg-purple-50/50 z-10">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Rankings
+                      </div>
+                    </td>
+                    {selectedColleges.map((college) => {
+                      const rankings = rankingsData[college.id] || []
+                      const nirfRanking = rankings.find((r: any) => r.rankingSource === "NIRF")
+                      return (
+                        <td key={college.id} className="p-4 border-l bg-purple-50/50">
+                          {nirfRanking ? (
+                            <div className="space-y-1 text-sm">
+                              <div className="font-medium">NIRF: #{nirfRanking.rank}</div>
+                              {nirfRanking.category && (
+                                <div className="text-xs text-muted-foreground">
+                                  {nirfRanking.category}
+                                </div>
+                              )}
+                            </div>
+                          ) : college.ranking ? (
+                            <div className="text-sm">#{college.ranking}</div>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                      )
+                    })}
                   </tr>
 
                   {/* View Details */}

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, X, Filter } from "lucide-react"
 import { useDebounce } from "@/lib/hooks/useDebounce"
+import { SearchAutocomplete } from "./SearchAutocomplete"
 
 interface CollegeFiltersProps {
   onFilterChange: (filters: FilterState) => void
@@ -23,6 +24,27 @@ export interface FilterState {
   entranceExam: string
   ownership: string
   academicAlliance: boolean | null
+  // Cutoff-based filters
+  cutoffExam: string
+  cutoffCategory: string
+  cutoffYear: string
+  cutoffRankMin: string
+  cutoffRankMax: string
+  // Placement filters
+  placementPackageMin: string
+  placementPackageMax: string
+  placementPercentageMin: string
+  // Ranking filters
+  rankingMin: string
+  rankingMax: string
+  rankingSource: string
+  rankingCategory: string
+  // Additional filters
+  accreditation: string
+  campusSizeMin: string
+  totalStudentsMin: string
+  establishedYearMin: string
+  establishedYearMax: string
 }
 
 const INDIAN_STATES = [
@@ -47,6 +69,22 @@ const COURSE_TYPES = [
   "B.Des", "M.Des"
 ]
 
+const CUTOFF_CATEGORIES = [
+  "General", "OBC", "SC", "ST", "EWS", "PWD"
+]
+
+const RANKING_SOURCES = [
+  "NIRF", "QS", "Times", "Outlook", "India Today"
+]
+
+const RANKING_CATEGORIES = [
+  "Overall", "Engineering", "Management", "Medical", "Law", "Pharmacy"
+]
+
+const ACCREDITATIONS = [
+  "AICTE", "UGC", "NAAC", "NBA", "NIRF"
+]
+
 export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [filters, setFilters] = useState<FilterState>({
@@ -59,6 +97,23 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
     entranceExam: "",
     ownership: "",
     academicAlliance: null,
+    cutoffExam: "",
+    cutoffCategory: "",
+    cutoffYear: "",
+    cutoffRankMin: "",
+    cutoffRankMax: "",
+    placementPackageMin: "",
+    placementPackageMax: "",
+    placementPercentageMin: "",
+    rankingMin: "",
+    rankingMax: "",
+    rankingSource: "",
+    rankingCategory: "",
+    accreditation: "",
+    campusSizeMin: "",
+    totalStudentsMin: "",
+    establishedYearMin: "",
+    establishedYearMax: "",
   })
 
   // Debounce search input
@@ -98,6 +153,23 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
       entranceExam: "",
       ownership: "",
       academicAlliance: null,
+      cutoffExam: "",
+      cutoffCategory: "",
+      cutoffYear: "",
+      cutoffRankMin: "",
+      cutoffRankMax: "",
+      placementPackageMin: "",
+      placementPackageMax: "",
+      placementPercentageMin: "",
+      rankingMin: "",
+      rankingMax: "",
+      rankingSource: "",
+      rankingCategory: "",
+      accreditation: "",
+      campusSizeMin: "",
+      totalStudentsMin: "",
+      establishedYearMin: "",
+      establishedYearMax: "",
     }
     setFilters(clearedFilters)
     onFilterChange(clearedFilters)
@@ -143,21 +215,18 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
       <CardContent>
         {/* Search Bar */}
         <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search colleges by name, location, or course..."
-              value={filters.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10 pr-4 py-6 text-base"
-            />
-          </div>
+          <SearchAutocomplete
+            placeholder="Search colleges by name, location, or course..."
+            onSearch={(query) => {
+              handleSearchChange(query)
+            }}
+            size="default"
+          />
         </div>
 
         {/* Advanced Filters */}
         {isExpanded && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
             {/* Location */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -320,6 +389,282 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                   <SelectItem value="false">Non-Alliance</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Cutoff Filters Section */}
+            <div className="col-span-full border-t pt-4 mt-2">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Cutoff Filters</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Exam for Cutoff
+                  </label>
+                  <Select
+                    value={filters.cutoffExam}
+                    onValueChange={(value) => handleFilterChange("cutoffExam", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>{filters.cutoffExam || "Select exam"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Exams</SelectItem>
+                      {ENTRANCE_EXAMS.map((exam) => (
+                        <SelectItem key={exam} value={exam}>
+                          {exam}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Category
+                  </label>
+                  <Select
+                    value={filters.cutoffCategory}
+                    onValueChange={(value) => handleFilterChange("cutoffCategory", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>{filters.cutoffCategory || "Select category"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      {CUTOFF_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Cutoff Year
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 2024"
+                    value={filters.cutoffYear}
+                    onChange={(e) => handleFilterChange("cutoffYear", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Rank Range
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min rank"
+                      value={filters.cutoffRankMin}
+                      onChange={(e) => handleFilterChange("cutoffRankMin", e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max rank"
+                      value={filters.cutoffRankMax}
+                      onChange={(e) => handleFilterChange("cutoffRankMax", e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Placement Filters Section */}
+            <div className="col-span-full border-t pt-4 mt-2">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Placement Filters</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Average Package (₹) - Min
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Min package"
+                    value={filters.placementPackageMin}
+                    onChange={(e) => handleFilterChange("placementPackageMin", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Average Package (₹) - Max
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Max package"
+                    value={filters.placementPackageMax}
+                    onChange={(e) => handleFilterChange("placementPackageMax", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Placement % - Min
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Min %"
+                    min="0"
+                    max="100"
+                    value={filters.placementPercentageMin}
+                    onChange={(e) => handleFilterChange("placementPercentageMin", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Ranking Filters Section */}
+            <div className="col-span-full border-t pt-4 mt-2">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Ranking Filters</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Ranking Source
+                  </label>
+                  <Select
+                    value={filters.rankingSource}
+                    onValueChange={(value) => handleFilterChange("rankingSource", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>{filters.rankingSource || "Select source"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Sources</SelectItem>
+                      {RANKING_SOURCES.map((source) => (
+                        <SelectItem key={source} value={source}>
+                          {source}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Ranking Category
+                  </label>
+                  <Select
+                    value={filters.rankingCategory}
+                    onValueChange={(value) => handleFilterChange("rankingCategory", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>{filters.rankingCategory || "Select category"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      {RANKING_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Rank Range - Min
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Min rank"
+                    value={filters.rankingMin}
+                    onChange={(e) => handleFilterChange("rankingMin", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Rank Range - Max
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Max rank"
+                    value={filters.rankingMax}
+                    onChange={(e) => handleFilterChange("rankingMax", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Filters Section */}
+            <div className="col-span-full border-t pt-4 mt-2">
+              <h3 className="text-sm font-semibold text-gray-800 mb-3">Additional Filters</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Accreditation
+                  </label>
+                  <Select
+                    value={filters.accreditation}
+                    onValueChange={(value) => handleFilterChange("accreditation", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>{filters.accreditation || "Select accreditation"}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All</SelectItem>
+                      {ACCREDITATIONS.map((acc) => (
+                        <SelectItem key={acc} value={acc}>
+                          {acc}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Min Campus Size (acres)
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Min size"
+                    value={filters.campusSizeMin}
+                    onChange={(e) => handleFilterChange("campusSizeMin", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Min Total Students
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Min students"
+                    value={filters.totalStudentsMin}
+                    onChange={(e) => handleFilterChange("totalStudentsMin", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Established Year Range
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="From"
+                      value={filters.establishedYearMin}
+                      onChange={(e) => handleFilterChange("establishedYearMin", e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="To"
+                      value={filters.establishedYearMax}
+                      onChange={(e) => handleFilterChange("establishedYearMax", e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

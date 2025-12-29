@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Star, ThumbsUp, Calendar, X, RefreshCw, ExternalLink, MapPin, Globe } from "lucide-react"
+import { Star, ThumbsUp, ThumbsDown, Calendar, X, RefreshCw, ExternalLink, MapPin, Globe, Image as ImageIcon, Video, CheckCircle2, MessageSquare } from "lucide-react"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 
 interface Review {
@@ -17,7 +18,14 @@ interface Review {
   reviewerName: string | null
   course: string | null
   batch: string | null
+  category: string | null
   helpfulCount: number
+  notHelpfulCount: number
+  photos: string[]
+  videoUrl: string | null
+  isVerified: boolean
+  replyFromCollege: string | null
+  replyDate: string | null
   createdAt: string
   source: string | null
   externalUrl: string | null
@@ -45,7 +53,16 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
     reviewerEmail: "",
     course: "",
     batch: "",
+    category: "",
   })
+
+  const reviewCategories = [
+    { value: "academics", label: "Academics" },
+    { value: "infrastructure", label: "Infrastructure" },
+    { value: "placements", label: "Placements" },
+    { value: "campus_life", label: "Campus Life" },
+    { value: "faculty", label: "Faculty" },
+  ]
 
   useEffect(() => {
     fetchReviews()
@@ -148,6 +165,7 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
           reviewerEmail: "",
           course: "",
           batch: "",
+          category: "",
         })
         setShowForm(false)
         fetchReviews()
@@ -334,6 +352,26 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
                 </div>
               </div>
 
+              <div>
+                <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value || "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {reviewCategories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Course</label>
@@ -389,6 +427,17 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
                       {review.title && (
                         <span className="font-semibold text-lg">{review.title}</span>
                       )}
+                      {review.category && (
+                        <Badge variant="outline" className="capitalize">
+                          {review.category.replace("_", " ")}
+                        </Badge>
+                      )}
+                      {review.isVerified && (
+                        <Badge variant="default" className="bg-green-600">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Verified Student
+                        </Badge>
+                      )}
                       {getSourceBadge(review.source)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
@@ -418,10 +467,108 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
                   </div>
                 </div>
                 <p className="text-gray-700 mb-4">{review.review}</p>
+                
+                {/* Photos */}
+                {review.photos && review.photos.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ImageIcon className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-600">Photos</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {review.photos.map((photo, idx) => (
+                        <div key={idx} className="relative h-32 rounded-lg overflow-hidden border">
+                          <Image
+                            src={photo}
+                            alt={`Review photo ${idx + 1}`}
+                            fill
+                            className="object-cover cursor-pointer hover:opacity-80"
+                            onClick={() => window.open(photo, "_blank")}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Video */}
+                {review.videoUrl && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Video className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-600">Video Review</span>
+                    </div>
+                    <div className="rounded-lg overflow-hidden border">
+                      <iframe
+                        src={review.videoUrl}
+                        className="w-full h-64"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* College Reply */}
+                {review.replyFromCollege && (
+                  <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-900">College Response</span>
+                      {review.replyDate && (
+                        <span className="text-xs text-blue-700">
+                          {new Date(review.replyDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-blue-900">{review.replyFromCollege}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Button variant="ghost" size="sm" className="h-8">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/reviews/${review.id}/helpful`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ helpful: true }),
+                        })
+                        if (response.ok) {
+                          fetchReviews()
+                        }
+                      } catch (error) {
+                        console.error("Error voting:", error)
+                      }
+                    }}
+                  >
                     <ThumbsUp className="h-4 w-4 mr-1" />
-                    Helpful ({review.helpfulCount})
+                    Helpful ({review.helpfulCount || 0})
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/reviews/${review.id}/helpful`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ helpful: false }),
+                        })
+                        if (response.ok) {
+                          fetchReviews()
+                        }
+                      } catch (error) {
+                        console.error("Error voting:", error)
+                      }
+                    }}
+                  >
+                    <ThumbsDown className="h-4 w-4 mr-1" />
+                    Not Helpful ({review.notHelpfulCount || 0})
                   </Button>
                 </div>
               </CardContent>

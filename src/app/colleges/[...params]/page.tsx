@@ -10,6 +10,11 @@ import { CourseCard } from "@/components/course/CourseCard"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 import { CollegeReviews } from "@/components/college/CollegeReviews"
 import { CollegeEntranceExams } from "@/components/college/CollegeEntranceExams"
+import { CollegeCutoffs } from "@/components/college/CollegeCutoffs"
+import { CollegePlacements } from "@/components/college/CollegePlacements"
+import { CollegeInfrastructure } from "@/components/college/CollegeInfrastructure"
+import { ApplicationGuide } from "@/components/college/ApplicationGuide"
+import { InquiryForm } from "@/components/college/InquiryForm"
 import { RelatedContent } from "@/components/seo/RelatedContent"
 import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList } from "@/lib/seo/generateMeta"
 import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
@@ -494,6 +499,31 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
 
         {/* Entrance Exams Section */}
         <CollegeEntranceExams entranceExams={college.entranceExams} />
+
+        {/* Cutoffs Section */}
+        <div className="mt-12">
+          <CollegeCutoffs collegeId={college.id} collegeSlug={slug} />
+        </div>
+
+        {/* Placements Section */}
+        <div className="mt-12">
+          <CollegePlacements collegeId={college.id} collegeSlug={slug} />
+        </div>
+
+        {/* Infrastructure Section */}
+        <div className="mt-12">
+          <CollegeInfrastructure collegeSlug={slug} />
+        </div>
+
+        {/* Application Guide Section */}
+        <div className="mt-12">
+          <ApplicationGuide collegeSlug={slug} />
+        </div>
+
+        {/* Inquiry Form Section */}
+        <div className="mt-12">
+          <InquiryForm collegeSlug={slug} collegeName={college.name} />
+        </div>
 
         {/* Related Content Section */}
         <RelatedContent
