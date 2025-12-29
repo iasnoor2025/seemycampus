@@ -1,9 +1,10 @@
 import { Metadata } from "next"
 import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
-import { ContactForm } from "@/components/contact/ContactForm"
 import { HeroSection } from "@/components/home/HeroSection"
 import { TestimonialsSection } from "@/components/home/TestimonialsSection"
-import { InstagramFeed } from "@/components/home/InstagramFeed"
+import { StatsSection } from "@/components/home/StatsSection"
+import { QuickToolsSection } from "@/components/home/QuickToolsSection"
+import { UpcomingExamsSection } from "@/components/home/UpcomingExamsSection"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -44,101 +45,106 @@ export default function Home() {
       {/* Hero Section with Search */}
       <HeroSection />
 
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+      {/* Statistics Section */}
+      <StatsSection />
+
+      {/* Quick Tools Section */}
+      <QuickToolsSection />
 
       {/* Top Featured Colleges */}
       <FeaturedColleges />
 
-      {/* FAQ Section - Compact Professional Design */}
-      <section className="py-10 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions About College Admissions and Courses</h2>
-          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* FAQ Items */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">How do I secure MBA admission?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus.</p>
-                </div>
-              </div>
-            </div>
+      {/* Upcoming Exams Section */}
+      <UpcomingExamsSection />
 
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">What criteria for MBA admission?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews.</p>
-                </div>
-              </div>
-            </div>
+      {/* Testimonials Section */}
+      <TestimonialsSection />
 
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">Steps for MBA admission?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">BBA program admission process?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">How to secure BBA admission?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-3">
-                <span className="bg-[#18254a] text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">Top BBA colleges for 93%?</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed">Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* FAQ Section - Modern Design */}
+      <section className="py-20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl"></div>
         </div>
-      </section>
 
-      {/* For More Guidance Section */}
-      <section className="py-16 pb-32 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section Title */}
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium text-sm">Got Questions?</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">For More Guidance</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4 leading-tight">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto">
+              About College Admissions and Courses
+            </p>
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Left Column - Instagram Feed */}
-            <div className="relative">
-              <InstagramFeed />
-            </div>
-
-            {/* Right Column - Contact Form */}
-            <ContactForm />
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* FAQ Items */}
+            {[
+              {
+                num: 1,
+                question: "How do I secure MBA admission?",
+                answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus.",
+                gradient: "from-blue-500 to-cyan-600"
+              },
+              {
+                num: 2,
+                question: "What criteria for MBA admission?",
+                answer: "Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews.",
+                gradient: "from-indigo-500 to-purple-600"
+              },
+              {
+                num: 3,
+                question: "Steps for MBA admission?",
+                answer: "Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus.",
+                gradient: "from-violet-500 to-purple-600"
+              },
+              {
+                num: 4,
+                question: "BBA program admission process?",
+                answer: "12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews.",
+                gradient: "from-teal-500 to-emerald-600"
+              },
+              {
+                num: 5,
+                question: "How to secure BBA admission?",
+                answer: "Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions.",
+                gradient: "from-sky-500 to-blue-600"
+              },
+              {
+                num: 6,
+                question: "Top BBA colleges for 93%?",
+                answer: "Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance.",
+                gradient: "from-purple-500 to-pink-600"
+              }
+            ].map((faq, index) => (
+              <div
+                key={faq.num}
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 group"
+              >
+                {/* Number Badge */}
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${faq.gradient} text-white font-bold text-lg mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                  {faq.num}
+                </div>
+                
+                {/* Question */}
+                <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                  {faq.question}
+                </h3>
+                
+                {/* Answer */}
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

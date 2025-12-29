@@ -270,45 +270,93 @@ export function HeroSection() {
 
       {/* Select Your Study Goal Section */}
       {studyGoalsData.length > 0 && (
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
-              Select Your Study Goal - Find Colleges and Courses in India
-            </h2>
+        <section className="py-20 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 relative overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="container mx-auto px-4 relative z-10">
+            {/* Section Header */}
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <GraduationCap className="w-5 h-5" />
+                <span className="font-medium text-sm">Explore Categories</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4 leading-tight">
+                Select Your Study Goal
+              </h2>
+              <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto">
+                Find Colleges and Courses in India
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {studyGoalsData.map((goal) => (
-                <Link key={goal.id} href={goal.link}>
-                  <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 hover:border-orange-500">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                          {iconMap[goal.icon] || <GraduationCap className="h-8 w-8" />}
+              {studyGoalsData.map((goal, index) => {
+                // Different gradient colors for each card
+                const gradients = [
+                  "from-blue-500 to-cyan-600",
+                  "from-indigo-500 to-purple-600",
+                  "from-violet-500 to-purple-600",
+                  "from-teal-500 to-emerald-600",
+                  "from-sky-500 to-blue-600",
+                  "from-purple-500 to-pink-600",
+                  "from-rose-500 to-pink-600",
+                ]
+                const gradient = gradients[index % gradients.length]
+
+                return (
+                  <Link key={goal.id} href={goal.link}>
+                    <Card className="h-full hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-slate-200 bg-white overflow-hidden group">
+                      <CardContent className="p-0">
+                        {/* Card Header with Gradient */}
+                        <div className={`bg-gradient-to-br ${gradient} p-6 relative`}>
+                          <div className="absolute top-4 right-4 opacity-20">
+                            {iconMap[goal.icon] || <GraduationCap className="h-16 w-16 text-white" />}
+                          </div>
+                          <div className="relative z-10">
+                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                              <div className="text-white">
+                                {iconMap[goal.icon] || <GraduationCap className="h-8 w-8" />}
+                              </div>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">
+                              {goal.name}
+                            </h3>
+                            {goal.collegeCount && (
+                              <p className="text-white/90 text-sm font-medium">{goal.collegeCount}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">
-                            {goal.name}
-                          </h3>
-                          {goal.collegeCount && (
-                            <p className="text-sm text-gray-600">{goal.collegeCount}</p>
-                          )}
+
+                        {/* Card Body */}
+                        <div className="p-6">
+                          <ul className="space-y-3 mb-6">
+                            {(goal.courses || []).slice(0, 3).map((course, courseIndex) => (
+                              <li key={courseIndex} className="text-sm text-gray-700 flex items-center gap-2 group-hover:text-gray-900 transition-colors">
+                                <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${gradient}`}></div>
+                                <span>{course}</span>
+                              </li>
+                            ))}
+                            {(goal.courses || []).length > 3 && (
+                              <li className="text-xs text-gray-500 italic">
+                                +{goal.courses.length - 3} more courses
+                              </li>
+                            )}
+                          </ul>
+                          
+                          {/* CTA Button */}
+                          <div className={`flex items-center justify-between bg-gradient-to-r ${gradient} text-white px-4 py-3 rounded-lg font-semibold text-sm group-hover:shadow-lg transition-all duration-300`}>
+                            <span>Explore</span>
+                            <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                          </div>
                         </div>
-                      </div>
-                      <ul className="space-y-2 mb-4">
-                        {(goal.courses || []).map((course, index) => (
-                          <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                            <ChevronRight className="h-4 w-4 text-orange-500" />
-                            {course}
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="flex items-center text-orange-600 font-semibold text-sm mt-4">
-                        Explore <ChevronRight className="h-4 w-4 ml-1" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </section>
