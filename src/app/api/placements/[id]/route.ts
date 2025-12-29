@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth"
 // PUT - Update placement stat
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -18,6 +18,7 @@ export async function PUT(
       )
     }
 
+    const { id } = await params
     const body = await request.json()
     const {
       year,
@@ -46,7 +47,7 @@ export async function PUT(
         topRecruiters: topRecruiters !== undefined ? topRecruiters : undefined,
         departmentWiseData: departmentWiseData !== undefined ? departmentWiseData : undefined,
       })
-      .where(eq(placementStats.id, parseInt(params.id)))
+      .where(eq(placementStats.id, parseInt(id)))
       .returning()
 
     if (!updatedPlacement) {
@@ -69,7 +70,7 @@ export async function PUT(
 // DELETE - Delete placement stat
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -80,9 +81,10 @@ export async function DELETE(
       )
     }
 
+    const { id } = await params
     const [deletedPlacement] = await db
       .delete(placementStats)
-      .where(eq(placementStats.id, parseInt(params.id)))
+      .where(eq(placementStats.id, parseInt(id)))
       .returning()
 
     if (!deletedPlacement) {

@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth"
 // PUT - Update cutoff
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -18,6 +18,7 @@ export async function PUT(
       )
     }
 
+    const { id } = await params
     const body = await request.json()
     const {
       examName,
@@ -46,7 +47,7 @@ export async function PUT(
         round: round !== undefined ? parseInt(round) : undefined,
         quota: quota !== undefined ? quota : undefined,
       })
-      .where(eq(cutoffs.id, parseInt(params.id)))
+      .where(eq(cutoffs.id, parseInt(id)))
       .returning()
 
     if (!updatedCutoff) {
@@ -69,7 +70,7 @@ export async function PUT(
 // DELETE - Delete cutoff
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -80,9 +81,10 @@ export async function DELETE(
       )
     }
 
+    const { id } = await params
     const [deletedCutoff] = await db
       .delete(cutoffs)
-      .where(eq(cutoffs.id, parseInt(params.id)))
+      .where(eq(cutoffs.id, parseInt(id)))
       .returning()
 
     if (!deletedCutoff) {

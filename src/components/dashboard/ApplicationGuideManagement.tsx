@@ -147,10 +147,10 @@ export function ApplicationGuideManagement() {
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+              <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select college">
-                    {(value) => {
+                    {(value: string | null) => {
                       if (!value) return "Select college"
                       const college = colleges.find((c) => c.id.toString() === value)
                       return college?.name || "Select college"

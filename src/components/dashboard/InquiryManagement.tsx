@@ -211,7 +211,7 @@ export function InquiryManagement() {
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+              <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select college">
                     {(value: string | null) => {
@@ -232,7 +232,7 @@ export function InquiryManagement() {
               </Select>
             </div>
             <div className="flex-1">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -246,7 +246,7 @@ export function InquiryManagement() {
               </Select>
             </div>
             <div className="flex-1">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
@@ -357,7 +357,11 @@ export function InquiryManagement() {
                                 </Button>
                                 <Select
                                   value={inquiry.status}
-                                  onValueChange={(value) => handleStatusChange(inquiry.id, value)}
+                                  onValueChange={(value) => {
+                                    if (value) {
+                                      handleStatusChange(inquiry.id, value)
+                                    }
+                                  }}
                                 >
                                   <SelectTrigger className="w-40">
                                     <SelectValue />

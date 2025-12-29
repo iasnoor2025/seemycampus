@@ -22,6 +22,7 @@ export async function getAllFeatureFlags(): Promise<FeatureFlag[]> {
   const flags = await db.select().from(featureFlags).orderBy(asc(featureFlags.category), asc(featureFlags.name))
   return flags.map(flag => ({
     ...flag,
+    category: flag.category as FeatureFlagCategory,
     createdAt: new Date(flag.createdAt),
     updatedAt: new Date(flag.updatedAt),
   }))
@@ -36,6 +37,7 @@ export async function getFeatureFlag(key: string): Promise<FeatureFlag | null> {
   
   return {
     ...flag,
+    category: flag.category as FeatureFlagCategory,
     createdAt: new Date(flag.createdAt),
     updatedAt: new Date(flag.updatedAt),
   }
@@ -69,6 +71,7 @@ export async function updateFeatureFlag(key: string, isEnabled: boolean): Promis
   
   return {
     ...updated,
+    category: updated.category as FeatureFlagCategory,
     createdAt: new Date(updated.createdAt),
     updatedAt: new Date(updated.updatedAt),
   }
@@ -86,6 +89,7 @@ export async function getFeatureFlagsByCategory(category: FeatureFlagCategory): 
   
   return flags.map(flag => ({
     ...flag,
+    category: flag.category as FeatureFlagCategory,
     createdAt: new Date(flag.createdAt),
     updatedAt: new Date(flag.updatedAt),
   }))

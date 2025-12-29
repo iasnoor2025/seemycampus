@@ -101,7 +101,7 @@ export function CollegePlacements({ collegeId, collegeSlug }: CollegePlacementsP
             Placement Statistics
           </CardTitle>
           {years.length > 0 && (
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <Select value={selectedYear} onValueChange={(value) => setSelectedYear(value ?? "")}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="All Years" />
               </SelectTrigger>

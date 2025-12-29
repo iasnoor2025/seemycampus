@@ -102,7 +102,7 @@ export function InquiryForm({ collegeSlug, collegeName }: InquiryFormProps) {
             <Label htmlFor="inquiryType">Inquiry Type *</Label>
             <Select
               value={formData.inquiryType}
-              onValueChange={(value) => setFormData({ ...formData, inquiryType: value })}
+              onValueChange={(value) => setFormData({ ...formData, inquiryType: value ?? "" })}
               required
             >
               <SelectTrigger>

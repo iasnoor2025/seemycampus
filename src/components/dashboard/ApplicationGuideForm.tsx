@@ -224,7 +224,7 @@ export function ApplicationGuideForm({
             <Label htmlFor="courseId">Course (Optional - leave empty for general guide)</Label>
             <Select
               value={formData.courseId}
-              onValueChange={(value) => setFormData({ ...formData, courseId: value })}
+              onValueChange={(value) => setFormData({ ...formData, courseId: value ?? "" })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select course (optional)">
@@ -303,7 +303,7 @@ export function ApplicationGuideForm({
               <Label htmlFor="feeCurrency">Currency</Label>
               <Select
                 value={formData.feeCurrency}
-                onValueChange={(value) => setFormData({ ...formData, feeCurrency: value })}
+                onValueChange={(value) => setFormData({ ...formData, feeCurrency: value ?? "INR" })}
               >
                 <SelectTrigger>
                   <SelectValue />

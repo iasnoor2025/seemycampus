@@ -180,7 +180,7 @@ export function AdmissionPredictorClient() {
               <Label htmlFor="examName" className="text-base font-semibold text-gray-900">
                 Exam Name <span className="text-red-500">*</span>
               </Label>
-              <Select value={examName} onValueChange={setExamName} disabled={loadingExams}>
+              <Select value={examName} onValueChange={(value) => setExamName(value || "")} disabled={loadingExams}>
                 <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
                   <SelectValue placeholder={loadingExams ? "Loading..." : "Select exam"} />
                 </SelectTrigger>
@@ -200,7 +200,7 @@ export function AdmissionPredictorClient() {
               </Label>
               <Select
                 value={category}
-                onValueChange={setCategory}
+                onValueChange={(value) => setCategory(value || "")}
                 disabled={!examName || loadingExams}
               >
                 <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">

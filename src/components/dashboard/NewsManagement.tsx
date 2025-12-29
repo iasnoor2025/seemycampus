@@ -161,7 +161,7 @@ export function NewsManagement() {
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Select value={selectedCollege} onValueChange={setSelectedCollege}>
+              <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select college">
                     {(value: string | null) => {
@@ -181,7 +181,7 @@ export function NewsManagement() {
               </Select>
             </div>
             <div className="flex-1">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value ?? "all")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by category">
                     {(value: string | null) => {

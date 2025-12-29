@@ -56,6 +56,23 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
     entranceExam: "",
     ownership: "",
     academicAlliance: null,
+    cutoffExam: "",
+    cutoffCategory: "",
+    cutoffYear: "",
+    cutoffRankMin: "",
+    cutoffRankMax: "",
+    placementPackageMin: "",
+    placementPackageMax: "",
+    placementPercentageMin: "",
+    rankingMin: "",
+    rankingMax: "",
+    rankingSource: "",
+    rankingCategory: "",
+    accreditation: "",
+    campusSizeMin: "",
+    totalStudentsMin: "",
+    establishedYearMin: "",
+    establishedYearMax: "",
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(initialTotalCount)
@@ -207,7 +224,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
               Found <span className="font-semibold">{totalCount}</span> colleges
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <Select value={sortBy} onValueChange={handleSortChange}>
+              <Select value={sortBy} onValueChange={(value) => handleSortChange(value ?? "relevance")}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>

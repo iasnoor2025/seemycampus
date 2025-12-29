@@ -135,7 +135,7 @@ export function CutoffForm({ cutoff, collegeId, onClose, onSuccess }: CutoffForm
               <Label htmlFor="examName">Exam Name *</Label>
               <Select
                 value={formData.examName}
-                onValueChange={(value) => setFormData({ ...formData, examName: value })}
+                onValueChange={(value) => setFormData({ ...formData, examName: value ?? "" })}
                 required
               >
                 <SelectTrigger>

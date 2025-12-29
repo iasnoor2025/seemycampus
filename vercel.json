@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/update-exam-dates",
+      "schedule": "0 0 1 4 *"
+    }
+  ]
+}
+

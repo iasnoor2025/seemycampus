@@ -183,7 +183,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
           </CardTitle>
           <div className="flex gap-2">
             {years.length > 0 && (
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <Select value={selectedYear} onValueChange={(value) => setSelectedYear(value || "")}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
@@ -198,7 +198,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               </Select>
             )}
             {exams.length > 0 && (
-              <Select value={selectedExam} onValueChange={setSelectedExam}>
+              <Select value={selectedExam} onValueChange={(value) => setSelectedExam(value || "")}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Exams" />
                 </SelectTrigger>
@@ -213,7 +213,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               </Select>
             )}
             {categories.length > 0 && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value || "")}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
@@ -345,7 +345,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Select Exam</label>
-                <Select value={trendExam} onValueChange={setTrendExam}>
+                <Select value={trendExam} onValueChange={(value) => setTrendExam(value || "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select exam for trends" />
                   </SelectTrigger>
@@ -361,7 +361,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               {categories.length > 0 && (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Select Category (Optional)</label>
-                  <Select value={trendCategory} onValueChange={setTrendCategory}>
+                  <Select value={trendCategory} onValueChange={(value) => setTrendCategory(value || "")}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
