@@ -8,6 +8,12 @@ export default async function AdminPage() {
     redirect("/auth/signin?callbackUrl=/admin")
   }
 
+  // Check if user is admin
+  const userRole = (session.user as any)?.role
+  if (userRole !== "admin") {
+    redirect("/")
+  }
+
   // Redirect to dashboard
   redirect("/dashboard")
 }

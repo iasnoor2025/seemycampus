@@ -35,14 +35,26 @@ export default auth((req) => {
     return NextResponse.redirect(url, 301)
   }
 
-  // Protect admin routes
-  if (pathname.startsWith("/admin") && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/auth/signin", req.url))
+  // Protect admin routes - require admin role
+  if (pathname.startsWith("/admin")) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/auth/signin", req.url))
+    }
+    const userRole = (req.auth?.user as any)?.role
+    if (userRole !== "admin") {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
   }
 
-  // Protect dashboard routes
-  if (pathname.startsWith("/dashboard") && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/auth/signin", req.url))
+  // Protect dashboard routes - require admin role
+  if (pathname.startsWith("/dashboard")) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/auth/signin", req.url))
+    }
+    const userRole = (req.auth?.user as any)?.role
+    if (userRole !== "admin") {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
   }
 
   return NextResponse.next()

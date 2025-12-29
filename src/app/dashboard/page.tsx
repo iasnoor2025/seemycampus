@@ -16,6 +16,12 @@ export default async function DashboardPage() {
     redirect("/auth/signin")
   }
 
+  // Check if user is admin
+  const userRole = (session.user as any)?.role
+  if (userRole !== "admin") {
+    redirect("/")
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8">
