@@ -5,7 +5,7 @@ import { eq, ilike } from "drizzle-orm"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, GraduationCap, MapPin, ArrowLeft } from "lucide-react"
+import { Clock, GraduationCap, MapPin, ArrowLeft, Building2 } from "lucide-react"
 import { Metadata } from "next"
 import { generateCourseMeta, generateStructuredDataCourse } from "@/lib/seo/generateMeta"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
@@ -161,171 +161,120 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
         const collegesList = allCollegesList.slice(offset, offset + limit)
 
         return (
-          <div className="min-h-screen bg-red-600">
-            <div className="max-w-5xl mx-auto bg-white min-h-screen py-8">
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+            <div className="container mx-auto px-4 py-12">
               {/* Breadcrumb */}
-              <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
-                <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+              <div className="mb-8 flex items-center gap-2 text-sm text-gray-600">
+                <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
                 <span className="text-gray-400">/</span>
-                <Link href="/colleges" className="hover:text-red-600 transition-colors">Colleges</Link>
+                <Link href="/colleges" className="hover:text-blue-600 transition-colors">Colleges</Link>
                 <span className="text-gray-400">/</span>
-                <span className="text-gray-900">{menuCourse[0].name}</span>
+                <span className="text-gray-900 font-medium">{menuCourse[0].name}</span>
               </div>
 
-              <div className="px-6 mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              {/* Header Section */}
+              <div className="mb-12">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                  <Building2 className="w-5 h-5" />
+                  <span className="font-medium text-sm">College Directory</span>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
                   Colleges Offering {menuCourse[0].name}
                 </h1>
-                <p className="text-gray-600">
-                  Browse colleges offering {menuCourse[0].name} courses
+                <p className="text-slate-600 text-lg max-w-2xl">
+                  Browse colleges offering {menuCourse[0].name} courses across India
                 </p>
               </div>
 
-            {/* Desktop Table Header */}
-            <div className="hidden md:block px-6 mb-4">
-              <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
-                <div className="col-span-2 text-center">PREVIEW</div>
-                <div className="col-span-4">COLLEGE NAME</div>
-                <div className="col-span-2">LOCATION</div>
-                <div className="col-span-3">COURSES</div>
-                <div className="col-span-1 text-center">VIEW</div>
-              </div>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-4 px-4">
-              {collegesList.map((college) => {
-                const collegeCourses = coursesWithColleges
-                  .filter(({ college: c }) => c.id === college.id)
-                  .map(({ course }) => course)
-
-                return (
-                  <div key={college.id} className="border rounded-lg p-4 bg-white shadow-sm">
-                    <div className="flex gap-3">
-                      {/* Logo */}
-                      <div className="flex-shrink-0">
-                        {college.images && college.images.length > 0 ? (
-                          <Image
-                            src={college.images[0]}
-                            alt={`${college.name} logo`}
-                            width={60}
-                            height={60}
-                            className="rounded-full object-cover border-2 border-gray-200"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
-                            {getInitials(college.name)}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
-                          <h3 className="font-semibold text-gray-900 line-clamp-2">{college.name}</h3>
-                        </Link>
-                        <p className="text-sm text-gray-600 mt-1">
-                          📍 {college.location || college.city || "Location not specified"}
-                        </p>
-                        
-                        {/* Courses */}
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {collegeCourses.slice(0, 2).map((course) => (
-                            <span key={course.id} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {course.name}
-                            </span>
-                          ))}
-                          {collegeCourses.length > 2 && (
-                            <span className="text-xs text-gray-500">+{collegeCourses.length - 2} more</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Link href={`/colleges/${college.slug}`} className="block mt-3">
-                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                        VIEW COLLEGE
-                      </Button>
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden md:block space-y-0">
+            {/* Colleges Grid - Modern Card Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {collegesList.map((college, index) => {
                 const collegeCourses = coursesWithColleges
                   .filter(({ college: c }) => c.id === college.id)
                   .map(({ course }) => course)
 
+                const gradients = [
+                  "from-blue-500 to-cyan-600",
+                  "from-indigo-500 to-purple-600",
+                  "from-violet-500 to-purple-600",
+                  "from-teal-500 to-emerald-600",
+                  "from-sky-500 to-blue-600",
+                  "from-purple-500 to-pink-600",
+                ]
+                const gradient = gradients[index % gradients.length]
+
                 return (
                   <div
                     key={college.id}
-                    className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                      index !== collegesList.length - 1 ? "border-b border-gray-200" : ""
-                    } hover:bg-gray-50 transition-colors`}
+                    className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 overflow-hidden group"
                   >
-                    {/* Preview - Logo */}
-                    <div className="col-span-2 flex justify-center">
-                      {college.images && college.images.length > 0 ? (
-                        <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                          <Image
-                            src={college.images[0]}
-                            alt={`${college.name} logo`}
-                            width={80}
-                            height={80}
-                            className="object-contain p-1"
-                          />
+                    {/* Card Header with Gradient */}
+                    <div className={`bg-gradient-to-br ${gradient} p-6 relative`}>
+                      <div className="absolute top-4 right-4 opacity-20">
+                        <Building2 className="h-16 w-16 text-white" />
+                      </div>
+                      <div className="relative z-10 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 flex-shrink-0">
+                          {college.images && college.images.length > 0 ? (
+                            <Image
+                              src={college.images[0]}
+                              alt={college.name}
+                              width={56}
+                              height={56}
+                              className="rounded-lg object-cover"
+                            />
+                          ) : (
+                            <span className="text-white font-bold text-lg">
+                              {getInitials(college.name)}
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
-                          {getInitials(college.name)}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* College Name */}
-                    <div className="col-span-4">
-                      <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
-                        <h3 className="text-base font-semibold text-gray-900">
-                          {college.name}
-                        </h3>
-                      </Link>
-                    </div>
-
-                    {/* Location */}
-                    <div className="col-span-2">
-                      <p className="text-sm text-gray-700">
-                        {college.location || college.city || "Location not specified"}
-                      </p>
-                    </div>
-
-                    {/* Courses */}
-                    <div className="col-span-3">
-                      <div className="flex flex-wrap gap-1">
-                        {collegeCourses.slice(0, 2).map((course) => (
-                          <Link
-                            key={course.id}
-                            href={`/courses/${course.slug}`}
-                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
-                          >
-                            {course.name}
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/colleges/${college.slug}`}>
+                            <h3 className="text-xl font-bold text-white line-clamp-2 group-hover:underline">
+                              {college.name}
+                            </h3>
                           </Link>
-                        ))}
-                        {collegeCourses.length > 2 && (
-                          <span className="text-xs text-gray-500 px-2 py-1">
-                            +{collegeCourses.length - 2} more
-                          </span>
-                        )}
+                        </div>
                       </div>
                     </div>
 
-                    {/* View Button */}
-                    <div className="col-span-1 flex justify-center">
-                      <Link href={`/colleges/${college.slug}`}>
-                        <Button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs">
-                          VIEW
+                    {/* Card Body */}
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 text-gray-600 mb-4">
+                        <MapPin className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm">
+                          {college.location || college.city || "Location not specified"}
+                        </span>
+                      </div>
+                      
+                      {/* Courses */}
+                      {collegeCourses.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-xs text-gray-500 mb-2 font-medium">Available Courses:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {collegeCourses.slice(0, 3).map((course) => (
+                              <Link
+                                key={course.id}
+                                href={`/courses/${course.slug}`}
+                                className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                              >
+                                {cleanCourseNameForDisplay(course.name)}
+                              </Link>
+                            ))}
+                            {collegeCourses.length > 3 && (
+                              <span className="text-xs text-gray-500 px-2 py-1">
+                                +{collegeCourses.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* View Button */}
+                      <Link href={`/colleges/${college.slug}`} className="block">
+                        <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold py-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300`}>
+                          View College Details
                         </Button>
                       </Link>
                     </div>
@@ -334,138 +283,134 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
               })}
             </div>
 
-              {/* Pagination */}
-              <div className="px-6">
-                <PaginationWrapper
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                />
-              </div>
+            {/* Pagination */}
+            <div className="mt-8">
+              <PaginationWrapper
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
             </div>
           </div>
+        </div>
         )
       }
 
-      // If courses found, show them in a table
+      // If courses found, show them in a modern card layout
       return (
-        <div className="min-h-screen bg-red-600">
-          <div className="max-w-5xl mx-auto bg-white min-h-screen py-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+          <div className="container mx-auto px-4 py-12">
             {/* Breadcrumb */}
-            <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
-              <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
+            <div className="mb-8 flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
               <span className="text-gray-400">/</span>
-              <Link href="/colleges" className="hover:text-red-600 transition-colors">Colleges</Link>
+              <Link href="/colleges" className="hover:text-blue-600 transition-colors">Colleges</Link>
               <span className="text-gray-400">/</span>
-              <span className="text-gray-900">{menuCourse[0].name}</span>
+              <span className="text-gray-900 font-medium">{menuCourse[0].name}</span>
             </div>
 
-            <div className="px-6 mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            {/* Header Section */}
+            <div className="mb-12">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <GraduationCap className="w-5 h-5" />
+                <span className="font-medium text-sm">Course Directory</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
                 {menuCourse[0].name} Courses
               </h1>
-              <p className="text-gray-600">
-                Find {menuCourse[0].name} courses at various colleges
+              <p className="text-slate-600 text-lg max-w-2xl">
+                Find {menuCourse[0].name} courses at various colleges across India
               </p>
             </div>
 
-            {/* Desktop Table Header */}
-            <div className="hidden md:block px-6 mb-4">
-              <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
-                <div className="col-span-5">COURSE NAME</div>
-                <div className="col-span-4">COLLEGE</div>
-                <div className="col-span-2">LOCATION</div>
-                <div className="col-span-1 text-center">VIEW</div>
-              </div>
-            </div>
+            {/* Courses Grid - Modern Card Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {matchingCourses.map(({ course, college }, index) => {
+                const gradients = [
+                  "from-blue-500 to-cyan-600",
+                  "from-indigo-500 to-purple-600",
+                  "from-violet-500 to-purple-600",
+                  "from-teal-500 to-emerald-600",
+                  "from-sky-500 to-blue-600",
+                  "from-purple-500 to-pink-600",
+                ]
+                const gradient = gradients[index % gradients.length]
 
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3 px-4">
-              {matchingCourses.map(({ course, college }) => (
-                <div key={course.id} className="border rounded-lg p-4 bg-white shadow-sm">
-                  <Link href={`/courses/${course.slug}`} className="hover:text-red-600 transition-colors">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2" title={course.name}>
-                      {cleanCourseNameForDisplay(course.name)}
-                    </h3>
-                  </Link>
-                  
-                  {college && (
-                    <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
-                      <p className="text-sm text-gray-700 mb-1">🏫 {college.name}</p>
-                    </Link>
-                  )}
-                  
-                  <p className="text-sm text-gray-600 mb-3">
-                    📍 {college?.location || college?.city || "Location not specified"}
-                  </p>
-                  
-                  <Link href={`/courses/${course.slug}`} className="block">
-                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                      VIEW COURSE
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
+                return (
+                  <div
+                    key={course.id}
+                    className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 overflow-hidden group"
+                  >
+                    {/* Card Header with Gradient */}
+                    <div className={`bg-gradient-to-br ${gradient} p-6 relative`}>
+                      <div className="absolute top-4 right-4 opacity-20">
+                        <GraduationCap className="h-16 w-16 text-white" />
+                      </div>
+                      <div className="relative z-10">
+                        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2" title={course.name}>
+                          {cleanCourseNameForDisplay(course.name)}
+                        </h3>
+                      </div>
+                    </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden md:block space-y-0">
-              {matchingCourses.map(({ course, college }, index) => (
-                <div
-                  key={course.id}
-                  className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                    index !== matchingCourses.length - 1 ? "border-b border-gray-200" : ""
-                  } hover:bg-gray-50 transition-colors`}
-                >
-                  {/* Course Name */}
-                  <div className="col-span-5">
-                    <Link href={`/courses/${course.slug}`} className="hover:text-red-600 transition-colors">
-                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2" title={course.name}>
-                        {cleanCourseNameForDisplay(course.name)}
-                      </h3>
-                    </Link>
-                  </div>
+                    {/* Card Body */}
+                    <div className="p-6">
+                      {college && (
+                        <>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                              {college.images && college.images.length > 0 ? (
+                                <Image
+                                  src={college.images[0]}
+                                  alt={college.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-lg object-cover"
+                                />
+                              ) : (
+                                getInitials(college.name)
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <Link href={`/colleges/${college.slug}`} className="hover:text-blue-600 transition-colors">
+                                <p className="font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600">
+                                  {college.name}
+                                </p>
+                              </Link>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-gray-600 mb-4">
+                            <MapPin className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm">
+                              {college.location || college.city || "Location not specified"}
+                            </span>
+                          </div>
+                        </>
+                      )}
 
-                  {/* College Name */}
-                  <div className="col-span-4">
-                    {college ? (
-                      <Link href={`/colleges/${college.slug}`} className="hover:text-red-600 transition-colors">
-                        <p className="text-sm text-gray-700">{college.name}</p>
+                      {/* View Button */}
+                      <Link href={`/courses/${course.slug}`} className="block">
+                        <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold py-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300`}>
+                          View Course Details
+                        </Button>
                       </Link>
-                    ) : (
-                      <p className="text-sm text-gray-500">N/A</p>
-                    )}
+                    </div>
                   </div>
-
-                  {/* Location */}
-                  <div className="col-span-2">
-                    <p className="text-sm text-gray-700">
-                      {college?.location || college?.city || "N/A"}
-                    </p>
-                  </div>
-
-                  {/* View Button */}
-                  <div className="col-span-1 flex justify-center">
-                    <Link href={`/courses/${course.slug}`}>
-                      <Button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs">
-                        VIEW
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
       )
+    } else {
+      notFound()
     }
-
-    notFound()
   }
 
   const { course, college } = result[0]
   const structuredData = generateStructuredDataCourse(course, college)
 
-  const formatCurrency = (amount: number, currency: string) => {
+  function formatCurrency(amount: number, currency: string) {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: currency,

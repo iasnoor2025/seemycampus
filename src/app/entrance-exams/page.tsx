@@ -2,20 +2,40 @@ import { Metadata } from "next"
 import { ExamsTimeline } from "@/components/entrance-exams/ExamsTimeline"
 import { Calendar, Info, Bell } from "lucide-react"
 
+// Helper function to get current academic year (April to March cycle)
+function getCurrentAcademicYear(): string {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1 // 1-12 (January = 1, December = 12)
+  
+  // Academic year in India runs from April to March
+  // If month is April (4) to December (12), it's currentYear - (currentYear+1)
+  // If month is January (1) to March (3), it's (currentYear-1) - currentYear
+  if (currentMonth >= 4) {
+    // April onwards - current academic year
+    return `${currentYear}-${String(currentYear + 1).slice(-2)}`
+  } else {
+    // January to March - previous academic year
+    return `${currentYear - 1}-${String(currentYear).slice(-2)}`
+  }
+}
+
 export const metadata: Metadata = {
-  title: "Admission Timeline & Entrance Exams 2024-25 | SeeMyCampus",
+  title: "Admission Timeline & Entrance Exams | SeeMyCampus",
   description: "Stay updated with the latest admission timelines, entrance exam dates, and registration deadlines for MBA, Engineering, Medical, and Law courses in India.",
-  keywords: ["entrance exams 2024", "admission timeline", "CAT exam dates", "JEE Main registration", "NEET 2025", "exam calendar"],
+  keywords: ["entrance exams", "admission timeline", "CAT exam dates", "JEE Main registration", "NEET", "exam calendar"],
 }
 
 export default function EntranceExamsPage() {
+  const academicYear = getCurrentAcademicYear()
+  
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
       {/* Hero Section */}
       <div className="bg-[#18254a] text-white py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Admission Timeline <span className="text-blue-400">2024-25</span>
+            Admission Timeline <span className="text-blue-400">{academicYear}</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
             Track important dates, registration deadlines, and exam schedules for India's top entrance examinations in one place.

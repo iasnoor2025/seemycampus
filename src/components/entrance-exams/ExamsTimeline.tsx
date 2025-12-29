@@ -19,11 +19,48 @@ interface EntranceExam {
   examPattern: string | null
 }
 
+// Helper function to get current academic year (April to March cycle)
+function getCurrentAcademicYear(): string {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1 // 1-12 (January = 1, December = 12)
+  
+  // Academic year in India runs from April to March
+  // If month is April (4) to December (12), it's currentYear - (currentYear+1)
+  // If month is January (1) to March (3), it's (currentYear-1) - currentYear
+  if (currentMonth >= 4) {
+    // April onwards - current academic year
+    return `${currentYear}-${String(currentYear + 1).slice(-2)}`
+  } else {
+    // January to March - previous academic year
+    return `${currentYear - 1}-${String(currentYear).slice(-2)}`
+  }
+}
+
 export function ExamsTimeline() {
+  const academicYear = getCurrentAcademicYear()
   const [exams, setExams] = useState<EntranceExam[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Helper to check if exam is in current academic year
+  const isExamInCurrentAcademicYear = (examDate: string | null) => {
+    if (!examDate) return false
+    const examDateObj = new Date(examDate)
+    const examYear = examDateObj.getFullYear()
+    const examMonth = examDateObj.getMonth() + 1
+    const currentYear = new Date().getFullYear()
+    const currentMonth = new Date().getMonth() + 1
+    
+    // Determine current academic year
+    const currentAcademicYear = currentMonth >= 4 ? currentYear : currentYear - 1
+    
+    // Determine exam's academic year
+    const examAcademicYear = examMonth >= 4 ? examYear : examYear - 1
+    
+    return examAcademicYear === currentAcademicYear || examAcademicYear === currentAcademicYear + 1
+  }
 
   useEffect(() => {
     async function fetchExams() {
@@ -41,10 +78,28 @@ export function ExamsTimeline() {
     fetchExams()
   }, [])
 
-  const filteredExams = exams.filter(exam => 
-    exam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    exam.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter and sort exams: prioritize current academic year exams, then sort by exam date
+  const filteredExams = exams
+    .filter(exam => 
+      exam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exam.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Prioritize exams in current academic year
+      const aInCurrentYear = isExamInCurrentAcademicYear(a.examDate)
+      const bInCurrentYear = isExamInCurrentAcademicYear(b.examDate)
+      
+      if (aInCurrentYear && !bInCurrentYear) return -1
+      if (!aInCurrentYear && bInCurrentYear) return 1
+      
+      // If both in same category, sort by exam date
+      if (a.examDate && b.examDate) {
+        return new Date(a.examDate).getTime() - new Date(b.examDate).getTime()
+      }
+      if (a.examDate) return -1
+      if (b.examDate) return 1
+      return 0
+    })
 
   if (loading) {
     return (
@@ -107,7 +162,7 @@ export function ExamsTimeline() {
       <div className="mt-12 bg-[#18254a] text-white p-8 rounded-2xl shadow-xl">
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
           <CalendarIcon className="h-6 w-6" />
-          Quick Timeline Overview 2024-25
+          Quick Timeline Overview {academicYear}
         </h2>
         <div className="relative space-y-8 before:absolute before:left-2 md:before:left-1/2 before:top-2 before:bottom-2 before:w-0.5 before:bg-blue-400/30">
           {exams.slice(0, 5).map((exam, index) => (

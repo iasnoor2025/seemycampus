@@ -252,20 +252,20 @@ export function CollegeComparison() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Search and Add Colleges */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Colleges to Compare</CardTitle>
-          <p className="text-sm text-muted-foreground">
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+          <CardTitle className="text-white text-2xl">Add Colleges to Compare</CardTitle>
+          <p className="text-white/90 text-sm">
             Search and select up to {MAX_COMPARISONS} colleges to compare
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-6">
+          <div className="space-y-6">
             <div className="flex gap-2">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   placeholder="Search colleges by name, location..."
                   value={searchQuery}
@@ -273,27 +273,30 @@ export function CollegeComparison() {
                     setSearchQuery(e.target.value)
                     // Search will be triggered automatically via debounced effect
                   }}
-                  className="pl-10"
+                  className="pl-12 h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors text-base"
                 />
               </div>
             </div>
 
             {/* Search Results */}
             {searchResults.length > 0 && (
-              <div className="border rounded-lg max-h-60 overflow-y-auto">
+              <div className="border-2 border-gray-200 rounded-xl max-h-60 overflow-y-auto bg-white shadow-sm">
                 {searchResults.map((college) => (
                   <div
                     key={college.id}
-                    className="p-3 hover:bg-accent cursor-pointer border-b last:border-b-0 flex items-center justify-between"
+                    className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 cursor-pointer border-b last:border-b-0 flex items-center justify-between transition-all duration-200"
                     onClick={() => addCollege(college)}
                   >
                     <div className="flex-1">
-                      <p className="font-medium">{college.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {college.city || college.location || "Location not specified"}
+                      <p className="font-semibold text-gray-900">{college.name}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        📍 {college.city || college.location || "Location not specified"}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
                       Add
                     </Button>
                   </div>
@@ -303,15 +306,23 @@ export function CollegeComparison() {
 
             {/* Selected Colleges Preview */}
             {selectedColleges.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-2">Selected Colleges ({selectedColleges.length}/{MAX_COMPARISONS}):</p>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+                <p className="text-sm font-semibold mb-3 text-gray-900">
+                  Selected Colleges ({selectedColleges.length}/{MAX_COMPARISONS}):
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedColleges.map((college) => (
-                    <Badge key={college.id} variant="secondary" className="flex items-center gap-1">
+                    <Badge 
+                      key={college.id} 
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 text-sm font-medium"
+                    >
                       {college.name}
                       <button
-                        onClick={() => removeCollege(college.id)}
-                        className="ml-1 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeCollege(college.id)
+                        }}
+                        className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -328,18 +339,31 @@ export function CollegeComparison() {
       {selectedColleges.length > 0 && (
         <>
           {/* Mobile Cards */}
-          <div className="md:hidden space-y-4">
-            <h2 className="text-xl font-bold">College Comparison</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Compare selected colleges
-            </p>
+          <div className="md:hidden space-y-6">
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-200">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2">
+                College Comparison
+              </h2>
+              <p className="text-sm text-gray-600">
+                Compare selected colleges side-by-side
+              </p>
+            </div>
             
-            {selectedColleges.map((college) => (
-              <Card key={college.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start gap-3">
-                    {/* Logo */}
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex-shrink-0">
+            {selectedColleges.map((college, index) => {
+              const gradients = [
+                "from-blue-500 to-cyan-600",
+                "from-indigo-500 to-purple-600",
+                "from-violet-500 to-purple-600",
+                "from-teal-500 to-emerald-600",
+              ]
+              const gradient = gradients[index % gradients.length]
+
+              return (
+                <Card key={college.id} className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                  <CardHeader className={`bg-gradient-to-br ${gradient} text-white rounded-t-lg pb-2`}>
+                    <div className="flex items-start gap-3">
+                      {/* Logo */}
+                      <div className={`w-16 h-16 rounded-lg overflow-hidden bg-white/20 backdrop-blur-sm flex-shrink-0 border border-white/30`}>
                       {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
                         <Image
                           src={Array.isArray(college.images) ? college.images[0] : college.images}
@@ -360,9 +384,9 @@ export function CollegeComparison() {
                     
                     <div className="flex-1 min-w-0">
                       <Link href={`/colleges/${college.slug}`} className="hover:underline">
-                        <CardTitle className="text-base line-clamp-2">{college.name}</CardTitle>
+                        <CardTitle className="text-white text-lg line-clamp-2">{college.name}</CardTitle>
                       </Link>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-white/90 mt-1">
                         📍 {college.city || college.location || "N/A"}{college.state && `, ${college.state}`}
                       </p>
                     </div>
@@ -371,7 +395,7 @@ export function CollegeComparison() {
                       size="sm"
                       variant="ghost"
                       onClick={() => removeCollege(college.id)}
-                      className="text-destructive flex-shrink-0"
+                      className="text-white hover:bg-white/20 flex-shrink-0"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -441,35 +465,45 @@ export function CollegeComparison() {
                   )}
                   
                   <Link href={`/colleges/${college.slug}`} className="block mt-4">
-                    <Button variant="outline" className="w-full">
+                    <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
                       View Full Details
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
 
           {/* Desktop Table View */}
-          <Card className="hidden md:block">
-            <CardHeader>
-              <CardTitle>College Comparison</CardTitle>
-              <p className="text-sm text-muted-foreground">
+          <Card className="hidden md:block border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="text-white text-2xl">College Comparison</CardTitle>
+              <p className="text-white/90 text-sm">
                 Side-by-side comparison of selected colleges
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-4 font-semibold sticky left-0 bg-background z-10 min-w-[150px] lg:min-w-[200px]">
+                    <tr className="border-b-2 border-gray-200 bg-gradient-to-r from-slate-50 to-blue-50">
+                      <th className="text-left p-4 font-bold text-gray-900 sticky left-0 bg-gradient-to-r from-slate-50 to-blue-50 z-10 min-w-[150px] lg:min-w-[200px] border-r-2 border-gray-200">
                         Criteria
                       </th>
-                      {selectedColleges.map((college) => (
-                        <th key={college.id} className="text-left p-4 font-semibold min-w-[200px] lg:min-w-[250px] border-l">
-                          <div className="space-y-2">
-                            <div className="relative w-full h-24 lg:h-32 mb-2 rounded overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700">
+                      {selectedColleges.map((college, index) => {
+                        const gradients = [
+                          "from-blue-500 to-cyan-600",
+                          "from-indigo-500 to-purple-600",
+                          "from-violet-500 to-purple-600",
+                          "from-teal-500 to-emerald-600",
+                        ]
+                        const gradient = gradients[index % gradients.length]
+
+                        return (
+                          <th key={college.id} className="text-left p-4 font-semibold min-w-[200px] lg:min-w-[250px] border-l border-gray-200">
+                            <div className="space-y-2">
+                              <div className={`relative w-full h-24 lg:h-32 mb-2 rounded-lg overflow-hidden bg-gradient-to-br ${gradient} shadow-md`}>
                               {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
                                 <div className="relative w-full h-full">
                                   <Image
@@ -489,189 +523,190 @@ export function CollegeComparison() {
                               )}
                             </div>
                             <Link href={`/colleges/${college.slug}`} className="hover:underline">
-                              <p className="font-bold text-sm lg:text-lg line-clamp-2">{college.name}</p>
+                              <p className="font-bold text-sm lg:text-lg line-clamp-2 text-gray-900">{college.name}</p>
                             </Link>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => removeCollege(college.id)}
-                              className="text-destructive"
+                              className="text-red-600 hover:bg-red-50"
                             >
                               <X className="h-4 w-4 mr-1" />
                               Remove
                             </Button>
                           </div>
                         </th>
-                      ))}
+                        )
+                      })}
                     </tr>
                   </thead>
                   <tbody>
                   {/* Location */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
+                        <MapPin className="h-4 w-4 text-blue-600" />
                         Location
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.city || college.location || "N/A"}
-                        {college.state && <span className="text-muted-foreground">, {college.state}</span>}
+                        {college.state && <span className="text-gray-600">, {college.state}</span>}
                       </td>
                     ))}
                   </tr>
 
                   {/* Ranking */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" />
+                        <Award className="h-4 w-4 text-blue-600" />
                         Ranking
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.ranking ? `#${college.ranking}` : "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Established Year */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4 text-blue-600" />
                         Established
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.establishedYear || "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Accreditation */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" />
+                        <Award className="h-4 w-4 text-blue-600" />
                         Accreditation
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.accreditation || "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Ownership */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
+                        <Building className="h-4 w-4 text-blue-600" />
                         Ownership
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.ownership || "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Campus Size */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
+                        <Building className="h-4 w-4 text-blue-600" />
                         Campus Size
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.campusSize || "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Total Students */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-4 w-4 text-blue-600" />
                         Total Students
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}
                       </td>
                     ))}
                   </tr>
 
                   {/* Hostel Fees */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">₹</span>
                         Hostel Fees (per year)
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {formatCurrency(college.hostelFees)}
                       </td>
                     ))}
                   </tr>
 
                   {/* Average Package */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">₹</span>
                         Average Package
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {formatCurrency(college.averagePackage)}
                       </td>
                     ))}
                   </tr>
 
                   {/* Highest Package */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">₹</span>
                         Highest Package
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {formatCurrency(college.highestPackage)}
                       </td>
                     ))}
                   </tr>
 
                   {/* Entrance Exams */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4" />
+                        <GraduationCap className="h-4 w-4 text-blue-600" />
                         Entrance Exams
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         {college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0
                           ? (
                               <div className="flex flex-wrap gap-1">
                                 {college.entranceExams.map((exam, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                  <Badge key={idx} className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs">
                                     {exam}
                                   </Badge>
                                 ))}
@@ -683,36 +718,36 @@ export function CollegeComparison() {
                   </tr>
 
                   {/* Contact Information */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-blue-600" />
                         Contact
                       </div>
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
                         <div className="space-y-1 text-sm">
                           {college.phone && (
                             <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
+                              <Phone className="h-3 w-3 text-gray-500" />
                               {college.phone}
                             </div>
                           )}
                           {college.email && (
                             <div className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
+                              <Mail className="h-3 w-3 text-gray-500" />
                               {college.email}
                             </div>
                           )}
                           {college.website && (
                             <div className="flex items-center gap-1">
-                              <Globe className="h-3 w-3" />
+                              <Globe className="h-3 w-3 text-gray-500" />
                               <a
                                 href={college.website}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary hover:underline"
+                                className="text-blue-600 hover:underline"
                               >
                                 Visit Website
                               </a>
@@ -725,13 +760,13 @@ export function CollegeComparison() {
                   </tr>
 
                   {/* Description */}
-                  <tr className="border-b">
-                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
                       Description
                     </td>
                     {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
-                        <p className="text-sm text-muted-foreground line-clamp-3">
+                      <td key={college.id} className="p-4 border-l border-gray-200">
+                        <p className="text-sm text-gray-600 line-clamp-3">
                           {college.description || "N/A"}
                         </p>
                       </td>
@@ -739,21 +774,21 @@ export function CollegeComparison() {
                   </tr>
 
                   {/* Placement Statistics */}
-                  <tr className="border-b bg-blue-50/50">
-                    <td className="p-4 font-medium sticky left-0 bg-blue-50/50 z-10">
+                  <tr className="border-b bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-blue-50 to-cyan-50 z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
+                        <Briefcase className="h-4 w-4 text-blue-600" />
                         Placement (Latest Year)
                       </div>
                     </td>
                     {selectedColleges.map((college) => {
                       const placement = placementsData[college.id]
                       return (
-                        <td key={college.id} className="p-4 border-l bg-blue-50/50">
+                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
                           {placement ? (
                             <div className="space-y-1 text-sm">
-                              <div>Avg: {formatCurrency(placement.averagePackage)}</div>
-                              <div>Highest: {formatCurrency(placement.highestPackage)}</div>
+                              <div className="font-medium">Avg: {formatCurrency(placement.averagePackage)}</div>
+                              <div className="font-medium">Highest: {formatCurrency(placement.highestPackage)}</div>
                               <div>%: {placement.placementPercentage || "N/A"}{placement.placementPercentage && "%"}</div>
                             </div>
                           ) : (
@@ -765,10 +800,10 @@ export function CollegeComparison() {
                   </tr>
 
                   {/* Cutoff Information */}
-                  <tr className="border-b bg-green-50/50">
-                    <td className="p-4 font-medium sticky left-0 bg-green-50/50 z-10">
+                  <tr className="border-b bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-green-50 to-emerald-50 z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" />
+                        <Award className="h-4 w-4 text-green-600" />
                         Recent Cutoffs
                       </div>
                     </td>
@@ -776,10 +811,10 @@ export function CollegeComparison() {
                       const cutoffs = cutoffsData[college.id] || []
                       const latestCutoff = cutoffs[0]
                       return (
-                        <td key={college.id} className="p-4 border-l bg-green-50/50">
+                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
                           {latestCutoff ? (
                             <div className="space-y-1 text-sm">
-                              <div className="font-medium">{latestCutoff.examName}</div>
+                              <div className="font-semibold">{latestCutoff.examName}</div>
                               <div>
                                 {latestCutoff.closingRank
                                   ? `Rank: ${latestCutoff.closingRank.toLocaleString()}`
@@ -788,7 +823,7 @@ export function CollegeComparison() {
                                   : "N/A"}
                               </div>
                               {latestCutoff.category && (
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-gray-600">
                                   {latestCutoff.category}
                                 </div>
                               )}
@@ -802,10 +837,10 @@ export function CollegeComparison() {
                   </tr>
 
                   {/* Rankings */}
-                  <tr className="border-b bg-purple-50/50">
-                    <td className="p-4 font-medium sticky left-0 bg-purple-50/50 z-10">
+                  <tr className="border-b bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors">
+                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-purple-50 to-pink-50 z-10 border-r-2 border-gray-200">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
+                        <TrendingUp className="h-4 w-4 text-purple-600" />
                         Rankings
                       </div>
                     </td>
@@ -813,18 +848,18 @@ export function CollegeComparison() {
                       const rankings = rankingsData[college.id] || []
                       const nirfRanking = rankings.find((r: any) => r.rankingSource === "NIRF")
                       return (
-                        <td key={college.id} className="p-4 border-l bg-purple-50/50">
+                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
                           {nirfRanking ? (
                             <div className="space-y-1 text-sm">
-                              <div className="font-medium">NIRF: #{nirfRanking.rank}</div>
+                              <div className="font-semibold">NIRF: #{nirfRanking.rank}</div>
                               {nirfRanking.category && (
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-gray-600">
                                   {nirfRanking.category}
                                 </div>
                               )}
                             </div>
                           ) : college.ranking ? (
-                            <div className="text-sm">#{college.ranking}</div>
+                            <div className="text-sm font-medium">#{college.ranking}</div>
                           ) : (
                             "N/A"
                           )}
@@ -835,16 +870,26 @@ export function CollegeComparison() {
 
                   {/* View Details */}
                   <tr>
-                    <td className="p-4 sticky left-0 bg-background z-10"></td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l">
-                        <Link href={`/colleges/${college.slug}`}>
-                          <Button variant="outline" className="w-full">
-                            View Full Details
-                          </Button>
-                        </Link>
-                      </td>
-                    ))}
+                    <td className="p-4 sticky left-0 bg-white z-10 border-r-2 border-gray-200"></td>
+                    {selectedColleges.map((college, index) => {
+                      const gradients = [
+                        "from-blue-600 to-cyan-600",
+                        "from-indigo-600 to-purple-600",
+                        "from-violet-600 to-purple-600",
+                        "from-teal-600 to-emerald-600",
+                      ]
+                      const gradient = gradients[index % gradients.length]
+
+                      return (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          <Link href={`/colleges/${college.slug}`}>
+                            <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
+                              View Full Details
+                            </Button>
+                          </Link>
+                        </td>
+                      )
+                    })}
                   </tr>
                 </tbody>
               </table>
@@ -855,12 +900,19 @@ export function CollegeComparison() {
       )}
 
       {selectedColleges.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <GraduationCap className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground mb-4">
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardContent className="py-16 text-center">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+              <GraduationCap className="h-12 w-12 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No Colleges Selected</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               No colleges selected for comparison. Search and add colleges above to get started.
             </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <Search className="h-4 w-4" />
+              <span>Start typing to search colleges</span>
+            </div>
           </CardContent>
         </Card>
       )}

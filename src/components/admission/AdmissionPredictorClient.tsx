@@ -165,21 +165,23 @@ export function AdmissionPredictorClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Input Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Enter Your Details</CardTitle>
-          <CardDescription>
+      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+          <CardTitle className="text-white text-2xl">Enter Your Details</CardTitle>
+          <CardDescription className="text-white/90">
             Provide your exam information to get admission probability predictions
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="examName">Exam Name *</Label>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="examName" className="text-base font-semibold text-gray-900">
+                Exam Name <span className="text-red-500">*</span>
+              </Label>
               <Select value={examName} onValueChange={setExamName} disabled={loadingExams}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
                   <SelectValue placeholder={loadingExams ? "Loading..." : "Select exam"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,14 +194,16 @@ export function AdmissionPredictorClient() {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="category">Category *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-base font-semibold text-gray-900">
+                Category <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={category}
                 onValueChange={setCategory}
                 disabled={!examName || loadingExams}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -212,8 +216,10 @@ export function AdmissionPredictorClient() {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="score">Score / Percentile</Label>
+            <div className="space-y-2">
+              <Label htmlFor="score" className="text-base font-semibold text-gray-900">
+                Score / Percentile
+              </Label>
               <Input
                 id="score"
                 type="number"
@@ -221,11 +227,14 @@ export function AdmissionPredictorClient() {
                 value={score}
                 onChange={(e) => setScore(e.target.value)}
                 disabled={loading}
+                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
               />
             </div>
 
-            <div>
-              <Label htmlFor="rank">Rank</Label>
+            <div className="space-y-2">
+              <Label htmlFor="rank" className="text-base font-semibold text-gray-900">
+                Rank
+              </Label>
               <Input
                 id="rank"
                 type="number"
@@ -233,11 +242,14 @@ export function AdmissionPredictorClient() {
                 value={rank}
                 onChange={(e) => setRank(e.target.value)}
                 disabled={loading}
+                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <Label htmlFor="courseName">Course Name (Optional)</Label>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="courseName" className="text-base font-semibold text-gray-900">
+                Course Name <span className="text-gray-500 text-sm font-normal">(Optional)</span>
+              </Label>
               <Input
                 id="courseName"
                 type="text"
@@ -245,6 +257,7 @@ export function AdmissionPredictorClient() {
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
                 disabled={loading}
+                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
               />
             </div>
           </div>
@@ -259,15 +272,18 @@ export function AdmissionPredictorClient() {
           <Button
             onClick={handlePredict}
             disabled={loading || !examName || !category || (!score && !rank)}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Predicting...
               </>
             ) : (
-              "Predict Admission Chances"
+              <>
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Predict Admission Chances
+              </>
             )}
           </Button>
         </CardContent>
@@ -275,51 +291,66 @@ export function AdmissionPredictorClient() {
 
       {/* Results */}
       {predictions.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Prediction Results</h2>
-            <Badge variant="outline">{predictions.length} colleges found</Badge>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-200">
+            <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
+              Prediction Results
+            </h2>
+            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 text-sm font-semibold">
+              {predictions.length} colleges found
+            </Badge>
           </div>
 
-          <div className="grid gap-4">
-            {predictions.map((prediction) => (
-              <Card key={prediction.collegeId} className="overflow-hidden">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="mb-2">
-                        <Link
-                          href={`/colleges/${prediction.collegeSlug}`}
-                          className="hover:text-blue-600 transition-colors"
-                        >
-                          {prediction.collegeName}
-                        </Link>
-                      </CardTitle>
-                      {prediction.courseName && (
-                        <CardDescription>{prediction.courseName}</CardDescription>
-                      )}
-                    </div>
-                    <div
-                      className={`px-4 py-2 rounded-lg ${getProbabilityBgColor(prediction.probability)}`}
-                    >
-                      <div className={`text-2xl font-bold ${getProbabilityColor(prediction.probability)}`}>
-                        {prediction.probability}%
-                      </div>
-                      <div className="text-xs text-gray-600 mt-1">Probability</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    {getConfidenceIcon(prediction.confidence)}
-                    <span className="text-sm font-medium capitalize">
-                      {prediction.confidence} Confidence
-                    </span>
-                  </div>
+          <div className="grid gap-6">
+            {predictions.map((prediction, index) => {
+              const gradients = [
+                "from-blue-500 to-cyan-600",
+                "from-indigo-500 to-purple-600",
+                "from-violet-500 to-purple-600",
+                "from-teal-500 to-emerald-600",
+                "from-sky-500 to-blue-600",
+                "from-purple-500 to-pink-600",
+              ]
+              const gradient = gradients[index % gradients.length]
 
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-sm text-gray-700">{prediction.reasoning}</p>
-                  </div>
+              return (
+                <Card key={prediction.collegeId} className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white">
+                  <CardHeader className={`bg-gradient-to-br ${gradient} text-white`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 pr-4">
+                        <CardTitle className="mb-2 text-white text-xl">
+                          <Link
+                            href={`/colleges/${prediction.collegeSlug}`}
+                            className="hover:text-blue-100 transition-colors"
+                          >
+                            {prediction.collegeName}
+                          </Link>
+                        </CardTitle>
+                        {prediction.courseName && (
+                          <CardDescription className="text-white/90">
+                            {prediction.courseName}
+                          </CardDescription>
+                        )}
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm px-6 py-4 rounded-xl border border-white/30">
+                        <div className={`text-3xl font-bold text-white`}>
+                          {prediction.probability}%
+                        </div>
+                        <div className="text-xs text-white/90 mt-1 font-medium">Probability</div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-6">
+                    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+                      {getConfidenceIcon(prediction.confidence)}
+                      <span className="text-sm font-semibold capitalize text-gray-900">
+                        {prediction.confidence} Confidence
+                      </span>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200">
+                      <p className="text-sm text-gray-700 leading-relaxed">{prediction.reasoning}</p>
+                    </div>
 
                   {prediction.predictedCutoff.rank && (
                     <div className="flex items-center gap-4 text-sm">
@@ -339,33 +370,34 @@ export function AdmissionPredictorClient() {
                     </div>
                   )}
 
-                  {prediction.historicalData.length > 0 && (
-                    <div className="border-t pt-3">
-                      <p className="text-sm font-medium mb-2">Historical Cutoffs:</p>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                        {prediction.historicalData.map((data, idx) => (
-                          <div key={idx} className="bg-gray-50 p-2 rounded">
-                            <div className="font-semibold">{data.year}</div>
-                            {data.closingRank && (
-                              <div className="text-gray-600">Rank: {data.closingRank}</div>
-                            )}
-                            {data.closingScore && (
-                              <div className="text-gray-600">Score: {data.closingScore}</div>
-                            )}
-                          </div>
-                        ))}
+                    {prediction.historicalData.length > 0 && (
+                      <div className="border-t border-slate-200 pt-4">
+                        <p className="text-sm font-semibold mb-3 text-gray-900">Historical Cutoffs:</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {prediction.historicalData.map((data, idx) => (
+                            <div key={idx} className="bg-gradient-to-br from-slate-50 to-blue-50 p-3 rounded-lg border border-slate-200">
+                              <div className="font-bold text-gray-900 mb-1">{data.year}</div>
+                              {data.closingRank && (
+                                <div className="text-xs text-gray-600">Rank: <span className="font-semibold">{data.closingRank}</span></div>
+                              )}
+                              {data.closingScore && (
+                                <div className="text-xs text-gray-600">Score: <span className="font-semibold">{data.closingScore}</span></div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <Link href={`/colleges/${prediction.collegeSlug}`}>
-                    <Button variant="outline" className="w-full">
-                      View College Details
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+                    <Link href={`/colleges/${prediction.collegeSlug}`}>
+                      <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold py-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300`}>
+                        View College Details
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       )}
