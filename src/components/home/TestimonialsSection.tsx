@@ -137,13 +137,13 @@ export function TestimonialsSection() {
             {slides.map((slide, slideIndex) => (
               <div 
                 key={slideIndex}
-                className="min-w-full grid grid-cols-1 md:grid-cols-3 gap-8 px-2"
+                className="min-w-full grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 px-2"
               >
                 {slide.map((testimonial) => (
                   <Card key={testimonial.id} className="bg-white shadow-xl">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col items-center mb-4">
-                        <div className="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden flex items-center justify-center">
+                    <CardContent className="p-8">
+                      <div className="flex flex-col items-center mb-6">
+                        <div className="w-44 h-44 rounded-full bg-gray-200 mb-5 overflow-hidden flex items-center justify-center shadow-2xl ring-4 ring-white/50">
                           {testimonial.photoUrl ? (
                             <img
                               src={testimonial.photoUrl}
@@ -158,22 +158,22 @@ export function TestimonialsSection() {
                             />
                           ) : null}
                           <div 
-                            className={`w-full h-full bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} flex items-center justify-center text-white text-2xl font-bold ${testimonial.photoUrl ? "hidden" : ""}`}
+                            className={`w-full h-full bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} flex items-center justify-center text-white text-5xl font-bold ${testimonial.photoUrl ? "hidden" : ""}`}
                           >
                             {getInitials(testimonial.name)}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                           <Calendar className="h-4 w-4" />
                           <span>{new Date(testimonial.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">{testimonial.name}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">{testimonial.name}</h3>
                       </div>
-                      <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                        {testimonial.testimonial}
+                      <p className="text-gray-700 text-base leading-relaxed mb-8 text-center">
+                        &ldquo;{testimonial.testimonial}&rdquo;
                       </p>
                       <Link href="/contact" className="block">
-                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-6 text-base uppercase tracking-wide">
                           GET IN TOUCH
                         </Button>
                       </Link>
@@ -211,15 +211,15 @@ export function TestimonialsSection() {
 
         {/* Pagination Dots */}
         {slides.length > 1 && (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 mt-8">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`rounded-full transition-all ${
                   index === currentSlide
-                    ? "w-3 h-3 bg-white"
-                    : "w-2 h-2 bg-white/50 hover:bg-white/75"
+                    ? "w-3 h-3 bg-gray-700"
+                    : "w-2.5 h-2.5 bg-gray-400 hover:bg-gray-500"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
