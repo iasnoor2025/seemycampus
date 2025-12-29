@@ -21,6 +21,7 @@
     "db:remove-duplicate-testimonials": "tsx src/db/remove-duplicate-testimonials.ts",
     "db:clean-course-names": "tsx src/db/clean-course-names.ts",
     "db:seed:comprehensive-courses": "tsx src/db/seed-comprehensive-courses.ts",
+    "db:seed:featured": "tsx src/db/seed-featured-colleges.ts",
     "db:scrape:diploma": "tsx src/db/scrape-external-specific.ts",
     "seo:audit": "node scripts/seo-audit.js"
   },
