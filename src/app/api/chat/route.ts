@@ -8,7 +8,18 @@ import { leads } from "@/db/schema"
 import { eq, or } from "drizzle-orm"
 
 export async function POST(request: NextRequest) {
+  let message: string = ""
+  
   try {
+    // Parse body early so it's accessible in catch block
+    let body: any = {}
+    try {
+      body = await request.json()
+      message = body.message || ""
+    } catch (parseError) {
+      // If JSON parsing fails, we'll handle it below
+    }
+
     // Rate limiting - check both per-minute and per-hour limits
     const clientIP = getClientIP(request)
     
@@ -50,8 +61,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { message, clearHistory, includeColleges, history, context, userInfo } = body
+    const { clearHistory, includeColleges, history, context, userInfo } = body
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -247,7 +257,7 @@ export async function POST(request: NextRequest) {
     let suggestions: any[] = []
     try {
       const chatbot = new Chatbot()
-      const searchResult = await chatbot.searchColleges(body?.message || "")
+      const searchResult = await chatbot.searchColleges(message || "")
       suggestions = searchResult || []
     } catch (e) {
       // Ignore search errors
