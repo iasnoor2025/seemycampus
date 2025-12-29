@@ -1,9 +1,11 @@
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, Flag, BookOpen, Lightbulb, GraduationCap, ChevronRight, TrendingUp } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { InstagramFeed } from "@/components/home/InstagramFeed"
+import { isFeatureEnabled } from "@/lib/featureFlags"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -35,7 +37,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Check if about page is enabled
+  const isEnabled = await isFeatureEnabled("public_about")
+  if (!isEnabled) {
+    redirect("/")
+  }
+
   return (
     <>
       {/* Hero Section - About Us Banner */}

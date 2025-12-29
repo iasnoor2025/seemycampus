@@ -115,6 +115,7 @@ export function HeroCarousel() {
           fill
           className="object-cover"
           priority={currentIndex === 0}
+          loading={currentIndex === 0 ? "eager" : "lazy"}
           quality={85}
           sizes="100vw"
         />
@@ -148,6 +149,8 @@ export function HeroCarousel() {
                 alt={currentSlide.title || "Hero slide"}
                 fill
                 className="object-cover"
+                priority={currentIndex === 0}
+                loading={currentIndex === 0 ? "eager" : "lazy"}
                 quality={85}
                 sizes="(max-width: 1024px) 0vw, 50vw"
               />

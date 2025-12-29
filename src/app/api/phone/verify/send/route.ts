@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
-import { generateOTP, sendOTP, storeOTP } from "@/lib/sms/otp"
+import { generateOTP, sendOTP, storeOTP, canSendOTP } from "@/lib/sms/otp"
+import { isFeatureEnabled } from "@/lib/featureFlags"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if OTP feature is enabled
+    const otpEnabled = await isFeatureEnabled("feature_otp")
+    if (!otpEnabled) {
+      return NextResponse.json(
+        { error: "OTP verification is currently disabled" },
+        { status: 503 }
+      )
+    }
+
     const body = await request.json()
     const { phone } = body
 
@@ -19,6 +29,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Invalid phone number format. Please enter a valid 10-digit Indian mobile number." },
         { status: 400 }
+      )
+    }
+
+    // Check rate limiting
+    const canSend = await canSendOTP(phoneDigits, 3, 15) // Max 3 OTPs per 15 minutes
+    if (!canSend) {
+      return NextResponse.json(
+        { error: "Too many OTP requests. Please wait 15 minutes before requesting again." },
+        { status: 429 }
       )
     }
 

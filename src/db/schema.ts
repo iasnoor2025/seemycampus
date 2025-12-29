@@ -747,6 +747,18 @@ export const collegeNewsRelations = relations(collegeNews, ({ one }) => ({
   }),
 }));
 
+// Feature Flags table - Enable/disable features and pages
+export const featureFlags = pgTable("feature_flags", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 255 }).notNull().unique(), // e.g., "dashboard_leads", "public_colleges", "feature_chat"
+  name: varchar("name", { length: 255 }).notNull(), // Display name
+  description: text("description"), // Description of the feature
+  category: varchar("category", { length: 100 }).notNull(), // "dashboard", "public_page", "feature"
+  isEnabled: boolean("is_enabled").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Update colleges relations to include new tables
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),

@@ -13,6 +13,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
+import { isPathEnabledClient } from "@/lib/client-feature-flags"
 
 interface MenuCourse {
   name: string
@@ -75,7 +76,10 @@ export function Header() {
   const hoveredCategoryData = displayCategories.find(cat => cat.name === hoveredCategory)
   const coursesToShow = hoveredCategoryData?.courses || []
 
-  const navLinks = [
+  const [enabledLinks, setEnabledLinks] = useState<Set<string>>(new Set())
+  const [linksLoading, setLinksLoading] = useState(true)
+
+  const allNavLinks = [
     { href: "/", label: "HOME" },
     { href: "/about", label: "ABOUT US" },
     { href: "/compare", label: "COMPARE" },
@@ -92,6 +96,60 @@ export function Header() {
     { href: "/contact", label: "CONTACT" },
   ]
 
+  // Check which links are enabled
+  useEffect(() => {
+    let isMounted = true
+    
+    const checkLinks = async () => {
+      const enabled = new Set<string>()
+      
+      // Always enable home and contact
+      enabled.add("/")
+      enabled.add("/contact")
+      
+      // Check all other links
+      const checkPromises = allNavLinks
+        .filter(link => link.href !== "/" && link.href !== "/contact")
+        .map(async (link) => {
+          try {
+            const isEnabled = await isPathEnabledClient(link.href)
+            if (isMounted && isEnabled === true) {
+              enabled.add(link.href)
+            }
+            // If isEnabled is false, don't add to enabled set (link will be hidden)
+          } catch (error) {
+            console.error(`Error checking feature flag for ${link.href}:`, error)
+            // On error, don't add the link (fail closed for disabled features)
+          }
+        })
+      
+      // Wait for all checks to complete
+      await Promise.all(checkPromises)
+      
+      if (isMounted) {
+        setEnabledLinks(enabled)
+        setLinksLoading(false)
+      }
+    }
+    
+    checkLinks()
+    
+    // Re-check links periodically (in case feature flags were updated)
+    const interval = setInterval(() => {
+      if (isMounted) {
+        checkLinks()
+      }
+    }, 10000) // Check every 10 seconds for faster updates
+    
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, []) // Only run on mount, not on pathname change
+
+  // Filter nav links based on feature flags
+  const navLinks = allNavLinks.filter(link => enabledLinks.has(link.href))
+
   return (
     <>
       <header className="bg-[#18254a] text-white sticky top-0 z-50 shadow-lg w-full">
@@ -106,6 +164,7 @@ export function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-white">
+              {/* Always show HOME */}
               <Link 
                 href="/" 
                 className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
@@ -113,12 +172,15 @@ export function Header() {
                 HOME
               </Link>
               
-              <Link 
-                href="/about" 
-                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
-              >
-                ABOUT
-              </Link>
+              {/* Show ABOUT only if enabled - check directly */}
+              {!linksLoading && enabledLinks.has("/about") ? (
+                <Link 
+                  href="/about" 
+                  className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                >
+                  ABOUT
+                </Link>
+              ) : null}
               
               {/* Colleges Dropdown */}
               <NavigationMenu>
@@ -193,33 +255,35 @@ export function Header() {
                 </NavigationMenuList>
               </NavigationMenu>
               
-              <Link href="/compare" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                COMPARE
-              </Link>
+              {/* Render remaining enabled links (excluding HOME, ABOUT, CONTACT, and COLLEGES which are handled separately) */}
+              {!linksLoading && allNavLinks
+                .filter(link => {
+                  // Exclude links that are handled separately
+                  if (link.href === "/" || 
+                      link.href === "/about" || 
+                      link.href === "/contact" ||
+                      link.href === "/colleges") {
+                    return false
+                  }
+                  // Only show if explicitly enabled in enabledLinks set
+                  return enabledLinks.has(link.href)
+                })
+                .map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                  >
+                    {link.label === "ABOUT US" ? "ABOUT" : link.label}
+                  </Link>
+                ))}
               
-              <Link href="/academic-alliance" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                ALLIANCE
-              </Link>
-              
-              <Link href="/career-counseling" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                COUNSEL
-              </Link>
-              
-              <Link href="/scholarships" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                SCHOLARSHIPS
-              </Link>
-              
-              <Link href="/entrance-exams" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                TIMELINE
-              </Link>
-              
-              <Link href="/fee-calculator" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                FEE CALC
-              </Link>
-              
-              <Link href="/contact" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                CONTACT
-              </Link>
+              {/* Always show CONTACT */}
+              {!linksLoading && (
+                <Link href="/contact" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
+                  CONTACT
+                </Link>
+              )}
             </nav>
 
             {/* Right Side - Desktop */}
@@ -301,10 +365,26 @@ export function Header() {
 
           {/* Navigation Links */}
           <ul className="py-2">
-            {navLinks.slice(0, 2).map((link) => (
-              <li key={link.href}>
+            {/* HOME - always show */}
+            <li>
+              <Link
+                href="/"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setCollegesExpanded(false)
+                  setExpandedCategoryId(null)
+                }}
+                className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+              >
+                HOME
+              </Link>
+            </li>
+            
+            {/* ABOUT - only if enabled */}
+            {!linksLoading && enabledLinks.has("/about") && (
+              <li>
                 <Link
-                  href={link.href}
+                  href="/about"
                   onClick={() => {
                     setMobileMenuOpen(false)
                     setCollegesExpanded(false)
@@ -312,10 +392,10 @@ export function Header() {
                   }}
                   className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
                 >
-                  {link.label}
+                  ABOUT US
                 </Link>
               </li>
-            ))}
+            )}
             
             {/* Colleges with Expandable Categories */}
             <li>
@@ -379,10 +459,37 @@ export function Header() {
               )}
             </li>
             
-            {navLinks.slice(2).map((link) => (
-              <li key={link.href}>
+            {/* Mobile menu links - filter out HOME, ABOUT, CONTACT and only show enabled links */}
+            {!linksLoading && allNavLinks
+              .filter(link => {
+                // Exclude HOME, ABOUT, and CONTACT (handled separately or always shown)
+                if (link.href === "/" || link.href === "/about" || link.href === "/contact") {
+                  return false
+                }
+                // Only show if explicitly enabled in enabledLinks
+                return enabledLinks.has(link.href)
+              })
+              .map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      setCollegesExpanded(false)
+                      setExpandedCategoryId(null)
+                    }}
+                    className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            
+            {/* Always show CONTACT in mobile menu */}
+            {!linksLoading && (
+              <li>
                 <Link
-                  href={link.href}
+                  href="/contact"
                   onClick={() => {
                     setMobileMenuOpen(false)
                     setCollegesExpanded(false)
@@ -390,27 +497,29 @@ export function Header() {
                   }}
                   className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
                 >
-                  {link.label}
+                  CONTACT
                 </Link>
               </li>
-            ))}
+            )}
           </ul>
 
           {/* Search at bottom */}
-          <div className="px-4 pt-4 border-t border-gray-200">
-            <Link
-              href="/colleges"
-              onClick={() => {
-                setMobileMenuOpen(false)
-                setCollegesExpanded(false)
-                setExpandedCategoryId(null)
-              }}
-              className="flex items-center gap-2 px-4 py-3 bg-[#18254a] text-white rounded-lg hover:bg-[#0f1a33] transition-colors"
-            >
-              <Search className="h-5 w-5" />
-              <span className="font-medium">Search Colleges</span>
-            </Link>
-          </div>
+          {enabledLinks.has("/colleges") && (
+            <div className="px-4 pt-4 border-t border-gray-200">
+              <Link
+                href="/colleges"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setCollegesExpanded(false)
+                  setExpandedCategoryId(null)
+                }}
+                className="flex items-center gap-2 px-4 py-3 bg-[#18254a] text-white rounded-lg hover:bg-[#0f1a33] transition-colors"
+              >
+                <Search className="h-5 w-5" />
+                <span className="font-medium">Search Colleges</span>
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
     </>

@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Settings as SettingsIcon } from "lucide-react"
+import { FeatureFlagsManager } from "@/components/dashboard/FeatureFlagsManager"
+import { OTPSettings } from "@/components/dashboard/OTPSettings"
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",
@@ -103,6 +105,16 @@ export default async function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Feature Flags Section */}
+      <div className="mt-8">
+        <FeatureFlagsManager />
+      </div>
+
+      {/* OTP Settings Section */}
+      <div className="mt-8">
+        <OTPSettings />
       </div>
     </div>
   )

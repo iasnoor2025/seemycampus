@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyOTP } from "@/lib/sms/otp"
+import { isFeatureEnabled } from "@/lib/featureFlags"
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if OTP feature is enabled
+    const otpEnabled = await isFeatureEnabled("feature_otp")
+    if (!otpEnabled) {
+      return NextResponse.json(
+        { error: "OTP verification is currently disabled" },
+        { status: 503 }
+      )
+    }
+
     const body = await request.json()
     const { phone, otp } = body
 

@@ -199,6 +199,7 @@ export function HeroSection() {
                   fill
                   className="object-cover"
                   priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
                   quality={85}
                   sizes="100vw"
                 />

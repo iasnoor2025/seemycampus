@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { phoneVerifications } from "@/db/schema"
-import { eq, and, gt } from "drizzle-orm"
+import { eq, and, gt, gte } from "drizzle-orm"
 
 /**
  * Generate a 6-digit OTP
@@ -136,5 +136,48 @@ export async function isPhoneVerified(phone: string): Promise<boolean> {
     .limit(1)
   
   return !!verification
+}
+
+/**
+ * Check if OTP can be sent (rate limiting)
+ * Returns true if OTP can be sent, false if rate limited
+ */
+export async function canSendOTP(phone: string, maxAttempts: number = 3, windowMinutes: number = 15): Promise<boolean> {
+  const windowStart = new Date()
+  windowStart.setMinutes(windowStart.getMinutes() - windowMinutes)
+  
+  // Count OTPs sent in the time window
+  const recentOTPs = await db
+    .select()
+    .from(phoneVerifications)
+    .where(
+      and(
+        eq(phoneVerifications.phone, phone),
+        gte(phoneVerifications.createdAt, windowStart)
+      )
+    )
+  
+  return recentOTPs.length < maxAttempts
+}
+
+/**
+ * Get OTP statistics for a phone number
+ */
+export async function getOTPStats(phone: string) {
+  const allOTPs = await db
+    .select()
+    .from(phoneVerifications)
+    .where(eq(phoneVerifications.phone, phone))
+    .orderBy(phoneVerifications.createdAt)
+  
+  const verified = allOTPs.filter(otp => otp.verified).length
+  const total = allOTPs.length
+  
+  return {
+    total,
+    verified,
+    unverified: total - verified,
+    lastSent: allOTPs[allOTPs.length - 1]?.createdAt || null,
+  }
 }
 

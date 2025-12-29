@@ -1,6 +1,8 @@
 import { Metadata } from "next"
+import { redirect } from "next/navigation"
 import { ScholarshipsListClient } from "@/components/scholarships/ScholarshipsListClient"
 import { baseUrl } from "@/lib/seo/generateMeta"
+import { isFeatureEnabled } from "@/lib/featureFlags"
 
 export const metadata: Metadata = {
   title: "Scholarships for Indian Students | Find Financial Aid",
@@ -26,6 +28,12 @@ export const metadata: Metadata = {
 }
 
 export default async function ScholarshipsPage() {
+  // Check if scholarships page is enabled
+  const isEnabled = await isFeatureEnabled("public_scholarships")
+  if (!isEnabled) {
+    redirect("/")
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">

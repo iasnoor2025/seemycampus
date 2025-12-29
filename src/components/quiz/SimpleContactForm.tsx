@@ -100,11 +100,36 @@ export function SimpleContactForm({ onSuccess }: SimpleContactFormProps) {
     }
   }
 
+  const checkOTPEnabled = async (): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/feature-flags/feature_otp")
+      if (response.ok) {
+        const data = await response.json()
+        return data.isEnabled !== false // Default to enabled if not found
+      }
+      return true // Default to enabled on error
+    } catch {
+      return true // Default to enabled on error
+    }
+  }
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Skip OTP in development mode - directly save lead
     if (isDevelopment) {
+      await saveLead()
+      return
+    }
+
+    // Check if OTP feature is enabled
+    const otpEnabled = await checkOTPEnabled()
+    if (!otpEnabled) {
+      // OTP is disabled, skip verification and save lead directly
+      toast({
+        title: "OTP verification disabled",
+        description: "Proceeding without phone verification...",
+      })
       await saveLead()
       return
     }
@@ -126,6 +151,15 @@ export function SimpleContactForm({ onSuccess }: SimpleContactFormProps) {
       const data = await response.json()
 
       if (!response.ok) {
+        // If OTP is disabled (503), skip verification
+        if (response.status === 503 && data.error?.includes("disabled")) {
+          toast({
+            title: "OTP verification disabled",
+            description: "Proceeding without phone verification...",
+          })
+          await saveLead()
+          return
+        }
         throw new Error(data.error || "Failed to send OTP")
       }
 
