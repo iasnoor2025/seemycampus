@@ -15,6 +15,8 @@
     "db:seed:logos": "tsx src/db/seed-logos.ts",
     "db:seed:hero-texts": "tsx src/db/seed-hero-rotating-texts.ts",
     "db:seed:exams": "tsx src/db/seed-exams.ts",
+    "db:seed:leads": "tsx src/db/seed-leads.ts",
+    "db:seed:counselor": "tsx src/db/seed-counselor.ts",
     "db:remove-duplicates": "tsx src/db/remove-duplicates.ts",
     "db:remove-duplicate-testimonials": "tsx src/db/remove-duplicate-testimonials.ts",
     "db:clean-course-names": "tsx src/db/clean-course-names.ts",

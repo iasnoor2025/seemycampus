@@ -146,6 +146,8 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(eq(users.role, "counselor"))
 
+    console.log(`Found ${counselors.length} counselors in database`)
+
     // Get active lead counts for each counselor
     const counselorsWithCounts = await Promise.all(
       counselors.map(async (counselor) => {
@@ -168,6 +170,7 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    console.log(`Returning ${counselorsWithCounts.length} counselors with counts`)
     return NextResponse.json({ counselors: counselorsWithCounts })
   } catch (error) {
     console.error("Error fetching counselors:", error)
@@ -180,6 +183,14 @@ export async function GET(request: NextRequest) {
 
 // Handle bulk assignment of random leads to a counselor
 async function handleBulkAssignment(counselorId: number, count: number, status?: string) {
+  // Validate count
+  if (!count || count <= 0 || !Number.isInteger(count)) {
+    return NextResponse.json(
+      { error: "Count must be a positive integer" },
+      { status: 400 }
+    )
+  }
+
   // Verify counselor exists and has counselor role
   const [counselor] = await db
     .select()
@@ -218,8 +229,31 @@ async function handleBulkAssignment(counselorId: number, count: number, status?:
     )
   }
 
+  // Get total unassigned leads count first
+  const totalUnassignedLeads = await db
+    .select()
+    .from(leads)
+    .where(
+      and(
+        isNull(leads.counselorId),
+        ne(leads.status, "converted")
+      )
+    )
+
   // Determine how many leads we can actually assign
-  const leadsToAssign = Math.min(count, availableSlots)
+  // Limited by: 1) available slots for counselor, 2) total unassigned leads available
+  const leadsToAssign = Math.min(count, availableSlots, totalUnassignedLeads.length)
+
+  if (leadsToAssign <= 0) {
+    return NextResponse.json(
+      { 
+        error: "No leads can be assigned. Either no available slots or no unassigned leads.",
+        availableSlots,
+        totalUnassigned: totalUnassignedLeads.length
+      },
+      { status: 400 }
+    )
+  }
 
   // Get unassigned leads (no counselorId or counselorId is null, and not converted)
   // Randomly select the requested number
@@ -239,7 +273,8 @@ async function handleBulkAssignment(counselorId: number, count: number, status?:
     return NextResponse.json(
       { 
         error: "No unassigned leads available",
-        availableSlots
+        availableSlots,
+        totalUnassigned: totalUnassignedLeads.length
       },
       { status: 404 }
     )
@@ -263,11 +298,16 @@ async function handleBulkAssignment(counselorId: number, count: number, status?:
     .where(inArray(leads.id, leadIds))
     .returning()
 
+  const message = count > assignedLeads.length
+    ? `Assigned ${assignedLeads.length} of ${count} requested lead(s) to counselor with status "${assignedStatus}". ${count - assignedLeads.length} could not be assigned due to available slots or unassigned leads limit.`
+    : `Successfully assigned ${assignedLeads.length} lead(s) to counselor with status "${assignedStatus}"`
+
   return NextResponse.json({
-    message: `Successfully assigned ${assignedLeads.length} lead(s) to counselor with status "${assignedStatus}"`,
+    message,
     assignedCount: assignedLeads.length,
     requestedCount: count,
     availableSlots,
+    totalUnassigned: totalUnassignedLeads.length,
     leads: assignedLeads,
     activeLeadsCount: activeLeads.length + assignedLeads.length,
     assignedStatus: assignedStatus,

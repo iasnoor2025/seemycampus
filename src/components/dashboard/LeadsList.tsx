@@ -94,6 +94,9 @@ export function LeadsList() {
   const [bulkAssignStatus, setBulkAssignStatus] = useState<string>("new")
   const [isAssigning, setIsAssigning] = useState(false)
   const [isBulkAssigning, setIsBulkAssigning] = useState(false)
+  const [counselorSelectOpen, setCounselorSelectOpen] = useState(false)
+  const [bulkCounselorSelectOpen, setBulkCounselorSelectOpen] = useState(false)
+  const [statusSelectOpen, setStatusSelectOpen] = useState(false)
   const [editFormData, setEditFormData] = useState<{
     name: string
     email: string
@@ -127,7 +130,11 @@ export function LeadsList() {
       const response = await fetch("/api/leads/assign")
       if (response.ok) {
         const data = await response.json()
+        console.log("Fetched counselors:", data.counselors)
         setCounselors(data.counselors || [])
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Error fetching counselors - response not ok:", response.status, errorData)
       }
     } catch (error) {
       console.error("Error fetching counselors:", error)
@@ -162,6 +169,8 @@ export function LeadsList() {
   const handleAssignClick = (lead: Lead) => {
     setLeadToAssign(lead)
     setSelectedCounselorId(lead.counselorId)
+    setCounselorSelectOpen(false)
+    fetchCounselors() // Ensure counselors are loaded
     setAssignDialogOpen(true)
   }
 
@@ -442,6 +451,8 @@ export function LeadsList() {
           <Button
             onClick={() => {
               fetchCounselors()
+              setBulkCounselorSelectOpen(false)
+              setStatusSelectOpen(false)
               setBulkAssignDialogOpen(true)
             }}
             className="flex items-center gap-2"
@@ -831,22 +842,9 @@ export function LeadsList() {
 
       {/* Assign Lead Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent
-          onInteractOutside={(e) => {
-            // Prevent closing when clicking on Select dropdown
-            const target = e.target as HTMLElement
-            if (target.closest('[data-slot="select-content"]') || 
-                target.closest('[data-baseui-select-positioner]') ||
-                target.closest('[data-baseui-select-popup]')) {
-              e.preventDefault()
-            }
-          }}
-        >
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign Lead to Counselor</DialogTitle>
-            <DialogDescription>
-              Select a counselor to assign this lead. Counselors can have a maximum of 10 active leads.
-            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -858,27 +856,46 @@ export function LeadsList() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="counselor">Counselor</Label>
+              {counselors.length > 0 && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  {counselors.length} counselor(s) available
+                </p>
+              )}
               <Select
                 value={selectedCounselorId?.toString() || ""}
-                onValueChange={(value) => setSelectedCounselorId(parseInt(value))}
+                open={counselorSelectOpen}
+                onOpenChange={setCounselorSelectOpen}
+                onValueChange={(value) => {
+                  console.log("Counselor onValueChange:", value)
+                  if (value) {
+                    setSelectedCounselorId(parseInt(value))
+                    setCounselorSelectOpen(false)
+                  }
+                }}
               >
                 <SelectTrigger id="counselor">
                   <SelectValue placeholder="Select a counselor" />
                 </SelectTrigger>
-                <SelectContent>
-                  {counselors.map((counselor) => (
-                    <SelectItem
-                      key={counselor.id}
-                      value={counselor.id.toString()}
-                      disabled={!counselor.canAssignMore}
-                    >
-                      {counselor.name || counselor.email} 
-                      {counselor.canAssignMore 
-                        ? ` (${counselor.activeLeadsCount}/${counselor.maxLeads} leads)`
-                        : ` (FULL - ${counselor.activeLeadsCount}/${counselor.maxLeads} leads)`
-                      }
+                <SelectContent className="z-[100]">
+                  {counselors.length > 0 ? (
+                    counselors.map((counselor) => (
+                      <SelectItem
+                        key={counselor.id}
+                        value={counselor.id.toString()}
+                        disabled={!counselor.canAssignMore}
+                      >
+                        {counselor.name || counselor.email} 
+                        {counselor.canAssignMore 
+                          ? ` (${counselor.activeLeadsCount}/${counselor.maxLeads} leads - ${counselor.maxLeads - counselor.activeLeadsCount} available)`
+                          : ` (FULL - ${counselor.activeLeadsCount}/${counselor.maxLeads} leads)`
+                        }
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-counselors" disabled>
+                      No counselors available
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               {counselors.length === 0 && (
@@ -895,6 +912,7 @@ export function LeadsList() {
                 setAssignDialogOpen(false)
                 setLeadToAssign(null)
                 setSelectedCounselorId(null)
+                setCounselorSelectOpen(false)
               }}
             >
               Cancel
@@ -911,17 +929,7 @@ export function LeadsList() {
 
       {/* Bulk Assign Leads Dialog */}
       <Dialog open={bulkAssignDialogOpen} onOpenChange={setBulkAssignDialogOpen}>
-        <DialogContent
-          onInteractOutside={(e) => {
-            // Prevent closing when clicking on Select dropdown
-            const target = e.target as HTMLElement
-            if (target.closest('[data-slot="select-content"]') || 
-                target.closest('[data-baseui-select-positioner]') ||
-                target.closest('[data-baseui-select-popup]')) {
-              e.preventDefault()
-            }
-          }}
-        >
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Bulk Assign Leads to Counselor</DialogTitle>
             <DialogDescription>
@@ -933,12 +941,20 @@ export function LeadsList() {
               <Label htmlFor="bulk-counselor">Counselor</Label>
               <Select
                 value={bulkSelectedCounselorId?.toString() || ""}
-                onValueChange={(value) => setBulkSelectedCounselorId(parseInt(value))}
+                open={bulkCounselorSelectOpen}
+                onOpenChange={setBulkCounselorSelectOpen}
+                onValueChange={(value) => {
+                  console.log("Bulk Counselor onValueChange:", value)
+                  if (value) {
+                    setBulkSelectedCounselorId(parseInt(value))
+                    setBulkCounselorSelectOpen(false)
+                  }
+                }}
               >
                 <SelectTrigger id="bulk-counselor">
                   <SelectValue placeholder="Select a counselor" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100]">
                   {counselors.length > 0 ? (
                     counselors.map((counselor) => (
                       <SelectItem
@@ -972,14 +988,14 @@ export function LeadsList() {
                 id="bulk-count"
                 type="number"
                 min="1"
-                max={bulkSelectedCounselorId ? counselors.find(c => c.id === bulkSelectedCounselorId)?.maxLeads || 10 : 10}
                 value={bulkAssignCount}
                 onChange={(e) => setBulkAssignCount(e.target.value)}
-                placeholder="Enter number of leads (e.g., 10, 20)"
+                placeholder="Enter number of leads (e.g., 1, 10, 100, 1000)"
               />
               {bulkSelectedCounselorId && (
                 <p className="text-sm text-muted-foreground">
-                  Available slots: {counselors.find(c => c.id === bulkSelectedCounselorId)?.maxLeads! - counselors.find(c => c.id === bulkSelectedCounselorId)?.activeLeadsCount! || 0}
+                  Available slots for this counselor: {counselors.find(c => c.id === bulkSelectedCounselorId)?.maxLeads! - counselors.find(c => c.id === bulkSelectedCounselorId)?.activeLeadsCount! || 0}. 
+                  System will assign up to available slots or available unassigned leads, whichever is lower.
                 </p>
               )}
             </div>
@@ -987,15 +1003,38 @@ export function LeadsList() {
               <Label htmlFor="bulk-status">Status to Assign</Label>
               <Select
                 value={bulkAssignStatus}
-                onValueChange={(value) => setBulkAssignStatus(value)}
+                open={statusSelectOpen}
+                onOpenChange={setStatusSelectOpen}
+                onValueChange={(value) => {
+                  console.log("Status onValueChange:", value)
+                  if (value) {
+                    setBulkAssignStatus(value)
+                    setStatusSelectOpen(false)
+                  }
+                }}
               >
                 <SelectTrigger id="bulk-status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem 
+                    value="new"
+                    onSelect={() => console.log("Status selected: new")}
+                  >
+                    New
+                  </SelectItem>
+                  <SelectItem 
+                    value="contacted"
+                    onSelect={() => console.log("Status selected: contacted")}
+                  >
+                    Contacted
+                  </SelectItem>
+                  <SelectItem 
+                    value="qualified"
+                    onSelect={() => console.log("Status selected: qualified")}
+                  >
+                    Qualified
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -1011,6 +1050,8 @@ export function LeadsList() {
                 setBulkSelectedCounselorId(null)
                 setBulkAssignCount("10")
                 setBulkAssignStatus("new")
+                setBulkCounselorSelectOpen(false)
+                setStatusSelectOpen(false)
               }}
             >
               Cancel

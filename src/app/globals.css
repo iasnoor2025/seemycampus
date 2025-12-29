@@ -93,16 +93,10 @@ html, body {
 }
 
 /* Fix Select dropdown z-index and overflow in dialogs */
-[data-slot="select-content"] {
-  z-index: 100 !important;
-  pointer-events: auto !important;
-}
-
-/* Base UI Select positioner and popup */
-[data-baseui-select-positioner],
-[data-baseui-select-popup] {
-  z-index: 100 !important;
-  pointer-events: auto !important;
+[data-slot="select-content"],
+[data-baseui-select-popup],
+[data-baseui-select-positioner] {
+  z-index: 9999 !important;
 }
 
 /* Fix NavigationMenu viewport overflow */
