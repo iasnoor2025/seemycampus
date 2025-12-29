@@ -37,7 +37,13 @@ export default auth((req) => {
 
   // Protect admin routes - require login (role check happens in page component)
   if (pathname.startsWith("/admin")) {
-    if (!isLoggedIn) {
+    // Check if user is logged in and has a valid session
+    // In production, req.auth might be undefined even with a session cookie
+    // So we check both req.auth and ensure user exists
+    const hasValidAuth = isLoggedIn && req.auth?.user
+    
+    if (!hasValidAuth) {
+      // Construct signin URL with callback
       const signInUrl = new URL("/auth/signin", req.url)
       signInUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(signInUrl)
