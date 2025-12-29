@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createLead, getAllLeads, getLeadByEmail } from "@/lib/leads/capture"
+import { auth } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth()
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "100")
     const offset = parseInt(searchParams.get("offset") || "0")
@@ -39,6 +41,18 @@ export async function GET(request: NextRequest) {
     if (email) {
       const lead = await getLeadByEmail(email)
       
+      // If user is counselor, only return if assigned to them
+      if (session && (session.user as any)?.role === "counselor") {
+        const userId = parseInt((session.user as any)?.id)
+        if (lead && lead.counselorId !== userId) {
+          return NextResponse.json({
+            success: true,
+            leads: [],
+            count: 0,
+          })
+        }
+      }
+      
       return NextResponse.json({
         success: true,
         leads: lead ? [lead] : [],
@@ -46,6 +60,18 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // For counselors, only return their assigned leads
+    if (session && (session.user as any)?.role === "counselor") {
+      const userId = parseInt((session.user as any)?.id)
+      const leadsList = await getAllLeads(limit, offset, userId)
+      return NextResponse.json({
+        success: true,
+        leads: leadsList,
+        count: leadsList.length,
+      })
+    }
+
+    // For admins/staff, return all leads
     const leadsList = await getAllLeads(limit, offset)
 
     return NextResponse.json({

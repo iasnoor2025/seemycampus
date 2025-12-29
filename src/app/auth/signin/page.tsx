@@ -1,20 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [pendingMessage, setPendingMessage] = useState(false)
+
+  useEffect(() => {
+    if (searchParams?.get("pending") === "true") {
+      setPendingMessage(true)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,7 +39,12 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        setError("Invalid email or password")
+        // Check if error is about pending approval
+        if (result.error === "PENDING_APPROVAL" || result.error.includes("PENDING_APPROVAL")) {
+          setError("Your account is pending admin approval. Please wait for approval before signing in.")
+        } else {
+          setError("Invalid email or password")
+        }
       } else {
         router.push("/dashboard")
         router.refresh()
@@ -42,7 +57,21 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="mb-8 flex flex-col items-center space-y-4">
+        <div className="flex items-center justify-center">
+          <Image
+            src="/main-logo-footer.png"
+            alt="See My Campus Logo"
+            width={300}
+            height={100}
+            className="h-24 md:h-32 w-auto object-contain"
+            priority
+            quality={90}
+          />
+        </div>
+        <h1 className="text-3xl font-bold text-[#18254a]">SEE MY CAMPUS</h1>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
@@ -50,6 +79,13 @@ export default function SignInPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {pendingMessage && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertDescription className="text-blue-800">
+                  Your account has been created successfully! It is pending admin approval. You will be able to sign in once an admin approves your account.
+                </AlertDescription>
+              </Alert>
+            )}
             {error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
                 {error}

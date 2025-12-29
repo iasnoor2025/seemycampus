@@ -1,6 +1,6 @@
 import { db } from "@/db"
-import { leads } from "@/db/schema"
-import { eq, desc, or } from "drizzle-orm"
+import { leads, users } from "@/db/schema"
+import { eq, desc, or, and, ne } from "drizzle-orm"
 import { validateLead, type LeadData } from "./validation"
 
 export async function createLead(data: unknown) {
@@ -103,13 +103,98 @@ export async function getLeadByEmail(email: string) {
   return lead || null
 }
 
-export async function getAllLeads(limit = 100, offset = 0) {
-  return await db
-    .select()
+export async function getAllLeads(limit = 100, offset = 0, counselorId?: number) {
+  if (counselorId) {
+    // For counselors, only return their assigned leads (not converted)
+    const leadsList = await db
+      .select({
+        id: leads.id,
+        name: leads.name,
+        email: leads.email,
+        phone: leads.phone,
+        source: leads.source,
+        status: leads.status,
+        counselorId: leads.counselorId,
+        quizData: leads.quizData,
+        createdAt: leads.createdAt,
+        updatedAt: leads.updatedAt,
+      })
+      .from(leads)
+      .where(
+        and(
+          eq(leads.counselorId, counselorId),
+          ne(leads.status, "converted")
+        )
+      )
+      .orderBy(desc(leads.createdAt))
+      .limit(limit)
+      .offset(offset)
+
+    // Get counselor info for each lead
+    return await Promise.all(
+      leadsList.map(async (lead) => {
+        if (lead.counselorId) {
+          const [counselor] = await db
+            .select({
+              id: users.id,
+              name: users.name,
+              email: users.email,
+            })
+            .from(users)
+            .where(eq(users.id, lead.counselorId))
+            .limit(1)
+
+          return {
+            ...lead,
+            counselor: counselor || null,
+          }
+        }
+        return lead
+      })
+    )
+  }
+  
+  // For admins, return all leads with counselor info
+  const leadsList = await db
+    .select({
+      id: leads.id,
+      name: leads.name,
+      email: leads.email,
+      phone: leads.phone,
+      source: leads.source,
+      status: leads.status,
+      counselorId: leads.counselorId,
+      quizData: leads.quizData,
+      createdAt: leads.createdAt,
+      updatedAt: leads.updatedAt,
+    })
     .from(leads)
     .orderBy(desc(leads.createdAt))
     .limit(limit)
     .offset(offset)
+
+  // Get counselor info for each lead
+  return await Promise.all(
+    leadsList.map(async (lead) => {
+      if (lead.counselorId) {
+        const [counselor] = await db
+          .select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+          })
+          .from(users)
+          .where(eq(users.id, lead.counselorId))
+          .limit(1)
+
+        return {
+          ...lead,
+          counselor: counselor || null,
+        }
+      }
+      return lead
+    })
+  )
 }
 
 export async function updateLeadStatus(id: number, status: string) {

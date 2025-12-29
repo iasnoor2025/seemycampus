@@ -72,6 +72,7 @@ export const leads = pgTable("leads", {
   phone: varchar("phone", { length: 50 }),
   quizData: jsonb("quiz_data").$type<Record<string, any>>(),
   studentAnswerId: integer("student_answer_id").references(() => studentAnswers.id),
+  counselorId: integer("counselor_id").references(() => users.id, { onDelete: "set null" }), // Assigned counselor
   source: varchar("source", { length: 50 }).default("quiz"), // quiz, chat, form, etc.
   status: varchar("status", { length: 50 }).default("new"), // new, contacted, qualified, converted
   phoneVerified: boolean("phone_verified").default(false),
@@ -97,7 +98,8 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified"),
   image: varchar("image", { length: 500 }),
   password: varchar("password", { length: 255 }), // hashed password
-  role: varchar("role", { length: 50 }).default("student"), // admin, student
+  role: varchar("role", { length: 50 }).default("student"), // admin, moderator, staff, counselor, student
+  isApproved: boolean("is_approved").default(false), // Admin approval required
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

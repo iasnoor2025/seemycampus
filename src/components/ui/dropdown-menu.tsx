@@ -46,10 +46,13 @@ const DropdownMenuContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof Menu.Popup> & {
     sideOffset?: number
+    align?: "start" | "center" | "end"
   }
->(({ className, sideOffset = 4, ...props }, ref) => (
+>(({ className, sideOffset = 4, align = "start", ...props }, ref) => (
   <Menu.Portal>
-    <Menu.Positioner>
+    <Menu.Positioner
+      placement={align === "end" ? "bottom-end" : align === "center" ? "bottom" : "bottom-start"}
+    >
       <Menu.Popup
         ref={ref}
         className={cn(
@@ -105,9 +108,41 @@ const DropdownMenuItem = React.forwardRef<
 })
 DropdownMenuItem.displayName = "DropdownMenuItem"
 
+const DropdownMenuLabel = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    inset?: boolean
+  }
+>(({ className, inset, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "px-2 py-1.5 text-sm font-semibold",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
+DropdownMenuLabel.displayName = "DropdownMenuLabel"
+
+const DropdownMenuSeparator = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+DropdownMenuSeparator.displayName = "DropdownMenuSeparator"
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 }

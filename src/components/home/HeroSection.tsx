@@ -180,7 +180,7 @@ export function HeroSection() {
     <>
       {/* Hero Section */}
       <section 
-        className="relative w-full h-[600px] md:h-[700px] flex items-center overflow-hidden"
+        className="relative w-full h-[450px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -212,11 +212,11 @@ export function HeroSection() {
         </div>
 
         {/* Content */}
-        <div className="container mx-auto px-4 relative z-20">
+        <div className="container mx-auto px-3 sm:px-4 relative z-20">
           <div className="max-w-4xl mx-auto text-center">
             {/* Main Heading - Typewriter animation with delete and type effect */}
-            <div className="relative h-32 md:h-40 mb-8 flex items-center justify-center">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center whitespace-nowrap">
+            <div className="relative min-h-[50px] sm:min-h-[60px] md:min-h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1">
+              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words max-w-full">
                 {displayText}
                 <span className="animate-pulse">|</span>
               </h1>
@@ -224,30 +224,30 @@ export function HeroSection() {
 
             {/* Subtitle - Optional, can show slide subtitle if needed */}
             {slides.length > 0 && slides[currentIndex]?.subtitle && (
-              <div className="relative h-12 mb-8 flex items-center justify-center">
-                <p className="text-lg md:text-xl text-white/90 transition-opacity duration-500">
+              <div className="relative min-h-[30px] sm:min-h-[40px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-2">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 transition-opacity duration-500">
                   {slides[currentIndex].subtitle}
                 </p>
               </div>
             )}
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="mb-3 sm:mb-4 md:mb-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   <Input
                     type="text"
                     placeholder="Search for colleges, exams, courses and more.."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 pr-4 py-6 text-base bg-white border-0 rounded-lg shadow-lg focus:ring-2 focus:ring-orange-500"
+                    className="pl-9 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base bg-white border-0 rounded-lg shadow-lg focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
                 <Button
                   type="submit"
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
                 >
                   Search
                 </Button>
@@ -259,7 +259,7 @@ export function HeroSection() {
               <Link href="/career-counseling">
                 <Button
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-base font-semibold rounded-lg shadow-lg"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg"
                 >
                   Get Expert Guidance
                 </Button>

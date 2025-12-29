@@ -5,6 +5,7 @@ import { db } from "@/db"
 import { users } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
+import { isAutoApproved, type UserRole } from "@/lib/roles"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db),
@@ -43,6 +44,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isValid) {
           return null
+        }
+
+        // Check if user is approved (auto-approved roles don't need approval)
+        const userRole = (user[0].role || "student") as UserRole
+        if (!isAutoApproved(userRole) && !user[0].isApproved) {
+          // Return null with a custom error that will be caught
+          throw new Error("PENDING_APPROVAL")
         }
 
         return {

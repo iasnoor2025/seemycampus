@@ -15,12 +15,19 @@ export default async function LeadsPage() {
     redirect("/auth/signin")
   }
 
+  const userRole = (session.user as any)?.role || "student"
+  const isCounselor = userRole === "counselor"
+
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Leads Management</h1>
+        <h1 className="text-4xl font-bold mb-2">
+          {isCounselor ? "My Assigned Leads" : "Leads Management"}
+        </h1>
         <p className="text-muted-foreground">
-          View and manage student leads from quizzes, contact forms, and other sources
+          {isCounselor
+            ? "View and manage your assigned student leads (maximum 10 active leads)"
+            : "View and manage student leads from quizzes, contact forms, and other sources"}
         </p>
       </div>
 

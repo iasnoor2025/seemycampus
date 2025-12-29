@@ -10,8 +10,9 @@ import { ScrollToTop } from "./ScrollToTop"
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isDashboard = pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin")
+  const isAuth = pathname?.startsWith("/auth")
 
-  if (isDashboard) {
+  if (isDashboard || isAuth) {
     return <>{children}</>
   }
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -49,7 +50,7 @@ export default function SignUpPage() {
         return
       }
 
-      router.push("/auth/signin?registered=true")
+      router.push("/auth/signin?registered=true&pending=true")
     } catch (err) {
       setError("An error occurred. Please try again.")
     } finally {
@@ -58,7 +59,21 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="mb-8 flex flex-col items-center space-y-4">
+        <div className="flex items-center justify-center">
+          <Image
+            src="/main-logo-footer.png"
+            alt="See My Campus Logo"
+            width={300}
+            height={100}
+            className="h-24 md:h-32 w-auto object-contain"
+            priority
+            quality={90}
+          />
+        </div>
+        <h1 className="text-3xl font-bold text-[#18254a]">SEE MY CAMPUS</h1>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>

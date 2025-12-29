@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user (default role is "student")
+    // Create user (default role is "student", requires admin approval)
     const [newUser] = await db
       .insert(users)
       .values({
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         role: "student",
+        isApproved: false, // Requires admin approval
       })
       .returning()
 

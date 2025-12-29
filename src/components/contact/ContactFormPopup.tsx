@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SimpleContactForm } from "@/components/quiz/SimpleContactForm"
 import { X } from "lucide-react"
@@ -9,9 +10,12 @@ import { Button } from "@/components/ui/button"
 
 export function ContactFormPopup() {
   const pathname = usePathname()
+  const { data: session, status: sessionStatus } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
   const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true)
   const lastClickTime = useRef<number>(0)
   const lastScrollTime = useRef<number>(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -52,12 +56,72 @@ export function ContactFormPopup() {
     }
   }
 
-  useEffect(() => {
-    checkContactFormStatus()
+  // Check if user is admin via API (more reliable than client-side session)
+  const checkAdminStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/session", {
+        credentials: "include",
+        cache: "no-store",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data?.user?.role === "admin") {
+          setIsAdmin(true)
+        } else {
+          setIsAdmin(false)
+        }
+      } else {
+        setIsAdmin(false)
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error)
+      setIsAdmin(false)
+    } finally {
+      setIsCheckingAdmin(false)
+    }
   }, [])
 
-  // Don't show popup on quiz, contact, dashboard, or admin pages
+  useEffect(() => {
+    checkContactFormStatus()
+    checkAdminStatus()
+  }, [checkAdminStatus])
+
+  // Re-check admin status when session changes or periodically
+  useEffect(() => {
+    if (sessionStatus === "loading") {
+      setIsCheckingAdmin(true)
+      return
+    }
+
+    // Check admin status when session status changes
+    if (sessionStatus === "authenticated" || sessionStatus === "unauthenticated") {
+      checkAdminStatus()
+    }
+
+    // Also check from session hook directly as fallback
+    if (session?.user?.role === "admin") {
+      setIsAdmin(true)
+      setIsCheckingAdmin(false)
+    } else if (sessionStatus === "unauthenticated") {
+      setIsAdmin(false)
+      setIsCheckingAdmin(false)
+    }
+  }, [sessionStatus, session, checkAdminStatus])
+
+  // Periodic check for admin status (every 5 seconds) to catch new logins
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAdminStatus()
+    }, 5000) // Check every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [checkAdminStatus])
+
+  // Don't show popup on quiz, contact, dashboard, or admin pages, or if user is admin
+  // Wait for both checks to complete before deciding
   const shouldShowPopup = 
+    !isCheckingAdmin &&
+    !isAdmin &&
     !pathname?.includes("/quiz") && 
     !pathname?.includes("/contact") &&
     !pathname?.includes("/dashboard") &&
@@ -98,7 +162,7 @@ export function ContactFormPopup() {
 
   // Show popup every 10 seconds if not submitted
   useEffect(() => {
-    if (isChecking || hasSubmitted || !shouldShowPopup) {
+    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
@@ -116,11 +180,11 @@ export function ContactFormPopup() {
         intervalRef.current = null
       }
     }
-  }, [isChecking, hasSubmitted, shouldShowPopup])
+  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isAdmin])
 
   // Show popup on every click if not submitted (with debounce)
   useEffect(() => {
-    if (isChecking || hasSubmitted || !shouldShowPopup) return
+    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) return
 
     const handleClick = (e: MouseEvent) => {
       const now = Date.now()
@@ -144,11 +208,11 @@ export function ContactFormPopup() {
     return () => {
       document.removeEventListener("click", handleClick, true)
     }
-  }, [isChecking, hasSubmitted, shouldShowPopup])
+  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isAdmin])
 
   // Show popup on scroll if not submitted (with debounce)
   useEffect(() => {
-    if (isChecking || hasSubmitted || !shouldShowPopup) return
+    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) return
 
     const handleScroll = () => {
       const now = Date.now()
@@ -172,7 +236,7 @@ export function ContactFormPopup() {
     return () => {
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isChecking, hasSubmitted, shouldShowPopup, isOpen])
+  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isOpen, isAdmin])
 
   const handleFormSuccess = () => {
     setHasSubmitted(true)
@@ -181,7 +245,7 @@ export function ContactFormPopup() {
     checkContactFormStatus()
   }
 
-  if (isChecking || hasSubmitted || !shouldShowPopup) {
+  if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) {
     return null
   }
 
