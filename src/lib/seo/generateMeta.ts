@@ -218,6 +218,8 @@ interface CollegeWithDetails extends College {
   totalStudents?: number | null
   courses?: Array<{ name: string; slug: string; level?: string | null; description?: string | null }> | null
   entranceExams?: string[] | null
+  reviewCount?: number | null // Number of approved reviews
+  averageRating?: number | null // Average rating from reviews (1-5)
 }
 
 export function generateStructuredDataCollege(college: CollegeWithDetails) {
@@ -303,12 +305,14 @@ export function generateStructuredDataCollege(college: CollegeWithDetails) {
     })
   }
 
-  // Add aggregate rating if available
-  if (college.averagePackage) {
+  // Add aggregate rating only if reviews exist (reviewCount must be > 0)
+  // Note: This should be populated with actual review data when available
+  // For now, we only include it if explicitly provided with valid review count
+  if (college.reviewCount && college.reviewCount > 0 && college.averageRating) {
     structuredData.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: "4.5", // Placeholder - should come from reviews
-      reviewCount: "0", // Should come from reviews count
+      ratingValue: college.averageRating.toString(),
+      reviewCount: college.reviewCount.toString(),
     }
   }
 

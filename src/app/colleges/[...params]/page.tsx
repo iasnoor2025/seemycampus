@@ -20,8 +20,8 @@ import { RelatedContent } from "@/components/seo/RelatedContent"
 import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList, generateCollegeFAQStructuredData, baseUrl } from "@/lib/seo/generateMeta"
 import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
 import { db } from "@/db"
-import { categories, studyGoals } from "@/db/schema"
-import { eq, or, asc } from "drizzle-orm"
+import { categories, studyGoals, collegeReviews } from "@/db/schema"
+import { eq, or, asc, and } from "drizzle-orm"
 
 interface PageProps {
   params: Promise<{
@@ -421,9 +421,31 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   }
 
   const { courses, ...college } = collegeData
+  
+  // Fetch review data for aggregate rating (only if reviews exist)
+  let reviewCount: number | null = null
+  let averageRating: number | null = null
+  try {
+    const approvedReviews = await db
+      .select()
+      .from(collegeReviews)
+      .where(and(eq(collegeReviews.collegeId, college.id), eq(collegeReviews.isApproved, true)))
+    
+    if (approvedReviews.length > 0) {
+      reviewCount = approvedReviews.length
+      const totalRating = approvedReviews.reduce((sum, review) => sum + review.rating, 0)
+      averageRating = Math.round((totalRating / approvedReviews.length) * 10) / 10
+    }
+  } catch (error) {
+    // Silently fail - reviews are optional
+    console.warn('Failed to fetch reviews for structured data:', error)
+  }
+  
   const structuredData = generateStructuredDataCollege({
     ...college,
     courses: courses || null,
+    reviewCount: reviewCount,
+    averageRating: averageRating,
   })
 
   // Generate FAQ structured data
