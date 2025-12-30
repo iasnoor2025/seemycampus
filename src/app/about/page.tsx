@@ -37,7 +37,17 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   // Check if about page is enabled
-  const isEnabled = await isFeatureEnabled("public_about")
+  // Fail open: if feature flag check fails (e.g., during build when DB isn't available), show the page
+  let isEnabled = true
+  try {
+    isEnabled = await isFeatureEnabled("public_about")
+  } catch (error) {
+    // During build time, database might not be available
+    // Default to enabled to allow static generation
+    console.warn("Feature flag check failed, defaulting to enabled:", error)
+    isEnabled = true
+  }
+  
   if (!isEnabled) {
     redirect("/")
   }
