@@ -18,6 +18,16 @@ html, body {
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Scrollbar hide utility for navigation */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 
 @layer base {
   :root {

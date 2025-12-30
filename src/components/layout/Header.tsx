@@ -214,9 +214,9 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-[#18254a] text-white sticky top-0 z-50 shadow-lg w-full">
-        <div className="w-full px-3 lg:px-4">
-          <div className="flex items-center justify-between h-14 lg:h-16">
+      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white sticky top-0 z-50 shadow-xl border-b border-white/10 w-full backdrop-blur-sm bg-opacity-95">
+        <div className="w-full px-3 lg:px-4 xl:px-6">
+          <div className="flex items-center justify-between h-16 lg:h-18 max-w-[1920px] mx-auto gap-2">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link 
@@ -225,14 +225,19 @@ export function Header() {
                   // Ensure navigation works
                   e.stopPropagation()
                 }}
-                className="flex items-center"
+                className="flex items-center group"
               >
-                <Logo />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-lg blur-sm group-hover:blur-md transition-all"></div>
+                  <div className="relative bg-white/10 backdrop-blur-sm rounded-lg p-1.5 group-hover:bg-white/20 transition-all">
+                    <Logo size="small" />
+                  </div>
+                </div>
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-white">
+            {/* Desktop Navigation - Scrollable */}
+            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 text-white flex-1 min-w-0 overflow-x-auto scrollbar-hide px-2 justify-center">
               {/* Always show HOME */}
               <Link 
                 href="/" 
@@ -240,7 +245,12 @@ export function Header() {
                   // Ensure navigation works
                   e.stopPropagation()
                 }}
-                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                className={cn(
+                  "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                  pathname === "/" 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                    : "hover:bg-white/10 text-white/90 hover:text-white"
+                )}
               >
                 HOME
               </Link>
@@ -253,7 +263,12 @@ export function Header() {
                     // Ensure navigation works
                     e.stopPropagation()
                   }}
-                  className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                  className={cn(
+                    "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                    pathname === "/about" 
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                      : "hover:bg-white/10 text-white/90 hover:text-white"
+                  )}
                 >
                   ABOUT
                 </Link>
@@ -264,7 +279,9 @@ export function Header() {
                 <NavigationMenuList>
                   <NavigationMenuItem>
                     <NavigationMenuTrigger 
-                      className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap bg-transparent text-white hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-red-400 h-auto py-0 px-2"
+                      className={cn(
+                        "font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap bg-transparent text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/10 data-[state=open]:text-white h-auto py-1.5 xl:py-2 px-2 xl:px-2.5 rounded-lg transition-all flex-shrink-0"
+                      )}
                     >
                       COLLEGES
                     </NavigationMenuTrigger>
@@ -285,8 +302,8 @@ export function Header() {
                                   className={cn(
                                     "block px-4 py-3 cursor-pointer transition-colors text-sm font-medium uppercase tracking-wide",
                                     hoveredCategory === category.name 
-                                      ? "bg-[#18254a] text-white" 
-                                      : "text-gray-900 hover:bg-gray-50"
+                                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+                                      : "text-gray-900 hover:bg-blue-50"
                                   )}
                                 >
                                   <div className="flex items-center justify-between">
@@ -323,7 +340,7 @@ export function Header() {
                                   // Ensure navigation works - stop propagation to prevent NavigationMenu from interfering
                                   e.stopPropagation()
                                 }}
-                                className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer"
+                                className="block px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer font-medium"
                               >
                                 {course.name}
                               </Link>
@@ -357,7 +374,12 @@ export function Header() {
                       // Ensure navigation works
                       e.stopPropagation()
                     }}
-                    className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                    className={cn(
+                      "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                      pathname === link.href 
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                        : "hover:bg-white/10 text-white/90 hover:text-white"
+                    )}
                   >
                     {link.label === "ABOUT US" ? "ABOUT" : link.label}
                   </Link>
@@ -370,31 +392,37 @@ export function Header() {
                   // Ensure navigation works
                   e.stopPropagation()
                 }}
-                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+                className={cn(
+                  "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                  pathname === "/contact" 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                    : "hover:bg-white/10 text-white/90 hover:text-white"
+                )}
               >
                 CONTACT
               </Link>
             </nav>
 
             {/* Right Side - Desktop */}
-            <div className="hidden lg:flex items-center gap-2">
-              <button
-                className="w-9 h-9 border border-white/40 flex items-center justify-center hover:bg-white/10 transition-colors"
-                aria-label="Search"
+            <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+              <Link
+                href="/colleges"
+                className="w-9 h-9 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-white/20 hover:border-white/30 transition-all group"
+                aria-label="Search Colleges"
               >
-                <Search className="h-4 w-4 text-white" />
-              </button>
+                <Search className="h-4 w-4 text-white group-hover:scale-110 transition-transform" />
+              </Link>
               
               <a 
                 href="tel:+918960147776" 
-                className="flex items-center overflow-hidden rounded-full hover:opacity-90 transition-opacity shadow-md"
+                className="flex items-center overflow-hidden rounded-lg hover:scale-105 transition-all shadow-lg hover:shadow-xl group"
                 aria-label="Call Now"
               >
-                <div className="bg-red-600 px-3 py-2 flex items-center justify-center">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 xl:px-4 py-2 xl:py-2.5 flex items-center justify-center group-hover:from-blue-700 group-hover:to-indigo-700 transition-all">
                   <Phone className="h-4 w-4 text-white" />
                 </div>
-                <div className="bg-white px-4 py-2 flex items-center">
-                  <span className="text-gray-800 font-semibold text-xs uppercase tracking-wide">
+                <div className="bg-white px-3 xl:px-4 py-2 xl:py-2.5 flex items-center">
+                  <span className="text-gray-800 font-semibold text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap">
                     CALL NOW
                   </span>
                 </div>
@@ -406,10 +434,10 @@ export function Header() {
               {/* Call Button - Mobile */}
               <a 
                 href="tel:+918960147776" 
-                className="flex items-center overflow-hidden rounded-full hover:opacity-90 transition-opacity shadow-md"
+                className="flex items-center overflow-hidden rounded-lg hover:scale-105 transition-all shadow-md"
                 aria-label="Call Now"
               >
-                <div className="bg-red-600 px-2.5 py-1.5 flex items-center justify-center">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-2.5 py-1.5 flex items-center justify-center">
                   <Phone className="h-4 w-4 text-white" />
                 </div>
                 <div className="bg-white px-2.5 py-1.5 flex items-center">
@@ -422,7 +450,7 @@ export function Header() {
               {/* Hamburger Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 transition-colors rounded"
+                className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 transition-colors rounded-lg border border-white/20"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -447,14 +475,14 @@ export function Header() {
       {/* Mobile Menu Slide-out */}
       <div 
         className={cn(
-          "fixed top-14 right-0 w-[280px] h-[calc(100vh-56px)] bg-white z-50 lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-xl",
+          "fixed top-16 right-0 w-[300px] h-[calc(100vh-64px)] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white z-50 lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl border-l border-white/10",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         <nav className="py-4">
 
           {/* Navigation Links */}
-          <ul className="py-2">
+          <ul className="py-4">
             {/* HOME - always show */}
             <li>
               <Link
@@ -466,7 +494,12 @@ export function Header() {
                   setCollegesExpanded(false)
                   setExpandedCategoryId(null)
                 }}
-                className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                className={cn(
+                  "block px-6 py-3 font-medium transition-all rounded-lg mx-2 mb-1",
+                  pathname === "/" 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                    : "text-white/90 hover:bg-white/10 hover:text-white"
+                )}
               >
                 HOME
               </Link>
@@ -484,7 +517,12 @@ export function Header() {
                     setCollegesExpanded(false)
                     setExpandedCategoryId(null)
                   }}
-                  className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                  className={cn(
+                    "block px-6 py-3 font-medium transition-all rounded-lg mx-2 mb-1",
+                    pathname === "/about" 
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                      : "text-white/90 hover:bg-white/10 hover:text-white"
+                  )}
                 >
                   ABOUT US
                 </Link>
@@ -500,36 +538,36 @@ export function Header() {
                     setExpandedCategoryId(null)
                   }
                 }}
-                className="w-full flex items-center justify-between px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-3 font-medium text-white/90 hover:bg-white/10 hover:text-white transition-all rounded-lg mx-2 mb-1"
               >
                 <span>COLLEGES</span>
                 <ChevronDown className={cn(
-                  "h-5 w-5 text-gray-400 transition-transform",
+                  "h-5 w-5 text-white/60 transition-transform",
                   collegesExpanded && "rotate-180"
                 )} />
               </button>
               
               {collegesExpanded && (
-                <ul className="bg-gray-50">
+                <ul className="bg-white/5 backdrop-blur-sm mx-2 rounded-lg border border-white/10">
                   {displayCategories.map((category) => (
                     <li key={category.id}>
                       <button
                         onClick={() => setExpandedCategoryId(
                           expandedCategoryId === category.id ? null : category.id
                         )}
-                        className="w-full flex items-center justify-between px-6 py-2.5 text-gray-700 text-sm hover:bg-gray-100 transition-colors"
+                        className="w-full flex items-center justify-between px-6 py-2.5 text-white/80 text-sm hover:bg-white/10 hover:text-white transition-colors rounded-lg"
                       >
                         <span>{category.name}</span>
                         {category.courses && category.courses.length > 0 && (
                           <ChevronRight className={cn(
-                            "h-4 w-4 text-gray-400 transition-transform",
+                            "h-4 w-4 text-white/60 transition-transform",
                             expandedCategoryId === category.id && "rotate-90"
                           )} />
                         )}
                       </button>
                       
                       {expandedCategoryId === category.id && category.courses && category.courses.length > 0 && (
-                        <ul className="bg-gray-100">
+                        <ul className="bg-white/5 backdrop-blur-sm border-t border-white/10">
                           {category.courses.map((course, idx) => (
                             <li key={idx}>
                               <Link
@@ -541,7 +579,7 @@ export function Header() {
                                   setCollegesExpanded(false)
                                   setExpandedCategoryId(null)
                                 }}
-                                className="block px-8 py-2 text-gray-600 text-sm hover:bg-gray-200 transition-colors"
+                                className="block px-8 py-2 text-white/70 text-sm hover:bg-white/10 hover:text-white transition-colors"
                               >
                                 {course.name}
                               </Link>
@@ -576,7 +614,12 @@ export function Header() {
                       setCollegesExpanded(false)
                       setExpandedCategoryId(null)
                     }}
-                    className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                    className={cn(
+                      "block px-6 py-3 font-medium transition-all rounded-lg mx-2 mb-1",
+                      pathname === link.href 
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                        : "text-white/90 hover:bg-white/10 hover:text-white"
+                    )}
                   >
                     {link.label}
                   </Link>
@@ -594,7 +637,12 @@ export function Header() {
                   setCollegesExpanded(false)
                   setExpandedCategoryId(null)
                 }}
-                className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                className={cn(
+                  "block px-6 py-3 font-medium transition-all rounded-lg mx-2 mb-1",
+                  pathname === "/contact" 
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                    : "text-white/90 hover:bg-white/10 hover:text-white"
+                )}
               >
                 CONTACT
               </Link>
@@ -603,7 +651,7 @@ export function Header() {
 
           {/* Search at bottom */}
           {enabledLinks.has("/colleges") && (
-            <div className="px-4 pt-4 border-t border-gray-200">
+            <div className="px-4 pt-4 border-t border-white/10">
               <Link
                 href="/colleges"
                 onClick={(e) => {
@@ -613,7 +661,7 @@ export function Header() {
                   setCollegesExpanded(false)
                   setExpandedCategoryId(null)
                 }}
-                className="flex items-center gap-2 px-4 py-3 bg-[#18254a] text-white rounded-lg hover:bg-[#0f1a33] transition-colors"
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
               >
                 <Search className="h-5 w-5" />
                 <span className="font-medium">Search Colleges</span>
