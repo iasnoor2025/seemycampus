@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, Phone, MapPin, Save, Loader2 } from "lucide-react"
+import { Mail, Phone, MapPin, Save, Loader2, MessageSquare } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Switch } from "@/components/ui/switch"
 
 export function ContactSettings() {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
+  const [popupEnabled, setPopupEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -29,6 +31,7 @@ export function ContactSettings() {
         setEmail(data.email || "")
         setPhone(data.phone || "")
         setAddress(data.address || "")
+        setPopupEnabled(data.popupEnabled !== false) // Default to true if not set
       }
     } catch (error) {
       console.error("Error fetching contact info:", error)
@@ -51,6 +54,7 @@ export function ContactSettings() {
           email,
           phone,
           address,
+          popupEnabled,
         }),
       })
 
@@ -150,6 +154,24 @@ export function ContactSettings() {
               className="max-w-md"
             />
             <p className="text-sm text-gray-500">Office location or address</p>
+          </div>
+
+          {/* Contact Popup Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+            <div className="flex-1">
+              <Label htmlFor="contact-popup-enabled" className="flex items-center gap-2 cursor-pointer">
+                <MessageSquare className="h-4 w-4 text-purple-600" />
+                <span className="text-base font-medium">Contact Popup</span>
+              </Label>
+              <p className="text-sm text-gray-500 mt-1">
+                Enable or disable the contact form popup that appears on the website
+              </p>
+            </div>
+            <Switch
+              id="contact-popup-enabled"
+              checked={popupEnabled}
+              onCheckedChange={setPopupEnabled}
+            />
           </div>
         </div>
 

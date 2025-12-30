@@ -19,10 +19,13 @@ export async function GET() {
     })
 
     // Return with defaults if not set
+    const popupEnabled = contactInfo.contact_popup_enabled !== "false" // Default to true if not set
+    
     return NextResponse.json({
       email: contactInfo.contact_email || "info@seemycampus.com",
       phone: contactInfo.contact_phone || "+91-XXX-XXX-XXXX",
       address: contactInfo.contact_address || "New Delhi, India",
+      popupEnabled: popupEnabled,
     })
   } catch (error: any) {
     console.error("Error fetching contact settings:", error)
@@ -42,13 +45,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, phone, address } = body
+    const { email, phone, address, popupEnabled } = body
 
     // Update or insert contact settings
     const updates = [
       { key: "contact_email", value: email || "", label: "Contact Email", category: "contact" },
       { key: "contact_phone", value: phone || "", label: "Contact Phone", category: "contact" },
       { key: "contact_address", value: address || "", label: "Contact Address", category: "contact" },
+      { key: "contact_popup_enabled", value: popupEnabled === false ? "false" : "true", label: "Contact Popup Enabled", category: "contact" },
     ]
 
     for (const update of updates) {

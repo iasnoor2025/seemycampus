@@ -16,9 +16,31 @@ export function ContactFormPopup() {
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true)
+  const [popupEnabled, setPopupEnabled] = useState(true) // Default to true
+  const [isCheckingPopupSetting, setIsCheckingPopupSetting] = useState(true)
   const lastClickTime = useRef<number>(0)
   const lastScrollTime = useRef<number>(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Check if popup is enabled in settings
+  const checkPopupSetting = useCallback(async () => {
+    try {
+      const response = await fetch("/api/settings/contact")
+      if (response.ok) {
+        const data = await response.json()
+        setPopupEnabled(data.popupEnabled !== false) // Default to true if not set
+      } else {
+        // If API fails, default to enabled
+        setPopupEnabled(true)
+      }
+    } catch (error) {
+      // If error, default to enabled
+      console.error("Error checking popup setting:", error)
+      setPopupEnabled(true)
+    } finally {
+      setIsCheckingPopupSetting(false)
+    }
+  }, [])
 
   // Check if contact form has been submitted
   const checkContactFormStatus = async () => {
@@ -109,7 +131,8 @@ export function ContactFormPopup() {
   useEffect(() => {
     checkContactFormStatus()
     checkAdminStatus()
-  }, [checkAdminStatus])
+    checkPopupSetting()
+  }, [checkAdminStatus, checkPopupSetting])
 
   // Re-check admin status when session changes
   // Prefer session hook over API call for better performance
@@ -165,9 +188,11 @@ export function ContactFormPopup() {
   }, [checkAdminStatus, isCheckingAdmin])
 
   // Don't show popup on quiz, contact, dashboard, or admin pages, or if user is admin
-  // Wait for both checks to complete before deciding
+  // Wait for all checks to complete before deciding
   const shouldShowPopup = 
     !isCheckingAdmin &&
+    !isCheckingPopupSetting &&
+    popupEnabled &&
     !isAdmin &&
     !pathname?.includes("/quiz") && 
     !pathname?.includes("/contact") &&
@@ -209,7 +234,7 @@ export function ContactFormPopup() {
 
   // Show popup every 10 seconds if not submitted
   useEffect(() => {
-    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) {
+    if (isChecking || isCheckingAdmin || isCheckingPopupSetting || hasSubmitted || !shouldShowPopup || isAdmin || !popupEnabled) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
@@ -227,11 +252,11 @@ export function ContactFormPopup() {
         intervalRef.current = null
       }
     }
-  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isAdmin])
+  }, [isChecking, isCheckingAdmin, isCheckingPopupSetting, hasSubmitted, shouldShowPopup, isAdmin, popupEnabled])
 
   // Show popup on every click if not submitted (with debounce)
   useEffect(() => {
-    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) return
+    if (isChecking || isCheckingAdmin || isCheckingPopupSetting || hasSubmitted || !shouldShowPopup || isAdmin || !popupEnabled) return
 
     const handleClick = (e: MouseEvent) => {
       const now = Date.now()
@@ -255,11 +280,11 @@ export function ContactFormPopup() {
     return () => {
       document.removeEventListener("click", handleClick, true)
     }
-  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isAdmin])
+  }, [isChecking, isCheckingAdmin, isCheckingPopupSetting, hasSubmitted, shouldShowPopup, isAdmin, popupEnabled])
 
   // Show popup on scroll if not submitted (with debounce)
   useEffect(() => {
-    if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) return
+    if (isChecking || isCheckingAdmin || isCheckingPopupSetting || hasSubmitted || !shouldShowPopup || isAdmin || !popupEnabled) return
 
     const handleScroll = () => {
       const now = Date.now()
@@ -283,7 +308,7 @@ export function ContactFormPopup() {
     return () => {
       window.removeEventListener("scroll", handleScroll)
     }
-  }, [isChecking, isCheckingAdmin, hasSubmitted, shouldShowPopup, isOpen, isAdmin])
+  }, [isChecking, isCheckingAdmin, isCheckingPopupSetting, hasSubmitted, shouldShowPopup, isOpen, isAdmin, popupEnabled])
 
   const handleFormSuccess = () => {
     setHasSubmitted(true)
@@ -292,7 +317,7 @@ export function ContactFormPopup() {
     checkContactFormStatus()
   }
 
-  if (isChecking || isCheckingAdmin || hasSubmitted || !shouldShowPopup || isAdmin) {
+  if (isChecking || isCheckingAdmin || isCheckingPopupSetting || hasSubmitted || !shouldShowPopup || isAdmin || !popupEnabled) {
     return null
   }
 
