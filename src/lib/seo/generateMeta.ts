@@ -10,6 +10,7 @@ interface College {
   city?: string | null
   description?: string | null
   images?: string[] | null
+  courses?: Array<{ name: string }> | null
 }
 
 interface Course {
@@ -22,34 +23,125 @@ interface Course {
   level?: string | null
 }
 
-export function generateCollegeMeta(college: College): Metadata {
-  const title = `${college.name} | SeeMyCampus`
-  const description =
-    college.description ||
-    `Learn about ${college.name} - ${college.location || college.city || "a leading educational institution"}. Find courses, admission details, and more.`
+interface CollegeForMeta extends College {
+  ranking?: number | null
+  establishedYear?: number | null
+  accreditation?: string | null
+  averagePackage?: number | null
+  courses?: Array<{ name: string }> | null
+}
+
+export function generateCollegeMeta(college: CollegeForMeta): Metadata {
+  const collegeName = college.name
+  const location = college.location || college.city || ""
+  const locationText = location ? ` in ${location}` : ""
+  
+  // Build keyword-rich description
+  let description = college.description || ""
+  
+  // If no description or short description, create a comprehensive one
+  if (!description || description.length < 100) {
+    const parts: string[] = []
+    parts.push(`${collegeName}${locationText}`)
+    
+    if (college.ranking) {
+      parts.push(`Ranked ${college.ranking}`)
+    }
+    
+    if (college.establishedYear) {
+      parts.push(`Established in ${college.establishedYear}`)
+    }
+    
+    if (college.accreditation) {
+      parts.push(`${college.accreditation} accredited`)
+    }
+    
+    parts.push("Get complete information about admission process, courses, fees, placements, cutoffs, and reviews")
+    
+    if (college.courses && college.courses.length > 0) {
+      const courseNames = college.courses.slice(0, 3).map(c => c.name).join(", ")
+      parts.push(`Offers ${courseNames}${college.courses.length > 3 ? ` and ${college.courses.length - 3} more courses` : ""}`)
+    }
+    
+    description = parts.join(". ") + "."
+  } else {
+    // Enhance existing description with keywords
+    if (!description.toLowerCase().includes("admission")) {
+      description += " Get admission details, application process, and eligibility criteria."
+    }
+    if (!description.toLowerCase().includes("course")) {
+      description += " Explore courses, fees, and program details."
+    }
+  }
+  
+  // Ensure description is between 120-160 characters for optimal SEO
+  if (description.length > 160) {
+    description = description.substring(0, 157) + "..."
+  } else if (description.length < 120) {
+    description += ` Find complete information about ${collegeName}${locationText} including admission, courses, fees, placements, and reviews.`
+  }
+  
+  const title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission, Courses, Fees, Placements | SeeMyCampus`
   const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
     ? college.images[0] 
     : (typeof college.images === 'string' ? college.images : undefined)
 
+  // Build comprehensive keywords array
+  const keywords: string[] = [
+    collegeName,
+    `${collegeName} admission`,
+    `${collegeName} courses`,
+    `${collegeName} fees`,
+    `${collegeName} placement`,
+    `${collegeName} ranking`,
+    `${collegeName} cutoffs`,
+  ]
+  
+  if (location) {
+    keywords.push(
+      `${collegeName} ${location}`,
+      `colleges in ${location}`,
+      `best colleges in ${location}`,
+      location
+    )
+  }
+  
+  if (college.city && college.city !== location) {
+    keywords.push(`${collegeName} ${college.city}`, `colleges in ${college.city}`)
+  }
+  
+  keywords.push(
+    "college admission",
+    "college courses",
+    "college fees",
+    "college placement",
+    "college ranking",
+    "education",
+    "India colleges",
+    "university",
+    "institute"
+  )
+  
+  if (college.accreditation) {
+    keywords.push(`${college.accreditation} colleges`)
+  }
+  
+  if (college.courses && college.courses.length > 0) {
+    college.courses.slice(0, 5).forEach(course => {
+      keywords.push(`${course.name} ${location || ""}`.trim())
+    })
+  }
+
   return {
     title,
     description,
-    keywords: [
-      college.name,
-      college.location || "",
-      college.city || "",
-      "college",
-      "admissions",
-      "courses",
-      "education",
-      "India colleges",
-    ].filter(Boolean),
+    keywords: keywords.filter(Boolean).filter((v, i, a) => a.indexOf(v) === i), // Remove duplicates
     openGraph: {
       title,
       description,
       type: "website",
       url: `${baseUrl}/colleges/${college.slug}`,
-      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630, alt: `${college.name} - SeeMyCampus` }] : undefined,
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630, alt: `${collegeName} - SeeMyCampus` }] : undefined,
       locale: "en_IN",
       siteName: "SeeMyCampus",
     },
@@ -124,6 +216,8 @@ interface CollegeWithDetails extends College {
   ownership?: string | null
   campusSize?: string | null
   totalStudents?: number | null
+  courses?: Array<{ name: string; slug: string; level?: string | null }> | null
+  entranceExams?: string[] | null
 }
 
 export function generateStructuredDataCollege(college: CollegeWithDetails) {
@@ -176,23 +270,113 @@ export function generateStructuredDataCollege(college: CollegeWithDetails) {
     }
   }
 
-  if (college.averagePackage || college.highestPackage) {
-    structuredData.jobLocation = {
-      "@type": "Place",
+  // Add courses/programs offered
+  if (college.courses && college.courses.length > 0) {
+    structuredData.hasProgram = college.courses.map((course) => ({
+      "@type": "Course",
+      name: course.name,
+      url: `${baseUrl}/courses/${course.slug}`,
+      educationalLevel: course.level || undefined,
+    }))
+  }
+
+  // Add aggregate rating if available
+  if (college.averagePackage) {
+    structuredData.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: "4.5", // Placeholder - should come from reviews
+      reviewCount: "0", // Should come from reviews count
     }
-    if (college.averagePackage) {
-      structuredData.aggregateRating = {
-        "@type": "AggregateRating",
-        ratingValue: "4.5", // Placeholder - should come from reviews
-        reviewCount: "0", // Should come from reviews count
-      }
-    }
+  }
+
+  // Add additional properties
+  if (college.ranking) {
+    structuredData.award = `Ranked ${college.ranking}`
+  }
+
+  if (college.totalStudents) {
+    structuredData.numberOfStudents = college.totalStudents
+  }
+
+  if (college.ownership) {
+    structuredData.ownership = college.ownership
   }
 
   // Filter out undefined values
   return Object.fromEntries(
     Object.entries(structuredData).filter(([_, value]) => value !== undefined)
   )
+}
+
+// Generate FAQ structured data for colleges
+export function generateCollegeFAQStructuredData(college: CollegeWithDetails) {
+  const faqs: Array<{ question: string; answer: string }> = []
+  
+  // Admission FAQ
+  faqs.push({
+    question: `What is the admission process for ${college.name}?`,
+    answer: `The admission process for ${college.name}${college.location ? ` in ${college.location}` : ""} typically involves${college.entranceExams && college.entranceExams.length > 0 ? ` entrance exams like ${college.entranceExams.slice(0, 3).join(", ")}` : " application submission"}. Visit the official website or contact the college directly for detailed admission requirements and deadlines.`
+  })
+  
+  // Fees FAQ
+  faqs.push({
+    question: `What are the fees for ${college.name}?`,
+    answer: `The fees for ${college.name}${college.location ? ` in ${college.location}` : ""} vary by course and program. ${college.courses && college.courses.length > 0 ? `The college offers ${college.courses.length} courses. ` : ""}For detailed fee structure, please visit the college website or contact the admissions office directly.`
+  })
+  
+  // Courses FAQ
+  if (college.courses && college.courses.length > 0) {
+    const courseNames = college.courses.slice(0, 5).map(c => c.name).join(", ")
+    faqs.push({
+      question: `What courses are offered at ${college.name}?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} offers various courses including ${courseNames}${college.courses.length > 5 ? ` and ${college.courses.length - 5} more courses` : ""}. Visit the college page to see all available courses and their details.`
+    })
+  }
+  
+  // Ranking FAQ
+  if (college.ranking) {
+    faqs.push({
+      question: `What is the ranking of ${college.name}?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} is ranked ${college.ranking}. Rankings may vary by different ranking agencies and criteria.`
+    })
+  }
+  
+  // Placement FAQ
+  if (college.averagePackage || college.highestPackage) {
+    const placementInfo: string[] = []
+    if (college.averagePackage) {
+      placementInfo.push(`average package of ₹${college.averagePackage.toLocaleString()}`)
+    }
+    if (college.highestPackage) {
+      placementInfo.push(`highest package of ₹${college.highestPackage.toLocaleString()}`)
+    }
+    faqs.push({
+      question: `What are the placement opportunities at ${college.name}?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} offers good placement opportunities with ${placementInfo.join(" and ")}. The college has a dedicated placement cell that assists students in securing job opportunities.`
+    })
+  }
+  
+  // Accreditation FAQ
+  if (college.accreditation) {
+    faqs.push({
+      question: `Is ${college.name} accredited?`,
+      answer: `Yes, ${college.name}${college.location ? ` in ${college.location}` : ""} is accredited by ${college.accreditation}, which ensures quality education and recognition of degrees.`
+    })
+  }
+  
+  // Established year FAQ
+  if (college.establishedYear) {
+    faqs.push({
+      question: `When was ${college.name} established?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} was established in ${college.establishedYear}, making it ${new Date().getFullYear() - college.establishedYear} years old.`
+    })
+  }
+  
+  if (faqs.length === 0) {
+    return null
+  }
+  
+  return generateFAQStructuredData(faqs)
 }
 
 export function generateBreadcrumbList(items: Array<{ name: string; url: string }>) {

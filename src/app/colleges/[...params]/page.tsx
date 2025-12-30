@@ -17,7 +17,7 @@ import { ApplicationGuide } from "@/components/college/ApplicationGuide"
 import { InquiryForm } from "@/components/college/InquiryForm"
 import { CollegeNews } from "@/components/college/CollegeNews"
 import { RelatedContent } from "@/components/seo/RelatedContent"
-import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList } from "@/lib/seo/generateMeta"
+import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList, generateCollegeFAQStructuredData, baseUrl } from "@/lib/seo/generateMeta"
 import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
 import { db } from "@/db"
 import { categories, studyGoals } from "@/db/schema"
@@ -146,24 +146,57 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (routeParams.length === 1) {
     const categoryInfo = await getCategoryBySlug(routeParams[0])
     if (categoryInfo) {
+      const categoryName = categoryInfo.name
       return {
-        title: `${categoryInfo.name} Colleges | SeeMyCampus`,
-        description: `Find the best ${categoryInfo.name} colleges in India. Browse top colleges with detailed information, ratings, and admission details.`,
+        title: `${categoryName} Colleges in India | Top ${categoryName} Colleges | Admission, Fees, Rankings | SeeMyCampus`,
+        description: `Find the best ${categoryName} colleges in India. Browse top-ranked ${categoryName.toLowerCase()} colleges with detailed information about admission process, courses, fees, placements, rankings, and cutoffs. Get expert guidance for ${categoryName.toLowerCase()} college admissions.`,
+        keywords: [
+          `${categoryName} colleges`,
+          `${categoryName} colleges in India`,
+          `best ${categoryName.toLowerCase()} colleges`,
+          `top ${categoryName.toLowerCase()} colleges`,
+          `${categoryName.toLowerCase()} college admission`,
+          `${categoryName.toLowerCase()} college fees`,
+          `${categoryName.toLowerCase()} college ranking`,
+          `colleges in India`,
+          `college admission`,
+          `college search`,
+        ],
+        openGraph: {
+          title: `${categoryName} Colleges in India | SeeMyCampus`,
+          description: `Find the best ${categoryName} colleges in India. Browse top colleges with detailed information, ratings, and admission details.`,
+          type: "website",
+          url: `${baseUrl}/colleges/${routeParams[0]}`,
+          locale: "en_IN",
+          siteName: "SeeMyCampus",
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: `${categoryName} Colleges in India | SeeMyCampus`,
+          description: `Find the best ${categoryName} colleges in India. Browse top colleges with detailed information, ratings, and admission details.`,
+        },
+        alternates: {
+          canonical: `${baseUrl}/colleges/${routeParams[0]}`,
+        },
       }
     }
   }
   
   // Otherwise, treat as individual college slug
   const slug = routeParams.join("/")
-  const college = await getCollegeBySlug(slug)
+  const collegeData = await getCollegeWithCourses(slug)
   
-  if (!college) {
+  if (!collegeData) {
     return {
       title: "College Not Found | SeeMyCampus",
     }
   }
 
-  return generateCollegeMeta(college)
+  // Pass courses to meta generation for better SEO
+  return generateCollegeMeta({
+    ...collegeData,
+    courses: collegeData.courses || null,
+  })
 }
 
 export default async function CollegesPage({ params, searchParams }: PageProps) {
@@ -388,7 +421,16 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   }
 
   const { courses, ...college } = collegeData
-  const structuredData = generateStructuredDataCollege(college)
+  const structuredData = generateStructuredDataCollege({
+    ...college,
+    courses: courses || null,
+  })
+
+  // Generate FAQ structured data
+  const faqStructuredData = generateCollegeFAQStructuredData({
+    ...college,
+    courses: courses || null,
+  })
 
   // Fetch related content for internal linking
   const [relatedColleges, relatedScholarships, relatedExams] = await Promise.all([
@@ -414,6 +456,12 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
+      {faqStructuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+        />
+      )}
       <div className="container mx-auto px-4 py-8">
         <CollegeHero
           name={college.name}

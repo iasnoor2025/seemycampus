@@ -5,16 +5,42 @@ import { TestimonialsSection } from "@/components/home/TestimonialsSection"
 import { StatsSection } from "@/components/home/StatsSection"
 import { QuickToolsSection } from "@/components/home/QuickToolsSection"
 import { UpcomingExamsSection } from "@/components/home/UpcomingExamsSection"
+import { generateFAQStructuredData } from "@/lib/seo/generateMeta"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
 export const metadata: Metadata = {
-  title: "SeeMyCampus - Find Your Perfect College",
-  description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
-  keywords: ["college admissions", "course finder", "education counseling", "college recommendations", "MBA", "BBA", "Engineering", "Medical", "Law", "Design", "college search India", "admission guidance"],
+  title: "SeeMyCampus - Find Your Perfect College | College Search, Admission, Courses, Fees | India",
+  description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, admission details, fees, placements, rankings, and get expert admission counseling for UG and PG programs. Search colleges by location, course, ranking, and more.",
+  keywords: [
+    "college admissions",
+    "college search India",
+    "college finder",
+    "course finder",
+    "education counseling",
+    "college recommendations",
+    "college admission guidance",
+    "college fees",
+    "college placement",
+    "college ranking",
+    "college cutoffs",
+    "MBA colleges",
+    "BBA colleges",
+    "Engineering colleges",
+    "Medical colleges",
+    "Law colleges",
+    "Design colleges",
+    "best colleges in India",
+    "top colleges",
+    "college comparison",
+    "admission guidance",
+    "college counseling",
+    "university search",
+    "institute search",
+  ],
   openGraph: {
-    title: "SeeMyCampus - Find Your Perfect College",
-    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
+    title: "SeeMyCampus - Find Your Perfect College | College Search, Admission, Courses, Fees | India",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, admission details, fees, placements, rankings, and get expert admission counseling for UG and PG programs.",
     url: baseUrl,
     siteName: "SeeMyCampus",
     images: [
@@ -22,7 +48,7 @@ export const metadata: Metadata = {
         url: `${baseUrl}/main-logo-xxxx.png`,
         width: 1200,
         height: 630,
-        alt: "SeeMyCampus - Find Your Perfect College",
+        alt: "SeeMyCampus - Find Your Perfect College | College Search, Admission, Courses, Fees",
       },
     ],
     locale: "en_IN",
@@ -30,8 +56,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SeeMyCampus - Find Your Perfect College",
-    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
+    title: "SeeMyCampus - Find Your Perfect College | College Search, Admission, Courses, Fees | India",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, admission details, fees, placements, rankings, and get expert admission counseling.",
     images: [`${baseUrl}/main-logo-xxxx.png`],
   },
   alternates: {
@@ -40,8 +66,42 @@ export const metadata: Metadata = {
 }
 
 export default function Home() {
+  // FAQ structured data for SEO
+  const faqData = [
+    {
+      question: "How do I secure MBA admission?",
+      answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus."
+    },
+    {
+      question: "What criteria for MBA admission?",
+      answer: "Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews."
+    },
+    {
+      question: "Steps for MBA admission?",
+      answer: "Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus."
+    },
+    {
+      question: "BBA program admission process?",
+      answer: "12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews."
+    },
+    {
+      question: "How to secure BBA admission?",
+      answer: "Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions."
+    },
+    {
+      question: "Top BBA colleges for 93%?",
+      answer: "Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance."
+    }
+  ]
+
+  const faqStructuredData = generateFAQStructuredData(faqData)
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
       {/* Hero Section with Search */}
       <HeroSection />
 
