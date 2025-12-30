@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Calendar, Download, ExternalLink } from "lucide-react"
 import { generateICal, generateGoogleCalendarUrl, generateOutlookCalendarUrl, downloadICalFile } from "@/lib/calendar/calendarUtils"
+import { cn } from "@/lib/utils"
 
 interface CalendarButtonProps {
   event: {
@@ -49,11 +50,9 @@ export function CalendarButton({ event }: CalendarButtonProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Calendar className="h-4 w-4" />
-          Add to Calendar
-        </Button>
+      <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
+        <Calendar className="h-4 w-4" />
+        Add to Calendar
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={handleDownloadICal}>

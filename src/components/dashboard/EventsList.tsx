@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Calendar, Plus, Edit, Trash2, Users, Clock, MapPin, Video, Loader2 } from "lucide-react"
+import { Calendar, Plus, Edit, Trash2, Users, Clock, MapPin, Video, Loader2, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { EventForm } from "./EventForm"
+import { EventAttendees } from "./EventAttendees"
 import { format } from "date-fns"
 
 interface Event {
@@ -43,6 +44,7 @@ export function EventsList() {
   const [loading, setLoading] = useState(true)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [viewingAttendees, setViewingAttendees] = useState<{ slug: string; title: string } | null>(null)
 
   const fetchEvents = async () => {
     try {
@@ -123,6 +125,15 @@ export function EventsList() {
         <EventForm event={editingEvent} onClose={handleCloseForm} />
       )}
 
+      {viewingAttendees && (
+        <EventAttendees
+          eventSlug={viewingAttendees.slug}
+          eventTitle={viewingAttendees.title}
+          open={!!viewingAttendees}
+          onOpenChange={(open) => !open && setViewingAttendees(null)}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>All Events ({events.length})</CardTitle>
@@ -201,6 +212,16 @@ export function EventsList() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        {event.currentAttendees > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewingAttendees({ slug: event.slug, title: event.title })}
+                            title="View Attendees"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

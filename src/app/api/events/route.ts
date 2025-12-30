@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { events } from "@/db/schema"
-import { eq, and, gte, lte, or, desc } from "drizzle-orm"
+import { events, eventRegistrations } from "@/db/schema"
+import { eq, and, gte, lte, or, desc, sql, inArray } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
@@ -27,7 +27,35 @@ export async function GET(request: NextRequest) {
 
     const allEvents = await query.orderBy(desc(events.startDate)).limit(limit)
 
-    return NextResponse.json({ events: allEvents })
+    // Get all event IDs
+    const eventIds = allEvents.map((e) => e.id)
+
+    // Count registrations for all events in a single query
+    let countMap = new Map<number, number>()
+    
+    if (eventIds.length > 0) {
+      const registrationCounts = await db
+        .select({
+          eventId: eventRegistrations.eventId,
+          count: sql<number>`count(*)`.as("count"),
+        })
+        .from(eventRegistrations)
+        .where(inArray(eventRegistrations.eventId, eventIds))
+        .groupBy(eventRegistrations.eventId)
+
+      // Create a map of eventId -> count
+      countMap = new Map(
+        registrationCounts.map((r) => [r.eventId, Number(r.count)])
+      )
+    }
+
+    // Add currentAttendees to each event
+    const eventsWithAttendees = allEvents.map((event) => ({
+      ...event,
+      currentAttendees: countMap.get(event.id) || 0,
+    }))
+
+    return NextResponse.json({ events: eventsWithAttendees })
   } catch (error: any) {
     console.error("Error fetching events:", error)
     return NextResponse.json(
