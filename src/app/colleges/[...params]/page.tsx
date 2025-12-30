@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ChevronRight } from "lucide-react"
+import { Building } from "lucide-react"
 import { CollegeLogo } from "@/components/college/CollegeLogo"
 import { getCollegeBySlug, getCollegeWithCourses, getCollegesByCategoryPaginated, getCollegesByCategoryAndSubcategoryPaginated } from "@/lib/colleges"
 import { CollegeHero } from "@/components/college/CollegeHero"
@@ -183,29 +183,34 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
       const { colleges: collegesList, pagination } = await getCollegesByCategoryPaginated(categorySlug, currentPage, 10)
 
     return (
-      <div className="min-h-screen bg-red-600">
-        <div className="max-w-5xl mx-auto bg-white min-h-screen py-8">
-          {/* Breadcrumb */}
-          <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link href="/colleges" className="hover:text-red-600 transition-colors">Colleges</Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900">{categoryName}</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-12 md:py-16 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
           </div>
 
-          <div className="px-6 mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              {categoryName} Colleges
-            </h1>
-            <p className="text-gray-600">
-              Browse top {categoryName} colleges in India
-            </p>
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-5xl mx-auto">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <Building className="w-5 h-5" />
+                <span className="font-medium text-sm">{categoryName} Colleges</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                {categoryName} Colleges
+              </h1>
+              <p className="text-xl text-white/90">
+                Browse top {categoryName} colleges in India
+              </p>
+            </div>
           </div>
+        </div>
 
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Table Header */}
-          <div className="px-6 mb-4">
-            <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+          <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+            <div className="grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
               <div className="col-span-2 text-center">PREVIEW</div>
               <div className="col-span-5">COLLEGE NAME</div>
               <div className="col-span-3">LOCATION</div>
@@ -213,13 +218,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
             </div>
           </div>
 
-          <div className="space-y-0">
-            {collegesList.map((college, index) => (
+          <div className="space-y-4">
+            {collegesList.map((college) => (
               <div
                 key={college.id}
-                className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                  index !== collegesList.length - 1 ? "border-b border-gray-200" : ""
-                } hover:bg-gray-50 transition-colors`}
+                className="grid grid-cols-12 gap-4 items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6"
               >
                 {/* Preview - Logo */}
                 <div className="col-span-2 flex justify-center">
@@ -234,9 +237,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
 
                 {/* College Name */}
                 <div className="col-span-5">
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {college.name}
-                  </h3>
+                  <Link href={`/colleges/${college.slug}`}>
+                    <h3 className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                      {college.name}
+                    </h3>
+                  </Link>
                 </div>
 
                 {/* Location */}
@@ -249,7 +254,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                 {/* View Button */}
                 <div className="col-span-2 flex justify-center">
                   <Link href={`/colleges/${college.slug}`}>
-                    <Button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm">
+                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                       VIEW MORE
                     </Button>
                   </Link>
@@ -259,7 +264,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
           </div>
 
           {/* Pagination */}
-          <div className="px-6">
+          <div className="mt-8">
             <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
@@ -282,31 +287,34 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
     const { colleges: collegesList, pagination } = await getCollegesByCategoryAndSubcategoryPaginated(category, subcategory, currentPage, 10)
 
     return (
-      <div className="min-h-screen bg-red-600">
-        <div className="max-w-5xl mx-auto bg-white min-h-screen py-8">
-          {/* Breadcrumb */}
-          <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link href="/colleges" className="hover:text-red-600 transition-colors">Colleges</Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link href={`/colleges/${category}`} className="hover:text-red-600 transition-colors">{categoryName}</Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900">{subcategoryName}</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-12 md:py-16 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
           </div>
 
-          <div className="px-6 mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              {subcategoryName}
-            </h1>
-            <p className="text-gray-600">
-              Browse top {categoryName} colleges offering {subcategoryName}
-            </p>
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-5xl mx-auto">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <Building className="w-5 h-5" />
+                <span className="font-medium text-sm">{subcategoryName}</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                {subcategoryName}
+              </h1>
+              <p className="text-xl text-white/90">
+                Browse top {categoryName} colleges offering {subcategoryName}
+              </p>
+            </div>
           </div>
+        </div>
 
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Table Header */}
-          <div className="px-6 mb-4">
-            <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+          <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+            <div className="grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
               <div className="col-span-2 text-center">PREVIEW</div>
               <div className="col-span-5">COLLEGE NAME</div>
               <div className="col-span-3">LOCATION</div>
@@ -314,13 +322,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
             </div>
           </div>
 
-          <div className="space-y-0">
-            {collegesList.map((college, index) => (
+          <div className="space-y-4">
+            {collegesList.map((college) => (
               <div
                 key={college.id}
-                className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                  index !== collegesList.length - 1 ? "border-b border-gray-200" : ""
-                } hover:bg-gray-50 transition-colors`}
+                className="grid grid-cols-12 gap-4 items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6"
               >
                 {/* Preview - Logo */}
                 <div className="col-span-2 flex justify-center">
@@ -335,9 +341,11 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
 
                 {/* College Name */}
                 <div className="col-span-5">
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {college.name}
-                  </h3>
+                  <Link href={`/colleges/${college.slug}`}>
+                    <h3 className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                      {college.name}
+                    </h3>
+                  </Link>
                 </div>
 
                 {/* Location */}
@@ -350,7 +358,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                 {/* View Button */}
                 <div className="col-span-2 flex justify-center">
                   <Link href={`/colleges/${college.slug}`}>
-                    <Button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm">
+                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                       VIEW MORE
                     </Button>
                   </Link>
@@ -360,7 +368,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
           </div>
 
           {/* Pagination */}
-          <div className="px-6">
+          <div className="mt-8">
             <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}

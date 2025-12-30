@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Settings as SettingsIcon } from "lucide-react"
 import { FeatureFlagsManager } from "@/components/dashboard/FeatureFlagsManager"
 import { OTPSettings } from "@/components/dashboard/OTPSettings"
+import { ContactSettings } from "@/components/dashboard/ContactSettings"
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",
@@ -110,6 +111,11 @@ export default async function SettingsPage() {
       {/* Feature Flags Section */}
       <div className="mt-8">
         <FeatureFlagsManager />
+      </div>
+
+      {/* Contact Settings Section */}
+      <div className="mt-8">
+        <ContactSettings />
       </div>
 
       {/* OTP Settings Section */}

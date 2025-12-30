@@ -80,34 +80,37 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-6">
-            <Link href="/blog">
-              <Button variant="ghost" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Blog
-              </Button>
-            </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+        {/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
           </div>
-
-          <article className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            {/* Header */}
-            <header className="mb-8">
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-4xl mx-auto">
+              <Link href="/blog">
+                <Button variant="ghost" className="gap-2 mb-6 text-white hover:bg-white/20">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Blog
+                </Button>
+              </Link>
               <div className="flex items-center gap-2 mb-4">
                 {post.category && (
-                  <Badge variant="secondary">{post.category}</Badge>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    {post.category}
+                  </Badge>
                 )}
-                {post.tags && post.tags.map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline">
+                {post.tags && post.tags.slice(0, 2).map((tag: string, index: number) => (
+                  <Badge key={index} variant="outline" className="bg-white/10 text-white border-white/30">
                     {tag}
                   </Badge>
                 ))}
               </div>
-
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                {post.title}
+              </h1>
+              <div className="flex items-center gap-4 text-sm text-white/90">
                 {post.authorName && (
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
@@ -127,7 +130,12 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
                   </div>
                 )}
               </div>
-            </header>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <article className="bg-white rounded-xl shadow-xl border border-slate-200 p-8 md:p-12">
 
             {/* Featured Image */}
             {post.featuredImage && (
@@ -163,7 +171,12 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
 
           {/* Related Posts */}
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Related Posts</h2>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2">
+                Related Posts
+              </h2>
+              <p className="text-gray-600">Explore more articles on similar topics</p>
+            </div>
             <BlogList category={post.category || undefined} limit={3} />
           </div>
         </div>

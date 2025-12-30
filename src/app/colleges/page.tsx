@@ -1,9 +1,7 @@
 import { getAllColleges } from "@/lib/colleges"
 import { Metadata } from "next"
 import { Suspense } from "react"
-import { ContactForm } from "@/components/contact/ContactForm"
 import { CollegesListClient } from "@/components/colleges/CollegesListClient"
-import { InstagramFeed } from "@/components/home/InstagramFeed"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -39,10 +37,13 @@ export default async function CollegesPage() {
   const collegesList = await getAllColleges()
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
       <Suspense fallback={
-        <div className="min-h-screen bg-red-600 flex items-center justify-center">
-          <div className="text-white text-xl">Loading colleges...</div>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="text-gray-600 text-xl">Loading colleges...</div>
+          </div>
         </div>
       }>
         <CollegesListClient 
@@ -50,33 +51,7 @@ export default async function CollegesPage() {
           initialTotalCount={collegesList.length}
         />
       </Suspense>
-
-      {/* For More Guidance Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section Title */}
-          <div className="flex items-center gap-3 mb-12 justify-center">
-            <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">For More Guidance</h2>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-8">
-            {/* Left Column - Instagram Feed */}
-            <div className="relative">
-              <InstagramFeed />
-            </div>
-
-            {/* Right Column - Contact Form */}
-            <div className="p-4">
-              <ContactForm />
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
+    </div>
   )
 }
 

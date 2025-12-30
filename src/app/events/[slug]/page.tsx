@@ -77,25 +77,47 @@ export default async function EventPage({ params }: EventPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{event.type.replace("_", " ")}</Badge>
-                  {event.organizer && (
-                    <span className="text-sm text-muted-foreground">
-                      by {event.organizer}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <CalendarButton event={event} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                {event.type.replace("_", " ")}
+              </Badge>
+              {event.organizer && (
+                <span className="text-sm text-white/90">by {event.organizer}</span>
+              )}
             </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+              {event.title}
+            </h1>
+            <div className="flex items-center gap-4 text-white/90">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span>{formatDate(event.startDate)}</span>
+              </div>
+              {event.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  <span>{event.location}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-8">
+          {/* Calendar Button */}
+          <div className="mb-6">
+            <CalendarButton event={event} />
           </div>
 
           {/* Event Image */}

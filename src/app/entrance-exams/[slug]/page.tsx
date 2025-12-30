@@ -116,43 +116,52 @@ export default async function EntranceExamPage({ params }: EntranceExamPageProps
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                  {exam.name}
-                </h1>
-                <div className="flex flex-wrap gap-2 mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+        {/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+          </div>
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap gap-2">
                   {isRegistrationOpen() ? (
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <Badge className="bg-green-500/20 backdrop-blur-sm text-white border-green-300/30">
                       Registration Open
                     </Badge>
                   ) : isRegistrationUpcoming() ? (
-                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                    <Badge className="bg-blue-500/20 backdrop-blur-sm text-white border-blue-300/30">
                       Registration Upcoming
                     </Badge>
                   ) : (
-                    <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+                    <Badge className="bg-gray-500/20 backdrop-blur-sm text-white border-gray-300/30">
                       Registration Closed
                     </Badge>
                   )}
                   {isExamPassed() && (
-                    <Badge variant="destructive">Exam Date Passed</Badge>
+                    <Badge className="bg-red-500/20 backdrop-blur-sm text-white border-red-300/30">
+                      Exam Date Passed
+                    </Badge>
                   )}
                 </div>
+                <div className="flex-shrink-0">
+                  <ShareButton 
+                    title={exam.name}
+                    text={`Check out ${exam.name} entrance exam details on SeeMyCampus!`}
+                  />
+                </div>
               </div>
-              <div className="flex-shrink-0">
-                <ShareButton 
-                  title={exam.name}
-                  text={`Check out ${exam.name} entrance exam details on SeeMyCampus!`}
-                />
-              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                {exam.name}
+              </h1>
             </div>
           </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-8">
 
           {/* Description */}
           {exam.description && (

@@ -717,6 +717,17 @@ export const collegeInquiriesRelations = relations(collegeInquiries, ({ one }) =
   }),
 }));
 
+// Site Settings table - Store site-wide settings like contact information
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(), // e.g., "contact_email", "contact_phone", "contact_address"
+  value: text("value"), // The actual value
+  label: varchar("label", { length: 255 }), // Human-readable label
+  category: varchar("category", { length: 50 }).default("general"), // general, contact, social, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // College News table - News & Updates
 export const collegeNews = pgTable("college_news", {
   id: serial("id").primaryKey(),

@@ -452,12 +452,6 @@ export function SimpleContactForm({ onSuccess }: SimpleContactFormProps) {
             : (isDevelopment ? "Start Quiz" : "Send Verification Code")}
         </Button>
       </div>
-      
-      {isDevelopment && (
-        <p className="text-xs text-center text-muted-foreground">
-          Development Mode: OTP verification skipped
-        </p>
-      )}
 
       {/* Error Messages */}
       {otpError && (

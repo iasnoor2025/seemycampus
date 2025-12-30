@@ -2,12 +2,10 @@ import { Metadata } from "next"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CollegeLogo } from "@/components/college/CollegeLogo"
-import { Building2, Handshake, GraduationCap, Users, Award, ChevronRight, TrendingUp, Globe, Target } from "lucide-react"
-import { ContactForm } from "@/components/contact/ContactForm"
+import { Building2, Handshake, GraduationCap, Users, Award, TrendingUp, Globe, Target, Sparkles, CheckCircle2 } from "lucide-react"
 import { getCollegesPaginated } from "@/lib/colleges"
 import { Button } from "@/components/ui/button"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
-import { InstagramFeed } from "@/components/home/InstagramFeed"
 
 export const metadata: Metadata = {
   title: "Academic Alliance | SeeMyCampus",
@@ -35,25 +33,27 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
   const { colleges, pagination } = await getCollegesPaginated(currentPage, 10, true)
 
   return (
-    <>
-      {/* Hero Section - Academic Alliance Banner */}
-      <section className="relative py-20 bg-gradient-to-r from-[#18254a] to-[#1e3a5f] text-white overflow-hidden">
-        {/* Background Image with Blur Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
-          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 0h100v100H0z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E")` }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Breadcrumb */}
-            <div className="mb-6 flex items-center justify-center gap-2 text-white/80 text-sm">
-              <Link href="/" className="hover:text-white transition-colors">HOME</Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>ACADEMIC ALLIANCE</span>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-6 shadow-lg">
+              <Handshake className="w-5 h-5" />
+              <span className="font-medium text-sm">Strategic Partnerships</span>
             </div>
             
             {/* Main Heading */}
-            <h1 className="text-5xl md:text-6xl font-bold mb-4">Academic Alliance</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+              Academic Alliance
+            </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
               Partnerships for Excellence in Education
             </p>
@@ -61,29 +61,26 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
         </div>
       </section>
 
-      {/* Partner Colleges Table Section - Red Background with White Content (Moved to top) */}
-      <section className="py-16 bg-red-600">
-        <div className="max-w-6xl mx-auto bg-white min-h-[400px] py-8">
-          {/* Breadcrumb */}
-          <div className="px-6 mb-6 flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900">Academic Alliance</span>
-          </div>
-
+      {/* Partner Colleges Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
           {/* Page Header */}
-          <div className="px-6 mb-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+              <Building2 className="w-5 h-5" />
+              <span className="font-medium text-sm">Partner Colleges</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
               Our Partner Colleges
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-lg">
               Explore our comprehensive directory of partner colleges and universities
             </p>
           </div>
 
           {/* Table Header */}
-          <div className="px-6 mb-4">
-            <div className="grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+          <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+            <div className="grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
               <div className="col-span-2 text-center">PREVIEW</div>
               <div className="col-span-5">COLLEGE NAME</div>
               <div className="col-span-3">LOCATION</div>
@@ -93,17 +90,17 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
 
           {/* Colleges List */}
           {colleges.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <p className="text-gray-600">No colleges found. Check back soon!</p>
+            <div className="py-16 text-center bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200">
+              <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 text-lg mb-2">No partner colleges found</p>
+              <p className="text-gray-500 text-sm">Check back soon for updates!</p>
             </div>
           ) : (
-            <div className="space-y-0">
-              {colleges.map((college, index) => (
+            <div className="space-y-4">
+              {colleges.map((college) => (
                 <div
                   key={college.id}
-                  className={`grid grid-cols-12 gap-4 items-center px-6 py-4 ${
-                    index !== colleges.length - 1 ? "border-b border-gray-200" : ""
-                  } hover:bg-gray-50 transition-colors`}
+                  className="grid grid-cols-12 gap-4 items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6"
                 >
                   {/* Preview - Logo */}
                   <div className="col-span-2 flex justify-center">
@@ -118,9 +115,11 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
 
                   {/* College Name */}
                   <div className="col-span-5">
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {college.name}
-                    </h3>
+                    <Link href={`/colleges/${college.slug}`}>
+                      <h3 className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                        {college.name}
+                      </h3>
+                    </Link>
                   </div>
 
                   {/* Location */}
@@ -133,7 +132,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
                   {/* View Button */}
                   <div className="col-span-2 flex justify-center">
                     <Link href={`/colleges/${college.slug}`}>
-                      <Button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm">
+                      <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                         VIEW MORE
                       </Button>
                     </Link>
@@ -144,7 +143,7 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
           )}
 
           {/* Pagination */}
-          <div className="px-6">
+          <div className="mt-8">
             <PaginationWrapper
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
@@ -153,23 +152,31 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
         </div>
       </section>
 
-      {/* Main Content Section - Light Gray Patterned Background */}
-      <section className="py-16 bg-gray-100" style={{
-        backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.03) 10px, rgba(0,0,0,.03) 20px)`
-      }}>
+      {/* Main Content Section - Three Information Cards */}
+      <section className="py-16">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+              <Sparkles className="w-5 h-5" />
+              <span className="font-medium text-sm">Our Approach</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
+              Why Partner With Us
+            </h2>
+          </div>
+
           {/* Three Information Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Partnership Card */}
-            <Card className="bg-white shadow-md">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Handshake className="h-12 w-12 text-gray-600" />
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <CardHeader className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-t-lg">
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Handshake className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-xl font-bold text-gray-900">Partnerships</CardTitle>
+                <CardTitle className="text-white text-xl font-bold text-center">Partnerships</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 text-sm leading-relaxed">
+              <CardContent className="pt-6">
+                <p className="text-gray-700 leading-relaxed">
                   Seemycampus partners with leading educational institutions across India to provide students 
                   with access to the best educational opportunities. Our strategic alliances enable us to offer 
                   comprehensive information and seamless admission processes.
@@ -178,15 +185,15 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
             </Card>
 
             {/* Network Card */}
-            <Card className="bg-white shadow-md">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <Globe className="h-12 w-12 text-gray-600" />
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <CardHeader className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-t-lg">
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <Globe className="h-8 w-8 text-white" />
                 </div>
-                <CardTitle className="text-xl font-bold text-gray-900">Extensive Network</CardTitle>
+                <CardTitle className="text-white text-xl font-bold text-center">Extensive Network</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 text-sm leading-relaxed">
+              <CardContent className="pt-6">
+                <p className="text-gray-700 leading-relaxed">
                   Our academic alliances enable us to offer comprehensive information about over 60,000 institutions 
                   and 375,000+ courses, ensuring students have all the resources they need to make informed decisions 
                   about their educational journey.
@@ -195,16 +202,16 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
             </Card>
 
             {/* Excellence Card */}
-            <Card className="bg-white shadow-md">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center relative">
-                  <Award className="h-10 w-10 text-gray-600" />
-                  <Target className="h-6 w-6 text-gray-600 absolute -top-1 -right-1" />
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <CardHeader className="bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-t-lg">
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center relative">
+                  <Award className="h-8 w-8 text-white" />
+                  <Target className="h-5 w-5 text-white absolute -top-1 -right-1" />
                 </div>
-                <CardTitle className="text-xl font-bold text-gray-900">Excellence</CardTitle>
+                <CardTitle className="text-white text-xl font-bold text-center">Excellence</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 text-sm leading-relaxed">
+              <CardContent className="pt-6">
+                <p className="text-gray-700 leading-relaxed">
                   We work with top-tier colleges and universities to ensure quality education delivery. Our partnerships 
                   focus on providing students with access to institutions that maintain high academic standards and 
                   excellent placement records.
@@ -215,32 +222,36 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
         </div>
       </section>
 
-      {/* Statistics Section - Red/Orange Gradient Background */}
-      <section className="relative py-16 bg-gradient-to-r from-red-600 to-orange-600 overflow-hidden">
-        {/* Background Pattern Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600/90 to-orange-600/90">
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)`
-          }}></div>
+      {/* Statistics Section */}
+      <section className="relative py-16 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Our Impact</h2>
+            <p className="text-white/90">Numbers that speak for themselves</p>
+          </div>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <div className="text-center text-white">
-              <div className="text-5xl md:text-6xl font-bold mb-2">300+</div>
-              <div className="text-sm md:text-base">Partner Colleges</div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">300+</div>
+              <div className="text-sm md:text-base text-white/90">Partner Colleges</div>
             </div>
-            <div className="text-center text-white">
-              <div className="text-5xl md:text-6xl font-bold mb-2">60K+</div>
-              <div className="text-sm md:text-base">Institutions Listed</div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">60K+</div>
+              <div className="text-sm md:text-base text-white/90">Institutions Listed</div>
             </div>
-            <div className="text-center text-white">
-              <div className="text-5xl md:text-6xl font-bold mb-2">375K+</div>
-              <div className="text-sm md:text-base">Courses Available</div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">375K+</div>
+              <div className="text-sm md:text-base text-white/90">Courses Available</div>
             </div>
-            <div className="text-center text-white">
-              <div className="text-5xl md:text-6xl font-bold mb-2">50K+</div>
-              <div className="text-sm md:text-base">Students Counseled</div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">50K+</div>
+              <div className="text-sm md:text-base text-white/90">Students Counseled</div>
             </div>
           </div>
         </div>
@@ -250,42 +261,77 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            {/* Heading */}
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Academic Alliance</h2>
-            
-            {/* Icon - Handshake */}
-            <div className="mb-6 flex items-center">
-              <Handshake className="h-12 w-12 text-[#18254a]" />
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <Handshake className="w-5 h-5" />
+                <span className="font-medium text-sm">Partnerships for Excellence</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
+                Academic Alliance
+              </h2>
             </div>
 
-            {/* Sub-heading */}
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Partnerships for Excellence</h3>
-
             {/* Content Card */}
-            <Card className="bg-white shadow-md border-0">
-              <CardContent className="pt-6">
-                <div className="space-y-4 text-gray-700 leading-relaxed">
-                  <p>
-                    Seemycampus.com has established strategic academic alliances with leading educational institutions 
-                    across India. These partnerships enable us to provide students with comprehensive information, 
-                    streamlined admission processes, and access to quality education opportunities.
-                  </p>
-                  <p>
-                    Our academic alliance program connects students to over 300 partner colleges and lists information 
-                    on more than 60,000 institutions. We provide detailed information on admissions, entrance tests, 
-                    infrastructure, courses, and career prospects, helping students make informed decisions about their 
-                    educational journey.
-                  </p>
-                  <p>
-                    Through our partnerships, we offer customized student outreach programs and assist students with 
-                    counseling and admission services. We help students find suitable colleges based on their academic 
-                    background, skill-set, and potential, ensuring they make the right choice for their career.
-                  </p>
-                  <p>
-                    Our alliance partners benefit from our robust ed-tech platform, which facilitates student recruitment 
-                    across all streams and degrees. We work together to create a seamless experience for students, 
-                    from initial inquiry to enrollment and beyond.
-                  </p>
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-slate-50 to-blue-50/30">
+              <CardContent className="pt-8 pb-8">
+                <div className="space-y-6 text-gray-700 leading-relaxed text-base">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Handshake className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 mb-2">Strategic Partnerships</p>
+                      <p>
+                        Seemycampus.com has established strategic academic alliances with leading educational institutions 
+                        across India. These partnerships enable us to provide students with comprehensive information, 
+                        streamlined admission processes, and access to quality education opportunities.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Globe className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 mb-2">Comprehensive Network</p>
+                      <p>
+                        Our academic alliance program connects students to over 300 partner colleges and lists information 
+                        on more than 60,000 institutions. We provide detailed information on admissions, entrance tests, 
+                        infrastructure, courses, and career prospects, helping students make informed decisions about their 
+                        educational journey.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 mb-2">Student Support</p>
+                      <p>
+                        Through our partnerships, we offer customized student outreach programs and assist students with 
+                        counseling and admission services. We help students find suitable colleges based on their academic 
+                        background, skill-set, and potential, ensuring they make the right choice for their career.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 mb-2">Mutual Benefits</p>
+                      <p>
+                        Our alliance partners benefit from our robust ed-tech platform, which facilitates student recruitment 
+                        across all streams and degrees. We work together to create a seamless experience for students, 
+                        from initial inquiry to enrollment and beyond.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -294,70 +340,76 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
       </section>
 
       {/* Benefits Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50/30">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
-              Benefits of Our Academic Alliance
-            </h2>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                <Award className="w-5 h-5" />
+                <span className="font-medium text-sm">Benefits</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
+                Benefits of Our Academic Alliance
+              </h2>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="bg-white shadow-md">
-                <CardHeader>
+              <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+                <CardHeader className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-t-lg">
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[#18254a] rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                       <Users className="h-6 w-6 text-white" />
                     </div>
-                    <CardTitle className="text-xl">For Students</CardTitle>
+                    <CardTitle className="text-white text-xl">For Students</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <CardContent className="pt-6">
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Access to comprehensive information on 60,000+ institutions</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Streamlined admission processes</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Personalized counseling and guidance</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Verified and authentic information</span>
                     </li>
                   </ul>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white shadow-md">
-                <CardHeader>
+              <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+                <CardHeader className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-t-lg">
                   <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 bg-[#18254a] rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                       <Building2 className="h-6 w-6 text-white" />
                     </div>
-                    <CardTitle className="text-xl">For Institutions</CardTitle>
+                    <CardTitle className="text-white text-xl">For Institutions</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <CardContent className="pt-6">
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Enhanced student recruitment opportunities</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Access to a wide network of prospective students</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Marketing and promotional support</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <ChevronRight className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                       <span>Data-driven insights and analytics</span>
                     </li>
                   </ul>
@@ -367,33 +419,6 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
           </div>
         </div>
       </section>
-
-
-      {/* For More Guidance Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section Title */}
-          <div className="flex items-center gap-3 mb-12 justify-center">
-            <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">For More Guidance</h2>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-8">
-            {/* Left Column - Instagram Feed */}
-            <div className="relative">
-              <InstagramFeed />
-            </div>
-
-            {/* Right Column - Contact Form */}
-            <div className="p-4">
-              <ContactForm />
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
+    </div>
   )
 }

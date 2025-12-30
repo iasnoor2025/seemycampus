@@ -1,9 +1,27 @@
 import { Metadata } from "next"
-import Link from "next/link"
 import { Suspense } from "react"
-import { ChevronRight, Home } from "lucide-react"
+import { MessageCircle, Mail, Phone, MapPin } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
-import { InstagramFeed } from "@/components/home/InstagramFeed"
+
+async function getContactInfo() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/settings/contact`, {
+      cache: "no-store",
+    })
+    if (response.ok) {
+      return await response.json()
+    }
+  } catch (error) {
+    console.error("Error fetching contact info:", error)
+  }
+  // Return defaults if fetch fails
+  return {
+    email: "info@seemycampus.com",
+    phone: "+91-XXX-XXX-XXXX",
+    address: "New Delhi, India",
+  }
+}
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -35,66 +53,87 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contactInfo = await getContactInfo()
+
   return (
-    <>
-      {/* Hero Section - Contact Us Banner */}
-      <section className="relative py-20 bg-gradient-to-r from-[#18254a] to-[#1e3a5f] text-white overflow-hidden">
-        {/* Background Image with Blur Effect - Office Setting */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30 blur-sm"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='800' height='600' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='800' height='600' fill='%23f0f0f0'/%3E%3Cpath d='M200 200 L600 200 L600 400 L200 400 Z' fill='%23d0d0d0'/%3E%3Ccircle cx='400' cy='300' r='50' fill='%23a0a0a0'/%3E%3C/svg%3E")`
-            }}
-          ></div>
-          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 0h100v100H0z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E")` }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Breadcrumb */}
-            <div className="mb-6 flex items-center justify-center gap-2 text-white/80 text-sm">
-              <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
-                <Home className="h-4 w-4" />
-                HOME
-              </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>ABOUT US</span>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-6 shadow-lg">
+              <MessageCircle className="w-5 h-5" />
+              <span className="font-medium text-sm">Get in Touch</span>
             </div>
             
             {/* Main Heading */}
-            <h1 className="text-5xl md:text-6xl font-bold mb-4">Contact Us</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+              Contact Us
+            </h1>
+            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+              Have questions? We're here to help! Reach out to us and we'll get back to you as soon as possible.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* For More Guidance Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section Title */}
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-              <ChevronRight className="h-5 w-5 text-white rotate-90" />
+      {/* Contact Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            {/* Contact Info Cards */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center mb-4">
+                <Mail className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Email Us</h3>
+              <a href={`mailto:${contactInfo.email}`} className="text-gray-600 hover:text-blue-600 transition-colors">
+                {contactInfo.email}
+              </a>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">For More Guidance</h2>
+
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                <Phone className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Call Us</h3>
+              <a href={`tel:${contactInfo.phone.replace(/[^0-9+]/g, "")}`} className="text-gray-600 hover:text-blue-600 transition-colors">
+                {contactInfo.phone}
+              </a>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-slate-200 hover:shadow-xl transition-all">
+              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Visit Us</h3>
+              <p className="text-gray-600">{contactInfo.address}</p>
+            </div>
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Left Column - Instagram Feed */}
-            <div className="relative">
-              <InstagramFeed />
+          {/* Contact Form */}
+          <div className="bg-white rounded-xl shadow-xl p-8 border border-slate-200">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2">
+                Send us a Message
+              </h2>
+              <p className="text-gray-600">Fill out the form below and we'll get back to you soon.</p>
             </div>
-
-            {/* Right Column - Contact Form */}
-            <Suspense fallback={<div>Loading form...</div>}>
-            <ContactForm />
+            <Suspense fallback={<div className="text-center py-8 text-gray-600">Loading form...</div>}>
+              <ContactForm />
             </Suspense>
           </div>
         </div>
       </section>
-    </>
+    </div>
   )
 }
 

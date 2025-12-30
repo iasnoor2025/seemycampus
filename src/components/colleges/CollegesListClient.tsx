@@ -6,7 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { GitCompare, Grid3x3, List, Star, MapPin, Award, TrendingUp } from "lucide-react"
+import { GitCompare, Grid3x3, List, Star, MapPin, Award, TrendingUp, Building } from "lucide-react"
 import { CollegeFilters, FilterState } from "./CollegeFilters"
 import { CollegePagination } from "./CollegePagination"
 import { Badge } from "@/components/ui/badge"
@@ -184,49 +184,65 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
   }
 
   return (
-    <div className="min-h-screen bg-red-600">
-      {/* Main Content - White Central Column */}
-      <div className="max-w-6xl mx-auto bg-white min-h-screen py-8">
-        {/* Page Header */}
-        <div className="px-4 sm:px-6 mb-8">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                Browse Colleges
-              </h1>
-              <p className="text-gray-600">
-                Explore our comprehensive directory of colleges and universities
-              </p>
-            </div>
-            <Link href="/compare">
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2 border-red-600 text-red-600 hover:bg-red-50"
-              >
-                <GitCompare className="h-4 w-4" />
-                Compare Colleges
-              </Button>
-            </Link>
-          </div>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-12 md:py-16 relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
         </div>
 
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                  <Building className="w-5 h-5" />
+                  <span className="font-medium text-sm">College Directory</span>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                  Browse Colleges
+                </h1>
+                <p className="text-xl text-white/90 max-w-2xl">
+                  Explore our comprehensive directory of colleges and universities
+                </p>
+              </div>
+              <Link href="/compare">
+                <Button 
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <GitCompare className="h-4 w-4" />
+                  Compare Colleges
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+
         {/* Filters */}
-        <div className="px-4 sm:px-6 mb-6">
-          <CollegeFilters
-            onFilterChange={handleFilterChange}
-            onSearchChange={handleSearchChange}
-          />
+        <div className="mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-4">
+            <CollegeFilters
+              onFilterChange={handleFilterChange}
+              onSearchChange={handleSearchChange}
+            />
+          </div>
         </div>
 
         {/* Results Count and Controls */}
         {!loading && (
-          <div className="px-4 sm:px-6 mb-4 flex items-center justify-between flex-wrap gap-4">
-            <p className="text-sm text-gray-600">
-              Found <span className="font-semibold">{totalCount}</span> colleges
+          <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-4 flex items-center justify-between flex-wrap gap-4">
+            <p className="text-sm text-gray-700 font-medium">
+              Found <span className="font-bold text-blue-600">{totalCount}</span> colleges
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <Select value={sortBy} onValueChange={(value) => handleSortChange(value ?? "relevance")}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 border-2 border-gray-200 hover:border-blue-400 transition-colors">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,12 +252,12 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                   <SelectItem value="ranking">Ranking (Best First)</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex border rounded-md">
+              <div className="flex border-2 border-gray-200 rounded-lg overflow-hidden">
                 <Button
                   variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className="rounded-r-none"
+                  className={viewMode === "list" ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : ""}
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -249,7 +265,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className="rounded-l-none"
+                  className={viewMode === "grid" ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : ""}
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </Button>
@@ -260,8 +276,8 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
 
         {/* Table Header - Only for list view */}
         {viewMode === "list" && !loading && colleges.length > 0 && (
-          <div className="px-4 sm:px-6 mb-4">
-            <div className="hidden md:grid grid-cols-12 gap-4 py-3 border-b-2 border-gray-300 font-semibold text-gray-900">
+          <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+            <div className="hidden md:grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
               <div className="col-span-2 text-center">PREVIEW</div>
               <div className="col-span-4">COLLEGE NAME</div>
               <div className="col-span-2">LOCATION</div>
@@ -273,28 +289,29 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
 
         {/* Loading State */}
         {loading && (
-          <div className="px-4 sm:px-6 py-12 text-center">
+          <div className="py-12 text-center bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading colleges...</p>
           </div>
         )}
 
         {/* Colleges List */}
         {!loading && colleges.length === 0 && (
-          <div className="px-4 sm:px-6 py-12 text-center">
-            <p className="text-gray-600">No colleges found. Try adjusting your filters.</p>
+          <div className="py-16 text-center bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200">
+            <Building className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg mb-2">No colleges found</p>
+            <p className="text-gray-500 text-sm">Try adjusting your filters to see more results.</p>
           </div>
         )}
 
         {!loading && colleges.length > 0 && (
           <>
             {viewMode === "list" ? (
-              <div className="space-y-0">
+              <div className="space-y-4">
                 {colleges.map((college, index) => (
                   <div
                     key={college.id}
-                    className={`md:grid md:grid-cols-12 md:gap-4 md:items-center px-4 sm:px-6 py-4 ${
-                      index !== colleges.length - 1 ? "border-b border-gray-200" : ""
-                    } hover:bg-gray-50 transition-colors`}
+                    className={`md:grid md:grid-cols-12 md:gap-4 md:items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6`}
                   >
                     {/* Mobile Card View */}
                     <div className="md:hidden space-y-3">
@@ -357,7 +374,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                         </div>
                       </div>
                       <Link href={`/colleges/${college.slug}`}>
-                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white text-sm">
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                           VIEW MORE
                         </Button>
                       </Link>
@@ -442,7 +459,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                     {/* View Button */}
                     <div className="col-span-2 flex justify-center">
                       <Link href={`/colleges/${college.slug}`}>
-                        <Button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm">
+                        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                           VIEW MORE
                         </Button>
                       </Link>
@@ -452,14 +469,25 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                 ))}
               </div>
             ) : (
-              <div className="px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {colleges.map((college) => (
-                  <div
-                    key={college.id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1"
-                  >
-                    {/* College Image/Logo */}
-                    <div className="relative h-40 bg-gradient-to-br from-blue-500 to-blue-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {colleges.map((college, index) => {
+                  const gradients = [
+                    "from-blue-500 to-cyan-600",
+                    "from-indigo-500 to-purple-600",
+                    "from-violet-500 to-purple-600",
+                    "from-teal-500 to-emerald-600",
+                    "from-sky-500 to-blue-600",
+                    "from-purple-500 to-pink-600",
+                  ]
+                  const gradient = gradients[index % gradients.length]
+
+                  return (
+                    <div
+                      key={college.id}
+                      className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-slate-200"
+                    >
+                      {/* College Image/Logo */}
+                      <div className={`relative h-40 bg-gradient-to-br ${gradient}`}>
                       {college.images && college.images.length > 0 ? (
                         <Image
                           src={college.images[0]}
@@ -481,15 +509,15 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                       )}
                     </div>
 
-                    {/* College Info */}
-                    <div className="p-4">
-                      <Link href={`/colleges/${college.slug}`}>
-                        <h3 className="font-semibold text-lg text-gray-900 mb-2 hover:text-red-600 transition-colors line-clamp-2">
-                          {college.name}
-                        </h3>
-                      </Link>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                        <MapPin className="h-4 w-4" />
+                      {/* College Info */}
+                      <div className="p-5">
+                        <Link href={`/colleges/${college.slug}`}>
+                          <h3 className="font-bold text-lg text-gray-900 mb-2 hover:text-blue-600 transition-colors line-clamp-2">
+                            {college.name}
+                          </h3>
+                        </Link>
+                        <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                          <MapPin className="h-4 w-4 text-blue-600" />
                         <span>{college.city || college.location || "N/A"}</span>
                         {college.state && <span>, {college.state}</span>}
                       </div>
@@ -524,14 +552,15 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                         )}
                       </div>
 
-                      <Link href={`/colleges/${college.slug}`}>
-                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                          View Details
-                        </Button>
-                      </Link>
+                        <Link href={`/colleges/${college.slug}`}>
+                          <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all`}>
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </>
@@ -539,7 +568,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="px-4 sm:px-6 mt-8">
+          <div className="mt-8">
             <CollegePagination
               currentPage={currentPage}
               totalPages={totalPages}

@@ -59,7 +59,7 @@ function SignInForm() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 flex flex-col items-center justify-center p-4">
       <div className="mb-8 flex flex-col items-center space-y-4">
         <div className="flex items-center justify-center">
           <Image
@@ -72,12 +72,12 @@ function SignInForm() {
             quality={90}
           />
         </div>
-        <h1 className="text-3xl font-bold text-[#18254a]">SEE MY CAMPUS</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent">SEE MY CAMPUS</h1>
       </div>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign In</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+      <Card className="w-full max-w-md border-0 shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+          <CardTitle className="text-white text-2xl">Sign In</CardTitle>
+          <CardDescription className="text-white/90">Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -116,12 +116,12 @@ function SignInForm() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md hover:shadow-lg transition-all" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-sm text-center text-gray-600">
               Don't have an account?{" "}
-              <Link href="/auth/signup" className="text-primary hover:underline">
+              <Link href="/auth/signup" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline">
                 Sign up
               </Link>
             </p>
