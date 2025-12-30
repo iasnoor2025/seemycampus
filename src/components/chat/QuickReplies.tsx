@@ -65,7 +65,7 @@ export function QuickReplies({
           size="sm"
           onClick={() => onSelect(reply.message)}
           disabled={disabled}
-          className="h-auto py-2 px-3 text-xs sm:text-sm whitespace-nowrap touch-manipulation border-gray-300 hover:border-[#18254a] hover:bg-[#18254a] hover:text-white transition-all duration-200 rounded-lg shadow-sm hover:shadow-md bg-white"
+          className="h-auto py-2 px-3 text-xs sm:text-sm whitespace-nowrap touch-manipulation border-gray-300 hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all duration-200 rounded-lg shadow-sm hover:shadow-md bg-white"
         >
           {reply.icon && <span className="mr-1.5">{reply.icon}</span>}
           {reply.label}

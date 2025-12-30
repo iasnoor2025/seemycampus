@@ -30,26 +30,34 @@ export default function EntranceExamsPage() {
   const academicYear = getCurrentAcademicYear()
   
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 min-h-screen pb-20">
       {/* Hero Section */}
-      <div className="bg-[#18254a] text-white py-16 md:py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+      <div className="relative bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-6 shadow-lg">
+            <Calendar className="w-5 h-5" />
+            <span className="font-medium text-sm">Admission Timeline</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
             Admission Timeline <span className="text-blue-400">{academicYear}</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto mb-10">
             Track important dates, registration deadlines, and exam schedules for India's top entrance examinations in one place.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
               <Calendar className="h-4 w-4 text-blue-400" />
               <span className="text-sm">Centralized Calendar</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
               <Bell className="h-4 w-4 text-orange-400" />
               <span className="text-sm">Deadline Alerts</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
               <Info className="h-4 w-4 text-green-400" />
               <span className="text-sm">Official Information</span>
             </div>

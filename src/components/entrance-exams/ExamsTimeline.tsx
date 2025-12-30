@@ -159,16 +159,21 @@ export function ExamsTimeline() {
       )}
 
       {/* Timeline Section (Visual enhancement) */}
-      <div className="mt-12 bg-[#18254a] text-white p-8 rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-          <CalendarIcon className="h-6 w-6" />
-          Quick Timeline Overview {academicYear}
-        </h2>
-        <div className="relative space-y-8 before:absolute before:left-2 md:before:left-1/2 before:top-2 before:bottom-2 before:w-0.5 before:bg-blue-400/30">
-          {exams.slice(0, 5).map((exam, index) => (
-            <div key={exam.id} className={`relative flex items-center justify-between md:justify-normal ${index % 2 === 0 ? "md:flex-row-reverse" : ""}`}>
-              <div className="hidden md:block w-1/2" />
-              <div className="absolute left-0 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-blue-500 border-4 border-[#18254a] z-10" />
+      <div className="mt-12 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+            <CalendarIcon className="h-6 w-6" />
+            Quick Timeline Overview {academicYear}
+          </h2>
+          <div className="relative space-y-8 before:absolute before:left-2 md:before:left-1/2 before:top-2 before:bottom-2 before:w-0.5 before:bg-blue-400/30">
+            {exams.slice(0, 5).map((exam, index) => (
+              <div key={exam.id} className={`relative flex items-center justify-between md:justify-normal ${index % 2 === 0 ? "md:flex-row-reverse" : ""}`}>
+                <div className="hidden md:block w-1/2" />
+                <div className="absolute left-0 md:left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-blue-500 border-4 border-slate-800 z-10" />
               <div className={`w-full md:w-1/2 pl-8 md:pl-0 ${index % 2 === 0 ? "md:pr-12" : "md:pl-12"}`}>
                 <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
                   <span className="text-blue-300 text-xs font-bold uppercase tracking-wider">
@@ -180,6 +185,7 @@ export function ExamsTimeline() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div>
     </div>

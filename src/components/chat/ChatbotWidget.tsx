@@ -413,21 +413,21 @@ export function ChatbotWidget() {
           <Button
             onClick={handleToggle}
             size="lg"
-            className="relative h-16 w-16 rounded-full shadow-2xl hover:shadow-[0_20px_50px_rgba(24,37,74,0.4)] transition-all duration-300 bg-gradient-to-br from-[#18254a] via-[#1e2f5c] to-[#18254a] hover:from-[#1a2d5a] hover:via-[#213366] hover:to-[#1a2d5a] touch-manipulation border-2 border-white/10 hover:border-white/20 backdrop-blur-sm hover:scale-105 active:scale-95"
+            className="relative h-16 w-16 rounded-full shadow-2xl hover:shadow-[0_20px_50px_rgba(59,130,246,0.4)] transition-all duration-300 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-800 touch-manipulation border-2 border-white/10 hover:border-white/20 backdrop-blur-sm hover:scale-105 active:scale-95"
             aria-label="Open chat"
           >
             {/* Pulse animation ring */}
-            <span className="absolute inset-0 rounded-full bg-[#18254a] animate-ping opacity-20 group-hover:opacity-30" style={{ animationDuration: '2s' }} />
+            <span className="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-20 group-hover:opacity-30" style={{ animationDuration: '2s' }} />
             
             {/* Chat icon with AI bot indicator */}
             <div className="relative z-10 flex items-center justify-center">
               <div className="relative">
                 <MessageCircle className="h-7 w-7 text-white group-hover:scale-110 transition-transform duration-300" />
                 {/* AI bot icon overlay */}
-                <Bot className="absolute bottom-0 right-0 h-3.5 w-3.5 text-white bg-[#18254a] rounded-full p-0.5 border border-white/30" />
+                <Bot className="absolute bottom-0 right-0 h-3.5 w-3.5 text-white bg-blue-700 rounded-full p-0.5 border border-white/30" />
               </div>
               {/* Online status indicator */}
-              <span className="absolute -top-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-[#18254a] animate-pulse shadow-lg shadow-green-400/50" />
+              <span className="absolute -top-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
             </div>
             
             {/* Shine effect on hover */}
@@ -457,7 +457,7 @@ export function ChatbotWidget() {
           )}
         >
           <Card className="flex flex-col h-full shadow-2xl border border-gray-200 sm:rounded-lg overflow-hidden bg-white">
-            <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-[#18254a] via-[#1e2f5c] to-[#18254a] text-white p-3 sm:p-4 relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-3 sm:p-4 relative overflow-hidden">
               {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
               
@@ -472,7 +472,7 @@ export function ChatbotWidget() {
               <CardTitle className="text-base sm:text-lg font-semibold relative z-10 flex items-center gap-2.5">
                 <div className="relative flex items-center justify-center">
                   <MessageCircle className="h-5 w-5" />
-                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-[#18254a] animate-pulse shadow-lg shadow-green-400/50" />
+                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
                 </div>
                 <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
                   AI Assistant
@@ -518,9 +518,9 @@ export function ChatbotWidget() {
                   />
                   {loading && (
                     <div className="flex items-center gap-2 text-muted-foreground text-sm mt-4">
-                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce" />
-                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.2s]" />
-                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.4s]" />
+                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" />
+                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce [animation-delay:0.4s]" />
                       <span className="ml-2 font-medium">Thinking...</span>
                     </div>
                   )}

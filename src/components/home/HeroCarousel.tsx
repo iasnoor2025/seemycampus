@@ -62,8 +62,11 @@ export function HeroCarousel() {
 
   if (loading) {
     return (
-      <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
+      <section className="relative bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 py-20 text-white min-h-[600px] flex items-center">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">Loading...</div>
         </div>
@@ -74,18 +77,21 @@ export function HeroCarousel() {
   if (slides.length === 0) {
     // Fallback to default content if no slides
     return (
-      <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/20"></div>
+      <section className="relative bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 py-20 text-white min-h-[600px] flex items-center overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <p className="text-lg mb-4 font-medium text-white/90">Now You Can Get</p>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white leading-tight">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent leading-tight">
                 The Best Education for<br />
                 <span className="text-white">Bright Future</span>
               </h1>
               <Link href="/quiz">
-                <Button size="lg" className="text-lg px-8 py-6 bg-red-600 hover:bg-red-700 text-white">
+                <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
                   MORE ABOUT
                 </Button>
               </Link>
@@ -106,7 +112,7 @@ export function HeroCarousel() {
   const currentSlide = slides[currentIndex]
 
   return (
-    <section className="relative bg-[#18254a] py-20 text-white min-h-[600px] flex items-center overflow-hidden">
+    <section className="relative bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 py-20 text-white min-h-[600px] flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
@@ -136,7 +142,7 @@ export function HeroCarousel() {
             )}
             {currentSlide.buttonText && currentSlide.buttonLink && (
               <Link href={currentSlide.buttonLink}>
-                <Button size="lg" className="text-lg px-8 py-6 bg-red-600 hover:bg-red-700 text-white">
+                <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all">
                   {currentSlide.buttonText}
                 </Button>
               </Link>

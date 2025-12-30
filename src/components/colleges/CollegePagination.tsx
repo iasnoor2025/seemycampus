@@ -86,7 +86,7 @@ export function CollegePagination({ currentPage, totalPages, onPageChange }: Col
               onClick={() => onPageChange(pageNum)}
               className={
                 isActive
-                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
                   : "border-gray-300 text-gray-700 hover:bg-gray-50"
               }
             >
