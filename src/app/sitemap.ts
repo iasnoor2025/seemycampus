@@ -90,58 +90,89 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // College pages - High priority for SEO
-  const colleges = await getAllColleges()
-  const collegePages: MetadataRoute.Sitemap = colleges.map((college) => ({
-    url: `${baseUrl}/colleges/${college.slug}`,
-    lastModified: college.updatedAt || college.createdAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }))
+  let collegePages: MetadataRoute.Sitemap = []
+  try {
+    const colleges = await getAllColleges()
+    collegePages = colleges.map((college) => ({
+      url: `${baseUrl}/colleges/${college.slug}`,
+      lastModified: college.updatedAt || college.createdAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }))
+  } catch (error) {
+    // During build time, database might not be available or schema might be incomplete
+    console.warn("Failed to fetch colleges for sitemap:", error)
+  }
 
   // Category pages (colleges by category)
-  const allCategories = await db.select().from(categories).where(eq(categories.isActive, true))
-  const categoryPages: MetadataRoute.Sitemap = allCategories.map((category) => ({
-    url: `${baseUrl}/colleges/${category.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }))
+  let categoryPages: MetadataRoute.Sitemap = []
+  try {
+    const allCategories = await db.select().from(categories).where(eq(categories.isActive, true))
+    categoryPages = allCategories.map((category) => ({
+      url: `${baseUrl}/colleges/${category.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch categories for sitemap:", error)
+  }
 
   // Study goal pages
-  const allStudyGoals = await db.select().from(studyGoals).where(eq(studyGoals.isActive, true))
-  const studyGoalPages: MetadataRoute.Sitemap = allStudyGoals.map((goal) => ({
-    url: `${baseUrl}/colleges/${goal.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }))
+  let studyGoalPages: MetadataRoute.Sitemap = []
+  try {
+    const allStudyGoals = await db.select().from(studyGoals).where(eq(studyGoals.isActive, true))
+    studyGoalPages = allStudyGoals.map((goal) => ({
+      url: `${baseUrl}/colleges/${goal.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch study goals for sitemap:", error)
+  }
 
   // Course pages
-  const allCourses = await db.select().from(courses)
-  const coursePages: MetadataRoute.Sitemap = allCourses.map((course) => ({
-    url: `${baseUrl}/courses/${course.slug}`,
-    lastModified: course.updatedAt || course.createdAt,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }))
+  let coursePages: MetadataRoute.Sitemap = []
+  try {
+    const allCourses = await db.select().from(courses)
+    coursePages = allCourses.map((course) => ({
+      url: `${baseUrl}/courses/${course.slug}`,
+      lastModified: course.updatedAt || course.createdAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch courses for sitemap:", error)
+  }
 
   // Scholarship pages
-  const allScholarships = await db.select().from(scholarships).where(eq(scholarships.isActive, true))
-  const scholarshipPages: MetadataRoute.Sitemap = allScholarships.map((scholarship) => ({
-    url: `${baseUrl}/scholarships/${scholarship.slug}`,
-    lastModified: scholarship.updatedAt || scholarship.createdAt,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }))
+  let scholarshipPages: MetadataRoute.Sitemap = []
+  try {
+    const allScholarships = await db.select().from(scholarships).where(eq(scholarships.isActive, true))
+    scholarshipPages = allScholarships.map((scholarship) => ({
+      url: `${baseUrl}/scholarships/${scholarship.slug}`,
+      lastModified: scholarship.updatedAt || scholarship.createdAt,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch scholarships for sitemap:", error)
+  }
 
   // Entrance exam pages
-  const allExams = await db.select().from(entranceExams).where(eq(entranceExams.isActive, true))
-  const examPages: MetadataRoute.Sitemap = allExams.map((exam) => ({
-    url: `${baseUrl}/entrance-exams/${exam.slug}`,
-    lastModified: exam.updatedAt || exam.createdAt,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }))
+  let examPages: MetadataRoute.Sitemap = []
+  try {
+    const allExams = await db.select().from(entranceExams).where(eq(entranceExams.isActive, true))
+    examPages = allExams.map((exam) => ({
+      url: `${baseUrl}/entrance-exams/${exam.slug}`,
+      lastModified: exam.updatedAt || exam.createdAt,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch entrance exams for sitemap:", error)
+  }
 
   return [
     ...staticPages,

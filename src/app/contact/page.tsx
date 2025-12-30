@@ -26,7 +26,12 @@ async function getContactInfo() {
       address: contactInfo.contact_address || "New Delhi, India",
     }
   } catch (error) {
-    console.error("Error fetching contact info:", error)
+    // During build time, database might not be available or table might not exist
+    // Silently return defaults to allow static generation
+    // Only log in development to avoid build noise
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Error fetching contact info, using defaults:", error)
+    }
     // Return defaults if fetch fails
     return {
       email: "info@seemycampus.com",
