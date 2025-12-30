@@ -5,40 +5,51 @@ import Link from "next/link"
 
 export function SocialIcons() {
   return (
-    <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1.5 sm:gap-2">
+    <div className="fixed right-4 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3">
+      {/* Facebook */}
       <Link
         href="https://www.facebook.com/seemycampus"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-10 h-10 sm:w-12 sm:h-12 bg-[#1877F2] text-white flex items-center justify-center hover:scale-105 sm:hover:scale-110 active:scale-95 transition-transform shadow-lg rounded-sm sm:rounded-none"
+        className="group relative w-12 h-12 sm:w-14 sm:h-14 bg-[#1877F2] text-white flex items-center justify-center rounded-xl hover:rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-110 active:scale-95"
         aria-label="Facebook"
       >
-        <Facebook className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="absolute inset-0 bg-white/20 rounded-xl group-hover:bg-white/30 transition-all"></div>
+        <Facebook className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
       </Link>
+
+      {/* Phone */}
       <Link
         href="tel:+918960147776"
-        className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 text-white flex items-center justify-center hover:scale-105 sm:hover:scale-110 active:scale-95 transition-transform shadow-lg rounded-sm sm:rounded-none"
+        className="group relative w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center rounded-xl hover:rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-110 active:scale-95"
         aria-label="Call"
       >
-        <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="absolute inset-0 bg-white/20 rounded-xl group-hover:bg-white/30 transition-all"></div>
+        <Phone className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
       </Link>
+
+      {/* Instagram */}
       <Link
         href="https://www.instagram.com/seemycampus"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 text-white flex items-center justify-center hover:scale-105 sm:hover:scale-110 active:scale-95 transition-transform shadow-lg rounded-sm sm:rounded-none"
+        className="group relative w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 text-white flex items-center justify-center rounded-xl hover:rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-pink-500/50 hover:scale-110 active:scale-95"
         aria-label="Instagram"
       >
-        <Instagram className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="absolute inset-0 bg-white/20 rounded-xl group-hover:bg-white/30 transition-all"></div>
+        <Instagram className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
       </Link>
+
+      {/* WhatsApp */}
       <Link
         href="https://wa.me/918960147776"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-10 h-10 sm:w-12 sm:h-12 bg-[#25D366] text-white flex items-center justify-center hover:scale-105 sm:hover:scale-110 active:scale-95 transition-transform shadow-lg rounded-sm sm:rounded-none"
+        className="group relative w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white flex items-center justify-center rounded-xl hover:rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-green-500/50 hover:scale-110 active:scale-95"
         aria-label="WhatsApp"
       >
-        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+        <div className="absolute inset-0 bg-white/20 rounded-xl group-hover:bg-white/30 transition-all"></div>
+        <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
       </Link>
     </div>
   )
