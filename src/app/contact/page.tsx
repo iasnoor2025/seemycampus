@@ -2,26 +2,42 @@ import { Metadata } from "next"
 import { Suspense } from "react"
 import { MessageCircle, Mail, Phone, MapPin } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
+import { db } from "@/db"
+import { siteSettings } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
 async function getContactInfo() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/settings/contact`, {
-      cache: "no-store",
+    const contactSettings = await db
+      .select()
+      .from(siteSettings)
+      .where(eq(siteSettings.category, "contact"))
+
+    // Transform to key-value pairs
+    const contactInfo: Record<string, string> = {}
+    contactSettings.forEach((setting) => {
+      contactInfo[setting.key] = setting.value || ""
     })
-    if (response.ok) {
-      return await response.json()
+
+    // Return with defaults if not set
+    return {
+      email: contactInfo.contact_email || "info@seemycampus.com",
+      phone: contactInfo.contact_phone || "+91-XXX-XXX-XXXX",
+      address: contactInfo.contact_address || "New Delhi, India",
     }
   } catch (error) {
     console.error("Error fetching contact info:", error)
-  }
-  // Return defaults if fetch fails
-  return {
-    email: "info@seemycampus.com",
-    phone: "+91-XXX-XXX-XXXX",
-    address: "New Delhi, India",
+    // Return defaults if fetch fails
+    return {
+      email: "info@seemycampus.com",
+      phone: "+91-XXX-XXX-XXXX",
+      address: "New Delhi, India",
+    }
   }
 }
+
+// Revalidate every hour to allow contact info updates
+export const revalidate = 3600
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 

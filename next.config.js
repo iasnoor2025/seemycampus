@@ -13,8 +13,6 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [75, 85, 90],
   },
-  // Optimize font loading
-  optimizeFonts: true,
   // Compress responses
   compress: true,
   // Enable static page generation

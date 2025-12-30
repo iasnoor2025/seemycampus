@@ -215,19 +215,14 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                       </div>
                       <div className="relative z-10 flex items-center gap-4">
                         <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 flex-shrink-0">
-                          {college.images && college.images.length > 0 ? (
-                            <Image
-                              src={college.images[0]}
-                              alt={college.name}
-                              width={56}
-                              height={56}
-                              className="rounded-lg object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-bold text-lg">
-                              {getInitials(college.name)}
-                            </span>
-                          )}
+                          <CollegeLogo
+                            collegeId={college.id}
+                            collegeName={college.name}
+                            imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                            size="sm"
+                            variant="rounded"
+                            className="rounded-lg"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <Link href={`/colleges/${college.slug}`}>
