@@ -2,6 +2,7 @@ import { getAllColleges } from "@/lib/colleges"
 import { Metadata } from "next"
 import { Suspense } from "react"
 import { CollegesListClient } from "@/components/colleges/CollegesListClient"
+import { colleges } from "@/db/schema"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
@@ -34,7 +35,17 @@ export const metadata: Metadata = {
 }
 
 export default async function CollegesPage() {
-  const collegesList = await getAllColleges()
+  // Handle database errors gracefully during build time
+  let collegesList: (typeof colleges.$inferSelect)[] = []
+  try {
+    collegesList = await getAllColleges()
+  } catch (error) {
+    // During build time, database might not be available or schema might be incomplete
+    // Default to empty array - the client component will handle loading data at runtime
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Failed to fetch colleges during build, will load at runtime:", error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
