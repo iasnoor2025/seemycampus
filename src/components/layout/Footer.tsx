@@ -82,51 +82,61 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {/* Column 1 - Logo and Description */}
             <div className="lg:col-span-1">
-              <div className="mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center p-3 mb-4 shadow-xl">
-                  <div className="w-full h-full flex items-center justify-center relative">
-                    <Image
-                      src="/main-logo-footer.png"
-                      alt="See My Campus Logo"
-                      width={100}
-                      height={100}
-                      className="w-full h-full object-contain"
-                      quality={85}
-                    />
+              <div className="mb-8">
+                <Link href="/" className="inline-block group">
+                  <div className="relative">
+                    <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center p-4 mb-4 shadow-2xl group-hover:shadow-white/50 transition-all duration-300 group-hover:scale-105 border-2 border-white/20">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl"></div>
+                      <div className="w-full h-full flex items-center justify-center relative z-10">
+                        <Image
+                          src="/main-logo-footer.png"
+                          alt="See My Campus Logo"
+                          width={120}
+                          height={120}
+                          className="w-full h-full object-contain"
+                          quality={90}
+                          priority
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
                   </div>
-                </div>
+                </Link>
               </div>
-              <p className="text-sm leading-relaxed text-white/80 mb-4">
+              <h3 className="text-xl font-bold text-white mb-3 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                SeeMyCampus
+              </h3>
+              <p className="text-sm leading-relaxed text-white/80 mb-6">
                 Seemycampus is a one stop shop to n number of campuses nationwide, keeping Seemycampus at the nexus of ideas that challenge and change the world.
               </p>
               {/* Social Media Icons */}
               <div className="flex items-center gap-3">
                 <a
-                  href="https://www.facebook.com"
+                  href="https://www.facebook.com/seemycampus"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-all"
+                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-all group"
                   aria-label="Facebook"
                 >
-                  <Facebook className="h-5 w-5 text-white" />
+                  <Facebook className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
                 </a>
                 <a
-                  href="https://www.instagram.com"
+                  href="https://www.instagram.com/seemycampus"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-pink-600 hover:border-pink-600 transition-all"
+                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-pink-600 hover:border-pink-600 transition-all group"
                   aria-label="Instagram"
                 >
-                  <Instagram className="h-5 w-5 text-white" />
+                  <Instagram className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
                 </a>
                 <a
-                  href="https://www.linkedin.com"
+                  href="https://www.linkedin.com/company/seemycampus"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-blue-700 hover:border-blue-700 transition-all"
+                  className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-blue-700 hover:border-blue-700 transition-all group"
                   aria-label="LinkedIn"
                 >
-                  <Linkedin className="h-5 w-5 text-white" />
+                  <Linkedin className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
                 </a>
               </div>
             </div>
