@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MapPin, Globe, Mail, Phone, GitCompare } from "lucide-react"
@@ -31,7 +32,8 @@ export function CollegeHero({
   brochureUrl,
 }: CollegeHeroProps) {
   const router = useRouter()
-  const imageUrl = images && images.length > 0 ? images[0] : "/placeholder-college.jpg"
+  const [imageError, setImageError] = useState(false)
+  const imageUrl = images && images.length > 0 && !imageError ? images[0] : "/placeholder-college.jpg"
   const displayLocation = city || location || "Location not specified"
 
   const handleCompare = () => {
@@ -75,6 +77,9 @@ export function CollegeHero({
         className="object-cover"
         priority
         sizes="100vw"
+        onError={() => {
+          setImageError(true)
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-8 text-white">

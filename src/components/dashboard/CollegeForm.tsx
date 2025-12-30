@@ -286,6 +286,7 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
                       src={logoUrl}
                       alt="Logo preview"
                       fill
+                      sizes="200px"
                       className="object-contain p-1 bg-white"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement

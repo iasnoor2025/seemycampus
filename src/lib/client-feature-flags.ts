@@ -61,25 +61,57 @@ export async function isPathEnabledClient(pathname: string): Promise<boolean> {
   try {
     // Add timestamp to prevent any caching
     const timestamp = Date.now()
-    const response = await fetch(`/api/feature-flags/${featureKey}?t=${timestamp}`, {
-      cache: 'no-store', // Always fetch fresh data
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-    })
-    if (response.ok) {
-      const data = await response.json()
-      // Explicitly check if isEnabled is true
-      return data.isEnabled === true
+    
+    // Create AbortController for timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+    
+    try {
+      const response = await fetch(`/api/feature-flags/${featureKey}?t=${timestamp}`, {
+        signal: controller.signal,
+        cache: 'no-store', // Always fetch fresh data
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Explicitly check if isEnabled is true
+        return data.isEnabled === true
+      }
+      
+      // On error, default to enabled (fail open for better UX)
+      // Only log if it's not a network error
+      if (response.status !== 0) {
+        console.warn(`Failed to check feature flag for ${pathname}:`, response.status)
+      }
+      return true // Fail open - show links by default if API fails
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      
+      // If it's an abort error (timeout), fail open
+      if (fetchError.name === 'AbortError') {
+        console.warn(`Feature flag check timeout for ${pathname}, defaulting to enabled`)
+        return true // Fail open on timeout
+      }
+      
+      // For other errors, also fail open for better UX
+      // Only log non-network errors
+      if (fetchError.name !== 'TypeError' || !fetchError.message.includes('fetch')) {
+        console.error(`Error checking feature flag for ${pathname}:`, fetchError)
+      }
+      return true // Fail open - show links by default if API fails
     }
-    // On error, default to disabled (fail closed)
-    console.warn(`Failed to check feature flag for ${pathname}:`, response.status)
-    return false
-  } catch (error) {
-    // On error, default to disabled (fail closed)
-    console.error(`Error checking feature flag for ${pathname}:`, error)
-    return false
+  } catch (error: any) {
+    // On any other error, fail open for better UX
+    if (error.name !== 'TypeError' || !error.message.includes('fetch')) {
+      console.error(`Error checking feature flag for ${pathname}:`, error)
+    }
+    return true // Fail open - show links by default if API fails
   }
 }
 

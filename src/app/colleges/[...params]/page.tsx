@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
-import Image from "next/image"
+import { CollegeLogo } from "@/components/college/CollegeLogo"
 import { getCollegeBySlug, getCollegeWithCourses, getCollegesByCategoryPaginated, getCollegesByCategoryAndSubcategoryPaginated } from "@/lib/colleges"
 import { CollegeHero } from "@/components/college/CollegeHero"
 import { CourseCard } from "@/components/course/CourseCard"
@@ -223,21 +223,13 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
               >
                 {/* Preview - Logo */}
                 <div className="col-span-2 flex justify-center">
-                  {college.images && college.images.length > 0 ? (
-                    <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={college.images[0]}
-                        alt={`${college.name} logo`}
-                        width={80}
-                        height={80}
-                        className="object-contain p-1"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
-                      {getInitials(college.name)}
-                    </div>
-                  )}
+                  <CollegeLogo
+                    collegeId={college.id}
+                    collegeName={college.name}
+                    imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                    size="lg"
+                    variant="circle"
+                  />
                 </div>
 
                 {/* College Name */}
@@ -332,21 +324,13 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
               >
                 {/* Preview - Logo */}
                 <div className="col-span-2 flex justify-center">
-                  {college.images && college.images.length > 0 ? (
-                    <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                      <Image
-                        src={college.images[0]}
-                        alt={`${college.name} logo`}
-                        width={80}
-                        height={80}
-                        className="object-contain p-1"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
-                      {getInitials(college.name)}
-                    </div>
-                  )}
+                  <CollegeLogo
+                    collegeId={college.id}
+                    collegeName={college.name}
+                    imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                    size="lg"
+                    variant="circle"
+                  />
                 </div>
 
                 {/* College Name */}

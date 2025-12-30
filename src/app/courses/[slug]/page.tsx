@@ -9,7 +9,7 @@ import { Clock, GraduationCap, MapPin, ArrowLeft, Building2 } from "lucide-react
 import { Metadata } from "next"
 import { generateCourseMeta, generateStructuredDataCourse } from "@/lib/seo/generateMeta"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
-import Image from "next/image"
+import { CollegeLogo } from "@/components/college/CollegeLogo"
 
 interface CoursePageProps {
   params: Promise<{
@@ -357,18 +357,15 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                       {college && (
                         <>
                           <div className="flex items-center gap-2 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                              {college.images && college.images.length > 0 ? (
-                                <Image
-                                  src={college.images[0]}
-                                  alt={college.name}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-lg object-cover"
-                                />
-                              ) : (
-                                getInitials(college.name)
-                              )}
+                            <div className="relative w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                              <CollegeLogo
+                                collegeId={college.id}
+                                collegeName={college.name}
+                                imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                                size="sm"
+                                variant="rounded"
+                                className="rounded-lg"
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
                               <Link href={`/colleges/${college.slug}`} className="hover:text-blue-600 transition-colors">

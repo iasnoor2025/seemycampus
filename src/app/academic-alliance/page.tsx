@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CollegeLogo } from "@/components/college/CollegeLogo"
 import { Building2, Handshake, GraduationCap, Users, Award, ChevronRight, TrendingUp, Globe, Target } from "lucide-react"
 import { ContactForm } from "@/components/contact/ContactForm"
 import { getCollegesPaginated } from "@/lib/colleges"
@@ -107,21 +107,13 @@ export default async function AcademicAlliancePage({ searchParams }: AcademicAll
                 >
                   {/* Preview - Logo */}
                   <div className="col-span-2 flex justify-center">
-                    {college.images && college.images.length > 0 ? (
-                      <div className="w-20 h-20 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                        <Image
-                          src={college.images[0]}
-                          alt={`${college.name} logo`}
-                          width={80}
-                          height={80}
-                          className="object-contain p-1"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs border-2 border-gray-200">
-                        {getInitials(college.name)}
-                      </div>
-                    )}
+                    <CollegeLogo
+                      collegeId={college.id}
+                      collegeName={college.name}
+                      imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                      size="lg"
+                      variant="circle"
+                    />
                   </div>
 
                   {/* College Name */}

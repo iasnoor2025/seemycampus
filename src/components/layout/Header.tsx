@@ -43,20 +43,56 @@ export function Header() {
   }, [pathname])
 
   useEffect(() => {
+    let isMounted = true
+    let timeoutId: NodeJS.Timeout | null = null
+    
     const fetchMenu = async () => {
       try {
-        const response = await fetch("/api/menu")
-        if (response.ok) {
+        // Add timeout to prevent hanging
+        const controller = new AbortController()
+        timeoutId = setTimeout(() => {
+          controller.abort()
+        }, 5000) // 5 second timeout
+        
+        const response = await fetch("/api/menu", {
+          signal: controller.signal,
+          cache: 'no-store'
+        })
+        
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
+        
+        if (response.ok && isMounted) {
           const data = await response.json()
           setCategories(data.menu || [])
         }
-      } catch (error) {
-        console.error("Error fetching menu:", error)
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error("Error fetching menu:", error)
+        }
+        // Set empty array on error to prevent infinite loading
+        if (isMounted) {
+          setCategories([])
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
       }
     }
+    
     fetchMenu()
+    
+    return () => {
+      isMounted = false
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
   }, [])
 
   // Close mobile menu on route change or resize
@@ -77,7 +113,6 @@ export function Header() {
   const coursesToShow = hoveredCategoryData?.courses || []
 
   const [enabledLinks, setEnabledLinks] = useState<Set<string>>(new Set())
-  const [linksLoading, setLinksLoading] = useState(true)
 
   const allNavLinks = [
     { href: "/", label: "HOME" },
@@ -96,9 +131,16 @@ export function Header() {
     { href: "/contact", label: "CONTACT" },
   ]
 
-  // Check which links are enabled
+  // Check which links are enabled - start with all links enabled (fail open)
   useEffect(() => {
     let isMounted = true
+    
+    // Initialize with all links enabled immediately (fail open approach)
+    const initialEnabled = new Set<string>()
+    allNavLinks.forEach(link => {
+      initialEnabled.add(link.href)
+    })
+    setEnabledLinks(initialEnabled)
     
     const checkLinks = async () => {
       const enabled = new Set<string>()
@@ -107,39 +149,59 @@ export function Header() {
       enabled.add("/")
       enabled.add("/contact")
       
-      // Check all other links
-      const checkPromises = allNavLinks
-        .filter(link => link.href !== "/" && link.href !== "/contact")
-        .map(async (link) => {
-          try {
-            const isEnabled = await isPathEnabledClient(link.href)
-            if (isMounted && isEnabled === true) {
-              enabled.add(link.href)
+      try {
+        // Check all other links - isPathEnabledClient now handles timeouts internally
+        // Use Promise.allSettled to not block on individual failures
+        const checkPromises = allNavLinks
+          .filter(link => link.href !== "/" && link.href !== "/contact")
+          .map(async (link) => {
+            try {
+              const isEnabled = await isPathEnabledClient(link.href)
+              
+              if (isMounted && isEnabled === true) {
+                enabled.add(link.href)
+              }
+              // If isEnabled is false, don't add to enabled set (link will be hidden)
+            } catch (error) {
+              // Error is already handled in isPathEnabledClient, but add link anyway (fail open)
+              if (isMounted) {
+                enabled.add(link.href) // Fail open - show link if check fails
+              }
             }
-            // If isEnabled is false, don't add to enabled set (link will be hidden)
-          } catch (error) {
-            console.error(`Error checking feature flag for ${link.href}:`, error)
-            // On error, don't add the link (fail closed for disabled features)
+          })
+        
+        // Wait for all checks to complete (non-blocking)
+        await Promise.allSettled(checkPromises)
+      } catch (error) {
+        console.error("Error in checkLinks:", error)
+        // On error, enable all links (fail open)
+        allNavLinks.forEach(link => {
+          if (link.href !== "/" && link.href !== "/contact") {
+            enabled.add(link.href)
           }
         })
+      }
       
-      // Wait for all checks to complete
-      await Promise.all(checkPromises)
-      
+      // Update enabled links after checks complete (non-blocking update)
       if (isMounted) {
         setEnabledLinks(enabled)
-        setLinksLoading(false)
       }
     }
     
-    checkLinks()
+    // Run checks asynchronously without blocking UI
+    checkLinks().catch(() => {
+      // Silently handle any errors - links are already shown
+    })
     
     // Re-check links periodically (in case feature flags were updated)
+    // Increased interval to reduce re-renders
     const interval = setInterval(() => {
       if (isMounted) {
-        checkLinks()
+        checkLinks().catch(() => {
+          // Silently handle any errors
+        })
       }
-    }, 10000) // Check every 10 seconds for faster updates
+    }, 60000) // Check every 60 seconds to reduce load
     
     return () => {
       isMounted = false
@@ -157,7 +219,14 @@ export function Header() {
           <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <Link href="/" className="flex items-center">
+              <Link 
+                href="/" 
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
+                }}
+                className="flex items-center"
+              >
                 <Logo />
               </Link>
             </div>
@@ -167,15 +236,23 @@ export function Header() {
               {/* Always show HOME */}
               <Link 
                 href="/" 
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
+                }}
                 className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
               >
                 HOME
               </Link>
               
               {/* Show ABOUT only if enabled - check directly */}
-              {!linksLoading && enabledLinks.has("/about") ? (
+              {enabledLinks.has("/about") ? (
                 <Link 
                   href="/about" 
+                  onClick={(e) => {
+                    // Ensure navigation works
+                    e.stopPropagation()
+                  }}
                   className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
                 >
                   ABOUT
@@ -242,7 +319,11 @@ export function Header() {
                             <li key={`${course.href}-${index}`}>
                               <Link
                                 href={course.href}
-                                className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                onClick={(e) => {
+                                  // Ensure navigation works - stop propagation to prevent NavigationMenu from interfering
+                                  e.stopPropagation()
+                                }}
+                                className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer"
                               >
                                 {course.name}
                               </Link>
@@ -256,7 +337,7 @@ export function Header() {
               </NavigationMenu>
               
               {/* Render remaining enabled links (excluding HOME, ABOUT, CONTACT, and COLLEGES which are handled separately) */}
-              {!linksLoading && allNavLinks
+              {allNavLinks
                 .filter(link => {
                   // Exclude links that are handled separately
                   if (link.href === "/" || 
@@ -272,6 +353,10 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={(e) => {
+                      // Ensure navigation works
+                      e.stopPropagation()
+                    }}
                     className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
                   >
                     {link.label === "ABOUT US" ? "ABOUT" : link.label}
@@ -279,11 +364,16 @@ export function Header() {
                 ))}
               
               {/* Always show CONTACT */}
-              {!linksLoading && (
-                <Link href="/contact" className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2">
-                  CONTACT
-                </Link>
-              )}
+              <Link 
+                href="/contact" 
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
+                }}
+                className="hover:text-red-400 transition-colors font-medium text-xs xl:text-sm uppercase tracking-wide whitespace-nowrap px-2"
+              >
+                CONTACT
+              </Link>
             </nav>
 
             {/* Right Side - Desktop */}
@@ -369,7 +459,9 @@ export function Header() {
             <li>
               <Link
                 href="/"
-                onClick={() => {
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
                   setMobileMenuOpen(false)
                   setCollegesExpanded(false)
                   setExpandedCategoryId(null)
@@ -381,11 +473,13 @@ export function Header() {
             </li>
             
             {/* ABOUT - only if enabled */}
-            {!linksLoading && enabledLinks.has("/about") && (
+            {enabledLinks.has("/about") && (
               <li>
                 <Link
                   href="/about"
-                  onClick={() => {
+                  onClick={(e) => {
+                    // Ensure navigation works
+                    e.stopPropagation()
                     setMobileMenuOpen(false)
                     setCollegesExpanded(false)
                     setExpandedCategoryId(null)
@@ -440,7 +534,9 @@ export function Header() {
                             <li key={idx}>
                               <Link
                                 href={course.href}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  // Ensure navigation works
+                                  e.stopPropagation()
                                   setMobileMenuOpen(false)
                                   setCollegesExpanded(false)
                                   setExpandedCategoryId(null)
@@ -460,7 +556,7 @@ export function Header() {
             </li>
             
             {/* Mobile menu links - filter out HOME, ABOUT, CONTACT and only show enabled links */}
-            {!linksLoading && allNavLinks
+            {allNavLinks
               .filter(link => {
                 // Exclude HOME, ABOUT, and CONTACT (handled separately or always shown)
                 if (link.href === "/" || link.href === "/about" || link.href === "/contact") {
@@ -473,7 +569,9 @@ export function Header() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    onClick={() => {
+                    onClick={(e) => {
+                      // Ensure navigation works
+                      e.stopPropagation()
                       setMobileMenuOpen(false)
                       setCollegesExpanded(false)
                       setExpandedCategoryId(null)
@@ -486,21 +584,21 @@ export function Header() {
               ))}
             
             {/* Always show CONTACT in mobile menu */}
-            {!linksLoading && (
-              <li>
-                <Link
-                  href="/contact"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    setCollegesExpanded(false)
-                    setExpandedCategoryId(null)
-                  }}
-                  className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
-                >
-                  CONTACT
-                </Link>
-              </li>
-            )}
+            <li>
+              <Link
+                href="/contact"
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
+                  setMobileMenuOpen(false)
+                  setCollegesExpanded(false)
+                  setExpandedCategoryId(null)
+                }}
+                className="block px-4 py-3 text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+              >
+                CONTACT
+              </Link>
+            </li>
           </ul>
 
           {/* Search at bottom */}
@@ -508,7 +606,9 @@ export function Header() {
             <div className="px-4 pt-4 border-t border-gray-200">
               <Link
                 href="/colleges"
-                onClick={() => {
+                onClick={(e) => {
+                  // Ensure navigation works
+                  e.stopPropagation()
                   setMobileMenuOpen(false)
                   setCollegesExpanded(false)
                   setExpandedCategoryId(null)

@@ -224,6 +224,7 @@ export function CollegesList() {
                               src={logoUrl}
                               alt={college.name}
                               fill
+                              sizes="80px"
                               className="object-contain p-2 bg-white"
                               onError={(e) => {
                                 // Hide image on error, show initials

@@ -36,6 +36,7 @@ export function CollegeCard(props: CollegeCardProps) {
   const { data: session } = useSession()
   const [isSaved, setIsSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   // Check if college is saved
   useEffect(() => {
@@ -95,7 +96,7 @@ export function CollegeCard(props: CollegeCardProps) {
     }
   }
 
-  const imageUrl = images && images.length > 0 ? images[0] : "/placeholder-college.jpg"
+  const imageUrl = images && images.length > 0 && !imageError ? images[0] : "/placeholder-college.jpg"
   const displayLocation = city || location || "Location not specified"
 
   const handleCompare = (e: React.MouseEvent) => {
@@ -140,6 +141,9 @@ export function CollegeCard(props: CollegeCardProps) {
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={() => {
+            setImageError(true)
+          }}
         />
       </div>
       <CardHeader>

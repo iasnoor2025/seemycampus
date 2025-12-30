@@ -59,22 +59,47 @@ export function ContactFormPopup() {
   // Check if user is admin via API (more reliable than client-side session)
   const checkAdminStatus = useCallback(async () => {
     try {
-      const response = await fetch("/api/auth/session", {
-        credentials: "include",
-        cache: "no-store",
-      })
-      if (response.ok) {
-        const data = await response.json()
-        if (data?.user?.role === "admin") {
-          setIsAdmin(true)
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+      
+      try {
+        const response = await fetch("/api/auth/session", {
+          credentials: "include",
+          cache: "no-store",
+          signal: controller.signal,
+        })
+        
+        clearTimeout(timeoutId)
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data?.user?.role === "admin") {
+            setIsAdmin(true)
+          } else {
+            setIsAdmin(false)
+          }
         } else {
           setIsAdmin(false)
         }
-      } else {
-        setIsAdmin(false)
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        
+        // Silently handle network errors and timeouts
+        if (fetchError.name === 'AbortError') {
+          // Timeout - silently fail, don't log
+          setIsAdmin(false)
+        } else if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+          // Network error - silently fail, don't log
+          setIsAdmin(false)
+        } else {
+          // Other errors - log but don't break
+          console.warn("Error checking admin status:", fetchError)
+          setIsAdmin(false)
+        }
       }
     } catch (error) {
-      console.error("Error checking admin status:", error)
+      // Outer catch for any unexpected errors
       setIsAdmin(false)
     } finally {
       setIsCheckingAdmin(false)
@@ -86,36 +111,58 @@ export function ContactFormPopup() {
     checkAdminStatus()
   }, [checkAdminStatus])
 
-  // Re-check admin status when session changes or periodically
+  // Re-check admin status when session changes
+  // Prefer session hook over API call for better performance
   useEffect(() => {
     if (sessionStatus === "loading") {
       setIsCheckingAdmin(true)
       return
     }
 
-    // Check admin status when session status changes
-    if (sessionStatus === "authenticated" || sessionStatus === "unauthenticated") {
-      checkAdminStatus()
-    }
-
-    // Also check from session hook directly as fallback
+    // Use session hook directly first (faster, no API call)
     if (session?.user?.role === "admin") {
       setIsAdmin(true)
       setIsCheckingAdmin(false)
+      return
     } else if (sessionStatus === "unauthenticated") {
+      setIsAdmin(false)
+      setIsCheckingAdmin(false)
+      return
+    }
+
+    // Only make API call if session is authenticated but role is not clear
+    // This is a fallback for edge cases
+    if (sessionStatus === "authenticated" && session?.user && !session.user.role) {
+      checkAdminStatus().catch(() => {
+        // Silently handle errors
+        setIsAdmin(false)
+        setIsCheckingAdmin(false)
+      })
+    } else {
       setIsAdmin(false)
       setIsCheckingAdmin(false)
     }
   }, [sessionStatus, session, checkAdminStatus])
 
-  // Periodic check for admin status (every 5 seconds) to catch new logins
+  // Periodic check for admin status (every 30 seconds) to catch new logins
+  // Reduced frequency to avoid excessive API calls and network errors
   useEffect(() => {
+    // Only set up interval if we're not already checking
+    if (isCheckingAdmin) {
+      return
+    }
+    
     const interval = setInterval(() => {
-      checkAdminStatus()
-    }, 5000) // Check every 5 seconds
+      // Only check if not currently checking to avoid overlapping requests
+      if (!isCheckingAdmin) {
+        checkAdminStatus().catch(() => {
+          // Silently handle any errors from the periodic check
+        })
+      }
+    }, 30000) // Check every 30 seconds instead of 5
 
     return () => clearInterval(interval)
-  }, [checkAdminStatus])
+  }, [checkAdminStatus, isCheckingAdmin])
 
   // Don't show popup on quiz, contact, dashboard, or admin pages, or if user is admin
   // Wait for both checks to complete before deciding

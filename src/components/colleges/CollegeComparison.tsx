@@ -370,7 +370,8 @@ export function CollegeComparison() {
                           alt={college.name}
                           width={64}
                           height={64}
-                          className="object-contain w-full h-full bg-white p-1"
+                          className="object-contain bg-white p-1"
+                          style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
                           onError={() => {
                             setImageErrors(prev => new Set(prev).add(college.id))
                           }}
@@ -510,6 +511,7 @@ export function CollegeComparison() {
                                     src={Array.isArray(college.images) ? college.images[0] : college.images}
                                     alt={college.name}
                                     fill
+                                    sizes="(max-width: 768px) 200px, 250px"
                                     className="object-contain rounded bg-white p-2"
                                     onError={() => {
                                       setImageErrors(prev => new Set(prev).add(college.id))

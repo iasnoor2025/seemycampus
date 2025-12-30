@@ -46,6 +46,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
   const router = useRouter()
   const [colleges, setColleges] = useState<College[]>(initialColleges)
   const [loading, setLoading] = useState(false)
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get("search") || "",
     location: "",
@@ -300,7 +301,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                       <div className="flex items-start gap-3">
                         {/* Preview - Logo */}
                         <div className="flex-shrink-0">
-                          {college.images && college.images.length > 0 ? (
+                          {college.images && college.images.length > 0 && !imageErrors.has(college.id) ? (
                             <div className="w-16 h-16 rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden shadow-sm">
                               <Image
                                 src={college.images[0]}
@@ -308,6 +309,9 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                                 width={64}
                                 height={64}
                                 className="object-contain p-1"
+                                onError={() => {
+                                  setImageErrors(prev => new Set(prev).add(college.id))
+                                }}
                               />
                             </div>
                           ) : (
@@ -363,7 +367,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                     <div className="hidden md:contents">
                     {/* Preview - Logo */}
                     <div className="col-span-2 flex justify-center">
-                      {college.images && college.images.length > 0 ? (
+                      {college.images && college.images.length > 0 && !imageErrors.has(college.id) ? (
                         <div className="w-20 h-20 rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden shadow-sm">
                           <Image
                             src={college.images[0]}
@@ -371,6 +375,9 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                             width={80}
                             height={80}
                             className="object-contain p-1"
+                            onError={() => {
+                              setImageErrors(prev => new Set(prev).add(college.id))
+                            }}
                           />
                         </div>
                       ) : (
@@ -458,6 +465,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                           src={college.images[0]}
                           alt={college.name}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-contain p-4"
                         />
                       ) : (
