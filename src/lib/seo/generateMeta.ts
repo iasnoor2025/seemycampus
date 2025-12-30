@@ -216,7 +216,7 @@ interface CollegeWithDetails extends College {
   ownership?: string | null
   campusSize?: string | null
   totalStudents?: number | null
-  courses?: Array<{ name: string; slug: string; level?: string | null }> | null
+  courses?: Array<{ name: string; slug: string; level?: string | null; description?: string | null }> | null
   entranceExams?: string[] | null
 }
 
@@ -272,12 +272,35 @@ export function generateStructuredDataCollege(college: CollegeWithDetails) {
 
   // Add courses/programs offered
   if (college.courses && college.courses.length > 0) {
-    structuredData.hasProgram = college.courses.map((course) => ({
-      "@type": "Course",
-      name: course.name,
-      url: `${baseUrl}/courses/${course.slug}`,
-      educationalLevel: course.level || undefined,
-    }))
+    structuredData.hasProgram = college.courses.map((course) => {
+      const courseData: Record<string, any> = {
+        "@type": "Course",
+        name: course.name,
+        url: `${baseUrl}/courses/${course.slug}`,
+      }
+      
+      // Add description (required for rich results)
+      if (course.description) {
+        courseData.description = course.description
+      } else {
+        // Generate a basic description if missing
+        courseData.description = `${course.name} program at ${college.name}${college.location ? ` in ${college.location}` : ""}. ${course.level ? `This is a ${course.level} level program.` : ""}`
+      }
+      
+      // Add provider (college) - recommended for rich results
+      courseData.provider = {
+        "@type": "EducationalOrganization",
+        name: college.name,
+        url: `${baseUrl}/colleges/${college.slug}`,
+      }
+      
+      // Add educational level if available
+      if (course.level) {
+        courseData.educationalLevel = course.level
+      }
+      
+      return courseData
+    })
   }
 
   // Add aggregate rating if available
