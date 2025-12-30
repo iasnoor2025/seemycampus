@@ -112,6 +112,13 @@ export function EventsList() {
         >
           Info Sessions
         </Button>
+        <Button
+          variant={filter === "office" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setFilter("office")}
+        >
+          Office
+        </Button>
       </div>
 
       {/* Events Grid */}

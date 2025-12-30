@@ -56,17 +56,32 @@ export async function PATCH(
     const { slug } = await params
     const body = await request.json()
 
+    // Only allow updating specific fields
+    const updateData: any = {
+      updatedAt: new Date(),
+    }
+
+    if (body.title !== undefined) updateData.title = body.title
+    if (body.slug !== undefined) updateData.slug = body.slug
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.type !== undefined) updateData.type = body.type
+    if (body.startDate !== undefined) updateData.startDate = new Date(body.startDate)
+    if (body.endDate !== undefined) updateData.endDate = body.endDate ? new Date(body.endDate) : null
+    if (body.registrationDeadline !== undefined) updateData.registrationDeadline = body.registrationDeadline ? new Date(body.registrationDeadline) : null
+    if (body.maxAttendees !== undefined) updateData.maxAttendees = body.maxAttendees || null
+    if (body.platform !== undefined) updateData.platform = body.platform || null
+    if (body.meetingLink !== undefined) updateData.meetingLink = body.meetingLink || null
+    if (body.location !== undefined) updateData.location = body.location || null
+    if (body.organizer !== undefined) updateData.organizer = body.organizer || null
+    if (body.organizerEmail !== undefined) updateData.organizerEmail = body.organizerEmail || null
+    if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl || null
+    if (body.tags !== undefined) updateData.tags = body.tags || []
+    if (body.isActive !== undefined) updateData.isActive = body.isActive
+    if (body.isPublic !== undefined) updateData.isPublic = body.isPublic
+
     const [updatedEvent] = await db
       .update(events)
-      .set({
-        ...body,
-        startDate: body.startDate ? new Date(body.startDate) : undefined,
-        endDate: body.endDate ? new Date(body.endDate) : undefined,
-        registrationDeadline: body.registrationDeadline
-          ? new Date(body.registrationDeadline)
-          : undefined,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(events.slug, slug))
       .returning()
 
@@ -78,7 +93,7 @@ export async function PATCH(
   } catch (error: any) {
     console.error("Error updating event:", error)
     return NextResponse.json(
-      { error: "Failed to update event" },
+      { error: error.message || "Failed to update event" },
       { status: 500 }
     )
   }

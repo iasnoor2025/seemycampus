@@ -209,6 +209,7 @@ export function EventForm({ event, onClose }: EventFormProps) {
                   <SelectItem value="workshop">Workshop</SelectItem>
                   <SelectItem value="info_session">Info Session</SelectItem>
                   <SelectItem value="campus_tour">Campus Tour</SelectItem>
+                  <SelectItem value="office">Office</SelectItem>
                 </SelectContent>
               </Select>
             </div>

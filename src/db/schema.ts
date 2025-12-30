@@ -243,7 +243,7 @@ export const events = pgTable("events", {
   title: varchar("title", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   description: text("description"),
-  type: varchar("type", { length: 50 }).default("webinar"), // webinar, workshop, info_session, campus_tour
+  type: varchar("type", { length: 50 }).default("webinar"), // webinar, workshop, info_session, campus_tour, office
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
   registrationDeadline: timestamp("registration_deadline"),
