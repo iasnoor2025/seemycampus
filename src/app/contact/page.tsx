@@ -20,18 +20,15 @@ async function getContactInfo() {
     })
 
     // Return with defaults if not set
+    // Only use defaults if the value is actually empty/null, not if it exists in DB
     return {
       email: contactInfo.contact_email || "info@seemycampus.com",
       phone: contactInfo.contact_phone || "+91-XXX-XXX-XXXX",
       address: contactInfo.contact_address || "New Delhi, India",
     }
   } catch (error) {
-    // During build time, database might not be available or table might not exist
-    // Silently return defaults to allow static generation
-    // Only log in development to avoid build noise
-    if (process.env.NODE_ENV === "development") {
-      console.warn("Error fetching contact info, using defaults:", error)
-    }
+    // Log error but still return defaults as fallback
+    console.error("Error fetching contact info from database:", error)
     // Return defaults if fetch fails
     return {
       email: "info@seemycampus.com",
@@ -41,8 +38,8 @@ async function getContactInfo() {
   }
 }
 
-// Revalidate every hour to allow contact info updates
-export const revalidate = 3600
+// Make this page dynamic to always fetch fresh contact info from database
+export const dynamic = 'force-dynamic'
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
