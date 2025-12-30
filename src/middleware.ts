@@ -75,6 +75,12 @@ export default auth(async (req) => {
     }
   }
 
+  // Skip feature flag checks for essential SEO files
+  const seoFiles = ["/sitemap.xml", "/robots.txt", "/sitemap", "/robots"]
+  if (seoFiles.some(file => pathname === file || pathname.startsWith(file))) {
+    return NextResponse.next()
+  }
+
   // Check public pages feature flags
   if (!pathname.startsWith("/api") && !pathname.startsWith("/_next") && !pathname.startsWith("/dashboard") && !pathname.startsWith("/admin") && !pathname.startsWith("/auth") && pathname !== "/") {
     try {
@@ -93,6 +99,6 @@ export default auth(async (req) => {
 })
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)"],
 }
 
