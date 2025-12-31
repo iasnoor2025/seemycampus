@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { optimizeMetaDescription } from "@/lib/blog/contentOptimizer"
+import { BlogSEOHelper } from "@/components/blog/BlogSEOHelper"
 
 interface BlogPost {
   id?: number
@@ -249,7 +251,7 @@ export function BlogPostForm({ post, onClose }: BlogPostFormProps) {
                   title={formData.title}
                   content={formData.content}
                   excerpt={formData.excerpt || ""}
-                  category={formData.category}
+                  category={formData.category || undefined}
                   tags={formData.tags || []}
                 />
               </div>

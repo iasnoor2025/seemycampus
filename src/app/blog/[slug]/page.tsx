@@ -111,7 +111,7 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
   const faqs: Array<{ question: string; answer: string }> = []
   if (faqMatches.length > 0) {
     // Simple extraction - can be enhanced
-    faqMatches.slice(0, 5).forEach((match) => {
+    faqMatches.slice(0, 5).forEach((match: string) => {
       const question = match.replace(/<[^>]+>/g, "").trim()
       if (question.includes("?")) {
         faqs.push({

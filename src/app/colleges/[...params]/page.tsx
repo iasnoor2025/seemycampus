@@ -803,6 +803,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                   Admission requires{" "}
                   {college.entranceExams.slice(0, 2).map((exam, idx) => {
                     const examSlug = exam.toLowerCase().replace(/\s+/g, "-")
+                    const examsLength = college.entranceExams?.length || 0
                     return (
                       <span key={exam}>
                         <Link
@@ -811,7 +812,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                         >
                           {exam}
                         </Link>
-                        {idx < Math.min(college.entranceExams.length, 2) - 1 && " or "}
+                        {idx < Math.min(examsLength, 2) - 1 && " or "}
                       </span>
                     )
                   })}
