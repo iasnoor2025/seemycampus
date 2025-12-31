@@ -83,6 +83,8 @@ export function CollegeLogo({
           objectFit: 'contain'
         }}
         unoptimized={useUnoptimized}
+        loading="lazy"
+        decoding="async"
         onError={(e) => {
           // Silently handle image errors
           setImageError(true)

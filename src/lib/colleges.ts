@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
-import { eq, and } from "drizzle-orm"
+import { eq, and, or, ilike, sql } from "drizzle-orm"
 
 export async function getAllColleges() {
   return await db.select().from(colleges)
@@ -38,6 +38,79 @@ export async function getCollegesByLocation(location: string) {
     .where(eq(colleges.location, location))
 }
 
+export async function getCollegesByCity(city: string, page: number = 1, limit: number = 20) {
+  const offset = (page - 1) * limit
+  
+  const conditions = [
+    or(
+      ilike(colleges.city, `%${city}%`),
+      ilike(colleges.location, `%${city}%`)
+    )!
+  ]
+  
+  const collegesList = await db
+    .select()
+    .from(colleges)
+    .where(and(...conditions))
+    .limit(limit)
+    .offset(offset)
+  
+  const totalCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(colleges)
+    .where(and(...conditions))
+  
+  const totalCount = totalCountResult[0]?.count || 0
+  const totalPages = Math.ceil(totalCount / limit)
+  
+  return {
+    colleges: collegesList,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalCount: Number(totalCount),
+      limit,
+    },
+  }
+}
+
+export async function getAllCities(): Promise<string[]> {
+  const cities = await db
+    .selectDistinct({ city: colleges.city })
+    .from(colleges)
+    .where(sql`${colleges.city} IS NOT NULL AND ${colleges.city} != ''`)
+  
+  return cities.map(c => c.city).filter(Boolean) as string[]
+}
+
+export async function getCityStats(city: string) {
+  const cityColleges = await db
+    .select()
+    .from(colleges)
+    .where(
+      or(
+        ilike(colleges.city, `%${city}%`),
+        ilike(colleges.location, `%${city}%`)
+      )!
+    )
+  
+  const stats = {
+    totalColleges: cityColleges.length,
+    privateColleges: cityColleges.filter(c => c.ownership === 'Private').length,
+    governmentColleges: cityColleges.filter(c => c.ownership === 'Government' || c.ownership === 'Public').length,
+    averageRanking: cityColleges.filter(c => c.ranking).length > 0
+      ? Math.round(cityColleges.filter(c => c.ranking).reduce((sum, c) => sum + (c.ranking || 0), 0) / cityColleges.filter(c => c.ranking).length)
+      : null,
+    topColleges: cityColleges
+      .filter(c => c.ranking)
+      .sort((a, b) => (a.ranking || 999) - (b.ranking || 999))
+      .slice(0, 5)
+      .map(c => ({ name: c.name, slug: c.slug, ranking: c.ranking })),
+  }
+  
+  return stats
+}
+
 export async function getCollegesByCategory(category: string) {
   // For now, return all colleges. In the future, add category field to schema
   // This is a placeholder that can be enhanced when category field is added
@@ -66,6 +139,34 @@ export async function getCollegesByCategoryPaginated(category: string, page: num
       limit,
     },
   }
+}
+
+export async function getCategoryStats(categoryName: string) {
+  // Get all colleges (for now - will filter by category when category field is added)
+  const allColleges = await db.select().from(colleges)
+  
+  // Calculate statistics
+  const stats = {
+    totalColleges: allColleges.length,
+    privateColleges: allColleges.filter(c => c.ownership === 'Private').length,
+    governmentColleges: allColleges.filter(c => c.ownership === 'Government' || c.ownership === 'Public').length,
+    averageRanking: allColleges.filter(c => c.ranking).length > 0
+      ? Math.round(allColleges.filter(c => c.ranking).reduce((sum, c) => sum + (c.ranking || 0), 0) / allColleges.filter(c => c.ranking).length)
+      : null,
+    topColleges: allColleges
+      .filter(c => c.ranking)
+      .sort((a, b) => (a.ranking || 999) - (b.ranking || 999))
+      .slice(0, 10)
+      .map(c => ({ name: c.name, slug: c.slug, ranking: c.ranking, location: c.location || c.city })),
+    averagePackage: allColleges.filter(c => c.averagePackage).length > 0
+      ? Math.round(allColleges.filter(c => c.averagePackage).reduce((sum, c) => sum + (c.averagePackage || 0), 0) / allColleges.filter(c => c.averagePackage).length)
+      : null,
+    highestPackage: allColleges.filter(c => c.highestPackage).length > 0
+      ? Math.max(...allColleges.filter(c => c.highestPackage).map(c => c.highestPackage || 0))
+      : null,
+  }
+  
+  return stats
 }
 
 export async function getCollegesByCategoryAndSubcategory(category: string, subcategory: string) {

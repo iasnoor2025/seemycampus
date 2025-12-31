@@ -399,6 +399,81 @@ export function generateCollegeFAQStructuredData(college: CollegeWithDetails) {
     })
   }
   
+  // Admission process FAQ
+  faqs.push({
+    question: `How to get admission in ${college.name}?`,
+    answer: `To get admission in ${college.name}${college.location ? ` in ${college.location}` : ""}, you need to ${college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0 ? `qualify in ${college.entranceExams.join(" or ")} entrance exam` : "meet the eligibility criteria"}. The admission process typically involves ${college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0 ? "entrance exam scores, " : ""}application submission, and selection based on merit. Visit the college website for detailed admission procedures.`
+  })
+  
+  // Location FAQ
+  if (college.location || college.city) {
+    const state = (college as any).state
+    faqs.push({
+      question: `Where is ${college.name} located?`,
+      answer: `${college.name} is located in ${college.location || college.city}${state ? `, ${state}` : ""}. ${college.city && college.location && college.city !== college.location ? `The city is ${college.city}.` : ""}`
+    })
+  }
+  
+  // Hostel FAQ
+  const hostelFees = (college as any).hostelFees
+  if (hostelFees) {
+    faqs.push({
+      question: `Does ${college.name} provide hostel facilities?`,
+      answer: `Yes, ${college.name}${college.location ? ` in ${college.location}` : ""} provides hostel facilities. The hostel fees are approximately ₹${hostelFees.toLocaleString()} per year. Hostel availability may vary, so contact the college for more details.`
+    })
+  }
+  
+  // Entrance exam FAQ
+  if (college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0) {
+    faqs.push({
+      question: `Which entrance exam is required for ${college.name}?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} accepts scores from ${college.entranceExams.length === 1 ? college.entranceExams[0] : college.entranceExams.slice(0, -1).join(", ") + (college.entranceExams.length > 1 ? `, or ${college.entranceExams[college.entranceExams.length - 1]}` : "")} entrance exam${college.entranceExams.length > 1 ? "s" : ""}. Check the college website for specific exam requirements and cutoff scores.`
+    })
+  }
+  
+  // Ownership FAQ
+  if (college.ownership) {
+    faqs.push({
+      question: `Is ${college.name} a private or government college?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} is a ${college.ownership} college. ${college.ownership === "Government" || college.ownership === "Public" ? "Government colleges typically have lower fees and are funded by the government." : "Private colleges are independently funded and may have different fee structures."}`
+    })
+  }
+  
+  // Campus size FAQ
+  if (college.campusSize) {
+    faqs.push({
+      question: `What is the campus size of ${college.name}?`,
+      answer: `The campus of ${college.name}${college.location ? ` in ${college.location}` : ""} spans ${college.campusSize}, providing ample space for academic buildings, hostels, sports facilities, and other infrastructure.`
+    })
+  }
+  
+  // Total students FAQ
+  if (college.totalStudents) {
+    faqs.push({
+      question: `How many students are enrolled at ${college.name}?`,
+      answer: `${college.name}${college.location ? ` in ${college.location}` : ""} has approximately ${college.totalStudents.toLocaleString()} students enrolled across various programs and courses.`
+    })
+  }
+  
+  // Website FAQ
+  if (college.website) {
+    faqs.push({
+      question: `What is the official website of ${college.name}?`,
+      answer: `The official website of ${college.name}${college.location ? ` in ${college.location}` : ""} is ${college.website}. You can visit the website for detailed information about admission, courses, fees, and other college-related information.`
+    })
+  }
+  
+  // Contact FAQ
+  if (college.phone || college.email) {
+    const contactInfo: string[] = []
+    if (college.phone) contactInfo.push(`phone: ${college.phone}`)
+    if (college.email) contactInfo.push(`email: ${college.email}`)
+    faqs.push({
+      question: `How can I contact ${college.name}?`,
+      answer: `You can contact ${college.name}${college.location ? ` in ${college.location}` : ""} through ${contactInfo.join(" or ")}. ${college.website ? `You can also visit their website at ${college.website} for more information.` : ""}`
+    })
+  }
+  
   if (faqs.length === 0) {
     return null
   }
@@ -462,6 +537,89 @@ export function generateReviewStructuredData(reviews: Array<{
       reviewBody: review.reviewBody,
       datePublished: review.datePublished,
     })),
+  }
+}
+
+/**
+ * Generate HowTo structured data for admission guides
+ */
+export function generateHowToStructuredData(
+  name: string,
+  description: string,
+  steps: Array<{ name: string; text: string; image?: string }>,
+  totalTime?: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name,
+    description,
+    step: steps.map((step, index) => ({
+      "@type": "HowToStep",
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+      ...(step.image && {
+        image: step.image.startsWith("http") ? step.image : `${baseUrl}${step.image}`,
+      }),
+    })),
+    ...(totalTime && { totalTime }),
+  }
+}
+
+/**
+ * Generate VideoObject structured data
+ */
+export function generateVideoObjectStructuredData(
+  name: string,
+  description: string,
+  thumbnailUrl: string,
+  contentUrl: string,
+  uploadDate?: string,
+  duration?: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name,
+    description,
+    thumbnailUrl: thumbnailUrl.startsWith("http") ? thumbnailUrl : `${baseUrl}${thumbnailUrl}`,
+    contentUrl: contentUrl.startsWith("http") ? contentUrl : `${baseUrl}${contentUrl}`,
+    ...(uploadDate && { uploadDate }),
+    ...(duration && { duration }),
+  }
+}
+
+/**
+ * Generate individual Review structured data (for single review)
+ */
+export function generateSingleReviewStructuredData(
+  itemReviewed: { name: string; url: string },
+  author: string,
+  rating: number,
+  reviewBody: string,
+  datePublished: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "CollegeOrUniversity",
+      name: itemReviewed.name,
+      url: itemReviewed.url,
+    },
+    author: {
+      "@type": "Person",
+      name: author,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: rating,
+      bestRating: "5",
+      worstRating: "1",
+    },
+    reviewBody,
+    datePublished,
   }
 }
 

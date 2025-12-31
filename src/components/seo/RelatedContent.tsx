@@ -62,9 +62,14 @@ export function RelatedContent({
 
   return (
     <div className="mt-12 space-y-8">
-      <h2 className="text-2xl font-bold text-gray-900">Related Content</h2>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Related Content</h2>
+        <p className="text-muted-foreground text-sm">
+          Explore related colleges, courses, scholarships, and entrance exams to make informed decisions.
+        </p>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Related Colleges */}
         {relatedColleges && relatedColleges.length > 0 && (
           <Card>
@@ -81,11 +86,12 @@ export function RelatedContent({
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {relatedColleges.slice(0, 5).map((college) => (
+                {relatedColleges.slice(0, 8).map((college) => (
                   <li key={college.id}>
                     <Link
                       href={`/colleges/${college.slug}`}
                       className="flex items-center justify-between group hover:text-blue-600 transition-colors"
+                      title={`View ${college.name} details`}
                     >
                       <span className="text-sm">{college.name}</span>
                       <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -93,13 +99,20 @@ export function RelatedContent({
                   </li>
                 ))}
               </ul>
-              {relatedColleges.length > 5 && (
+              <div className="mt-4 space-y-2">
+                {currentCity && (
+                  <Link href={`/colleges/location/${currentCity.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      More Colleges in {currentCity}
+                    </Button>
+                  </Link>
+                )}
                 <Link href="/colleges">
-                  <Button variant="outline" size="sm" className="w-full mt-4">
+                  <Button variant="outline" size="sm" className="w-full">
                     View All Colleges
                   </Button>
                 </Link>
-              )}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -115,11 +128,12 @@ export function RelatedContent({
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {relatedCourses.slice(0, 5).map((course) => (
+                {relatedCourses.slice(0, 8).map((course) => (
                   <li key={course.id}>
                     <Link
                       href={`/courses/${course.slug}`}
                       className="flex items-center justify-between group hover:text-green-600 transition-colors"
+                      title={`View ${course.name} course details`}
                     >
                       <span className="text-sm">
                         {course.name}
@@ -134,13 +148,11 @@ export function RelatedContent({
                   </li>
                 ))}
               </ul>
-              {relatedCourses.length > 5 && (
-                <Link href="/courses">
-                  <Button variant="outline" size="sm" className="w-full mt-4">
-                    View All Courses
-                  </Button>
-                </Link>
-              )}
+              <Link href="/courses">
+                <Button variant="outline" size="sm" className="w-full mt-4">
+                  Browse All Courses
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}

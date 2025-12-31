@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next"
-import { getAllColleges } from "@/lib/colleges"
+import { getAllColleges, getAllCities } from "@/lib/colleges"
 import { db } from "@/db"
 import { courses, scholarships, entranceExams, categories, studyGoals } from "@/db/schema"
 import { eq } from "drizzle-orm"
@@ -174,6 +174,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn("Failed to fetch entrance exams for sitemap:", error)
   }
 
+  // Location pages - High priority for local SEO
+  let locationPages: MetadataRoute.Sitemap = []
+  try {
+    const cities = await getAllCities()
+    // Top 50 cities from the location page
+    const topCities = [
+      "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad",
+      "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal",
+      "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad", "Ludhiana", "Agra", "Nashik",
+      "Faridabad", "Meerut", "Rajkot", "Varanasi", "Srinagar", "Amritsar", "Dhanbad",
+      "Jabalpur", "Raipur", "Allahabad", "Coimbatore", "Jodhpur", "Madurai", "Gwalior",
+      "Vijayawada", "Chandigarh", "Kota", "Guwahati", "Solapur", "Hubli", "Bareilly",
+      "Moradabad", "Mysore", "Gurgaon", "Aligarh", "Jalandhar", "Bhubaneswar"
+    ]
+    
+    // Use top cities, but also include any cities from database that have colleges
+    const allLocationCities = [...new Set([...topCities, ...cities])]
+    
+    locationPages = allLocationCities.slice(0, 50).map((city) => ({
+      url: `${baseUrl}/colleges/location/${city.toLowerCase().replace(/\s+/g, "-")}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }))
+  } catch (error) {
+    console.warn("Failed to fetch cities for location pages in sitemap:", error)
+  }
+
   return [
     ...staticPages,
     ...collegePages,
@@ -182,6 +210,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...coursePages,
     ...scholarshipPages,
     ...examPages,
+    ...locationPages,
   ]
 }
 
