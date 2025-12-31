@@ -623,6 +623,92 @@ export function generateSingleReviewStructuredData(
   }
 }
 
+/**
+ * Generate Article structured data for blog posts
+ */
+export function generateArticleStructuredData(
+  title: string,
+  description: string,
+  author: string,
+  publishedDate: string,
+  modifiedDate?: string,
+  imageUrl?: string,
+  category?: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description,
+    author: {
+      "@type": "Person",
+      name: author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "SeeMyCampus",
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/main-logo-xxxx.png`,
+      },
+    },
+    datePublished: publishedDate,
+    ...(modifiedDate && { dateModified: modifiedDate }),
+    ...(imageUrl && {
+      image: imageUrl.startsWith("http") ? imageUrl : `${baseUrl}${imageUrl}`,
+    }),
+    ...(category && { articleSection: category }),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${title.toLowerCase().replace(/\s+/g, "-")}`,
+    },
+  }
+}
+
+/**
+ * Generate BlogPosting structured data (more specific than Article)
+ */
+export function generateBlogPostingStructuredData(
+  title: string,
+  description: string,
+  author: string,
+  publishedDate: string,
+  slug: string,
+  modifiedDate?: string,
+  imageUrl?: string,
+  category?: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: title,
+    description,
+    author: {
+      "@type": "Person",
+      name: author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "SeeMyCampus",
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/main-logo-xxxx.png`,
+      },
+    },
+    datePublished: publishedDate,
+    ...(modifiedDate && { dateModified: modifiedDate }),
+    ...(imageUrl && {
+      image: imageUrl.startsWith("http") ? imageUrl : `${baseUrl}${imageUrl}`,
+    }),
+    ...(category && { articleSection: category }),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${slug}`,
+    },
+    url: `${baseUrl}/blog/${slug}`,
+  }
+}
+
 export function generateStructuredDataCourse(course: Course, college?: { name: string; slug: string } | null) {
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",

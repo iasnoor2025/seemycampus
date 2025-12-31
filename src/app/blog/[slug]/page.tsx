@@ -5,7 +5,8 @@ import { Calendar, User, Clock, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BlogList } from "@/components/blog/BlogList"
-import { baseUrl, generateBreadcrumbList } from "@/lib/seo/generateMeta"
+import { baseUrl, generateBreadcrumbList, generateBlogPostingStructuredData, generateHowToStructuredData, generateFAQStructuredData } from "@/lib/seo/generateMeta"
+import { estimateReadingTime, optimizeImages, addHeadingIds, generateTableOfContents } from "@/lib/blog/contentOptimizer"
 import Link from "next/link"
 
 interface BlogPageProps {
@@ -35,14 +36,30 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     }
   }
 
+  const title = post.seoTitle || post.title
+  const description = post.seoDescription || post.excerpt || post.title
+  const keywords = post.tags && Array.isArray(post.tags) ? post.tags : []
+
   return {
-    title: post.seoTitle || post.title,
-    description: post.seoDescription || post.excerpt || "",
+    title,
+    description: description.length > 160 ? description.substring(0, 157) + "..." : description,
+    keywords: keywords.length > 0 ? keywords : undefined,
     openGraph: {
-      title: post.title,
-      description: post.excerpt || "",
+      title,
+      description,
       images: post.featuredImage ? [post.featuredImage] : [],
       url: `${baseUrl}/blog/${slug}`,
+      type: "article",
+      publishedTime: post.publishedAt || undefined,
+      authors: post.authorName ? [post.authorName] : undefined,
+      section: post.category || undefined,
+      tags: keywords,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: post.featuredImage ? [post.featuredImage] : [],
     },
     alternates: {
       canonical: `${baseUrl}/blog/${slug}`,
@@ -74,12 +91,67 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
     { name: post.title, url: `/blog/${slug}` },
   ])
 
+  // Generate BlogPosting structured data
+  const blogStructuredData = generateBlogPostingStructuredData(
+    post.title,
+    post.excerpt || post.title,
+    post.authorName || "SeeMyCampus",
+    post.publishedAt || post.createdAt || new Date().toISOString(),
+    slug,
+    post.updatedAt || undefined,
+    post.featuredImage || undefined,
+    post.category || undefined
+  )
+
+  // Check if content contains HowTo steps (look for numbered lists or step indicators)
+  const hasHowToContent = /step\s+\d+|step\s+[1-9]|first|second|third|finally|next|then/i.test(post.content)
+  
+  // Extract FAQ from content if present (look for question patterns)
+  const faqMatches = post.content.match(/<h[23]>(.*\?.*)<\/h[23]>/gi) || []
+  const faqs: Array<{ question: string; answer: string }> = []
+  if (faqMatches.length > 0) {
+    // Simple extraction - can be enhanced
+    faqMatches.slice(0, 5).forEach((match) => {
+      const question = match.replace(/<[^>]+>/g, "").trim()
+      if (question.includes("?")) {
+        faqs.push({
+          question,
+          answer: `Find detailed information about ${question.toLowerCase()} in this comprehensive guide.`,
+        })
+      }
+    })
+  }
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogStructuredData) }}
+      />
+      {hasHowToContent && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateHowToStructuredData(
+            post.title,
+            post.excerpt || post.title,
+            [
+              { name: "Introduction", text: "Read the introduction section to understand the context." },
+              { name: "Main Steps", text: "Follow the step-by-step instructions provided in the article." },
+              { name: "Conclusion", text: "Review the conclusion for final tips and recommendations." },
+            ]
+          )) }}
+        />
+      )}
+      {faqs.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQStructuredData(faqs)) }}
+        />
+      )}
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
         {/* Hero Section */}
         <section className="relative py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white overflow-hidden">
@@ -129,6 +201,10 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
                     <span>{post.viewCount} views</span>
                   </div>
                 )}
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{estimateReadingTime(post.content)} min read</span>
+                </div>
               </div>
             </div>
           </div>
@@ -148,10 +224,34 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
               </div>
             )}
 
+            {/* Table of Contents */}
+            {(() => {
+              const toc = generateTableOfContents(post.content)
+              if (toc.length > 0) {
+                return (
+                  <div className="mb-8 p-6 bg-slate-50 rounded-lg border border-slate-200">
+                    <h2 className="text-xl font-bold mb-4">Table of Contents</h2>
+                    <ul className="space-y-2">
+                      {toc.map((item, index) => (
+                        <li key={index} className={`${item.level === 3 ? "ml-4" : item.level === 4 ? "ml-8" : ""}`}>
+                          <a href={`#${item.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                            {item.text}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              }
+              return null
+            })()}
+
             {/* Content */}
             <div
               className="prose prose-lg max-w-none mb-8"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ 
+                __html: addHeadingIds(optimizeImages(post.content))
+              }}
             />
 
             {/* Tags */}

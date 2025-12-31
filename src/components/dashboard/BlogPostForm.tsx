@@ -72,11 +72,29 @@ export function BlogPostForm({ post, onClose }: BlogPostFormProps) {
   }
 
   const handleTitleChange = (title: string) => {
+    const optimizedSlug = generateSlug(title)
     setFormData({
       ...formData,
       title,
-      slug: formData.slug || generateSlug(title),
+      slug: formData.slug || optimizedSlug,
       seoTitle: formData.seoTitle || title,
+      seoDescription: formData.seoDescription || (formData.excerpt ? optimizeMetaDescription(formData.excerpt) : null),
+    })
+  }
+  
+  const handleExcerptChange = (excerpt: string) => {
+    setFormData({
+      ...formData,
+      excerpt,
+      seoDescription: formData.seoDescription || optimizeMetaDescription(excerpt || formData.content || ""),
+    })
+  }
+  
+  const handleContentChange = (content: string) => {
+    setFormData({
+      ...formData,
+      content,
+      seoDescription: formData.seoDescription || optimizeMetaDescription(formData.excerpt || content),
     })
   }
 
@@ -206,7 +224,7 @@ export function BlogPostForm({ post, onClose }: BlogPostFormProps) {
                 id="excerpt"
                 rows={3}
                 value={formData.excerpt || ""}
-                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value || null })}
+                onChange={(e) => handleExcerptChange(e.target.value)}
                 placeholder="Short description for listings..."
               />
             </div>
@@ -217,12 +235,25 @@ export function BlogPostForm({ post, onClose }: BlogPostFormProps) {
                 id="content"
                 rows={15}
                 value={formData.content || ""}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                onChange={(e) => handleContentChange(e.target.value)}
                 required
                 placeholder="Enter blog content (HTML supported)..."
                 className="font-mono text-sm"
               />
             </div>
+            
+            {/* SEO Helper */}
+            {formData.title && formData.content && (
+              <div className="md:col-span-2">
+                <BlogSEOHelper
+                  title={formData.title}
+                  content={formData.content}
+                  excerpt={formData.excerpt || ""}
+                  category={formData.category}
+                  tags={formData.tags || []}
+                />
+              </div>
+            )}
 
             <div className="md:col-span-2">
               <Label htmlFor="tags">Tags</Label>

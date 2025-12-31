@@ -70,7 +70,7 @@ export default auth(async (req) => {
         }
       } catch (error) {
         // If check fails, allow access (fail open for backward compatibility)
-        console.error("Error checking feature flag in middleware:", error)
+        console.error("Error checking feature flag in proxy:", error)
       }
     }
   }
@@ -91,7 +91,7 @@ export default auth(async (req) => {
       }
     } catch (error) {
       // If check fails, allow access (fail open for backward compatibility)
-      console.error("Error checking feature flag in middleware:", error)
+      console.error("Error checking feature flag in proxy:", error)
     }
   }
 

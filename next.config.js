@@ -11,7 +11,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000, // 1 year cache
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    quality: 85, // Optimize quality for better performance
+    // Note: quality is set per-image using the quality prop in Image component
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
@@ -19,8 +19,7 @@ const nextConfig = {
   compress: true,
   // Enable static page generation
   poweredByHeader: false,
-  // Optimize production builds
-  swcMinify: true,
+  // Note: swcMinify is enabled by default in Next.js 13+, no need to specify
   // Enable experimental features for better performance
   experimental: {
     optimizeCss: true,
