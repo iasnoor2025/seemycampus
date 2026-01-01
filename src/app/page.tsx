@@ -96,11 +96,36 @@ export default function Home() {
 
   const faqStructuredData = generateFAQStructuredData(faqData)
 
+  // WebPage structured data with image for better Google search visibility
+  const webpageStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "SeeMyCampus - Find Your Perfect College",
+    description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, admission details, fees, placements, rankings, and get expert admission counseling for UG and PG programs.",
+    url: baseUrl,
+    image: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/main-logo-xxxx.png`,
+      width: 1200,
+      height: 630,
+    },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/main-logo-xxxx.png`,
+      width: 1200,
+      height: 630,
+    },
+  }
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageStructuredData) }}
       />
       {/* Hero Section with Search */}
       <HeroSection />

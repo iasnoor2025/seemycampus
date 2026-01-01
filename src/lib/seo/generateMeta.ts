@@ -236,8 +236,18 @@ export function generateStructuredDataCollege(college: CollegeWithDetails) {
 
   if (college.images && college.images.length > 0) {
     const imageUrl = Array.isArray(college.images) ? college.images[0] : college.images
-    structuredData.image = imageUrl
-    structuredData.logo = imageUrl
+    structuredData.image = {
+      "@type": "ImageObject",
+      url: imageUrl,
+      width: 1200,
+      height: 630,
+    }
+    structuredData.logo = {
+      "@type": "ImageObject",
+      url: imageUrl,
+      width: 1200,
+      height: 630,
+    }
   }
 
   if (college.city || college.location) {
@@ -706,6 +716,70 @@ export function generateBlogPostingStructuredData(
       "@id": `${baseUrl}/blog/${slug}`,
     },
     url: `${baseUrl}/blog/${slug}`,
+  }
+}
+
+/**
+ * Generate SiteNavigationElement structured data for sitelinks
+ */
+export function generateSiteNavigationStructuredData() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+  
+  return {
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    name: "Main Navigation",
+    url: baseUrl,
+    hasPart: [
+      {
+        "@type": "SiteNavigationElement",
+        name: "College Search",
+        url: `${baseUrl}/colleges`,
+        description: "Search and explore 60,000+ colleges and universities in India",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Admission Predictor",
+        url: `${baseUrl}/admission-predictor`,
+        description: "Predict your admission chances based on exam scores and rankings",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Compare Colleges",
+        url: `${baseUrl}/compare`,
+        description: "Compare multiple colleges side by side on fees, placements, and rankings",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Career Counseling",
+        url: `${baseUrl}/career-counseling`,
+        description: "Get expert career counseling and guidance for college admissions",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Scholarships",
+        url: `${baseUrl}/scholarships`,
+        description: "Find and apply for scholarships to fund your education",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Blog",
+        url: `${baseUrl}/blog`,
+        description: "Read articles about college admissions, courses, and career guidance",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Fee Calculator",
+        url: `${baseUrl}/fee-calculator`,
+        description: "Calculate total college fees including tuition, hostel, and other expenses",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Entrance Exams",
+        url: `${baseUrl}/entrance-exams`,
+        description: "Get information about entrance exam dates, syllabus, and preparation tips",
+      },
+    ],
   }
 }
 

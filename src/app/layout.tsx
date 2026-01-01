@@ -91,7 +91,18 @@ export default function RootLayout({
     "@type": "EducationalOrganization",
     name: "SeeMyCampus",
     url: baseUrl,
-    logo: `${baseUrl}/main-logo-xxxx.png`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/main-logo-xxxx.png`,
+      width: 1200,
+      height: 630,
+    },
+    image: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/main-logo-xxxx.png`,
+      width: 1200,
+      height: 630,
+    },
     description: "SeeMyCampus helps Indian students find the perfect college and course. Explore 60,000+ institutions, 375,000+ courses, and get expert admission counseling for UG and PG programs.",
     address: {
       "@type": "PostalAddress",
@@ -110,6 +121,12 @@ export default function RootLayout({
     "@type": "WebSite",
     name: "SeeMyCampus",
     url: baseUrl,
+    image: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/main-logo-xxxx.png`,
+      width: 1200,
+      height: 630,
+    },
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -118,6 +135,118 @@ export default function RootLayout({
       },
       "query-input": "required name=search_term_string",
     },
+    // Add mainEntity to help with sitelinks
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "College Search",
+          url: `${baseUrl}/colleges`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Admission Predictor",
+          url: `${baseUrl}/admission-predictor`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "Compare Colleges",
+          url: `${baseUrl}/compare`,
+        },
+        {
+          "@type": "ListItem",
+          position: 4,
+          name: "Career Counseling",
+          url: `${baseUrl}/career-counseling`,
+        },
+        {
+          "@type": "ListItem",
+          position: 5,
+          name: "Scholarships",
+          url: `${baseUrl}/scholarships`,
+        },
+        {
+          "@type": "ListItem",
+          position: 6,
+          name: "Blog",
+          url: `${baseUrl}/blog`,
+        },
+        {
+          "@type": "ListItem",
+          position: 7,
+          name: "Fee Calculator",
+          url: `${baseUrl}/fee-calculator`,
+        },
+        {
+          "@type": "ListItem",
+          position: 8,
+          name: "Entrance Exams",
+          url: `${baseUrl}/entrance-exams`,
+        },
+      ],
+    },
+  }
+
+  // SiteNavigationElement for sitelinks
+  const siteNavigationSchema = {
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    name: "Main Navigation",
+    url: baseUrl,
+    hasPart: [
+      {
+        "@type": "SiteNavigationElement",
+        name: "College Search",
+        url: `${baseUrl}/colleges`,
+        description: "Search and explore 60,000+ colleges and universities in India",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Admission Predictor",
+        url: `${baseUrl}/admission-predictor`,
+        description: "Predict your admission chances based on exam scores and rankings",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Compare Colleges",
+        url: `${baseUrl}/compare`,
+        description: "Compare multiple colleges side by side on fees, placements, and rankings",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Career Counseling",
+        url: `${baseUrl}/career-counseling`,
+        description: "Get expert career counseling and guidance for college admissions",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Scholarships",
+        url: `${baseUrl}/scholarships`,
+        description: "Find and apply for scholarships to fund your education",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Blog",
+        url: `${baseUrl}/blog`,
+        description: "Read articles about college admissions, courses, and career guidance",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Fee Calculator",
+        url: `${baseUrl}/fee-calculator`,
+        description: "Calculate total college fees including tuition, hostel, and other expenses",
+      },
+      {
+        "@type": "SiteNavigationElement",
+        name: "Entrance Exams",
+        url: `${baseUrl}/entrance-exams`,
+        description: "Get information about entrance exam dates, syllabus, and preparation tips",
+      },
+    ],
   }
 
   return (
@@ -129,6 +258,8 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
         <link rel="alternate icon" href="/logo.svg" />
         <link rel="apple-touch-icon" href="/logo.svg" />
+        <link rel="image_src" href={`${baseUrl}/main-logo-xxxx.png`} />
+        <meta name="image" content={`${baseUrl}/main-logo-xxxx.png`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
@@ -136,6 +267,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteNavigationSchema) }}
         />
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
