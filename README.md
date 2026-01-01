@@ -100,9 +100,33 @@ See `.env.example` for required environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `NEXTAUTH_URL`: Application URL
 - `NEXTAUTH_SECRET`: Secret for NextAuth
-- `AI_API_KEY`: AI provider API key
-- `AI_API_URL`: AI provider API URL
-- `AI_PROVIDER`: AI provider type (custom, openai, anthropic)
+- `AI_PROVIDER`: AI provider type (`custom`, `openai`, or `openrouter`)
+
+### AI Provider Configuration
+
+#### OpenRouter (Recommended)
+```env
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_MODEL=openai/gpt-3.5-turbo  # or any model from OpenRouter
+OPENROUTER_REFERER=https://yourdomain.com  # Optional
+OPENROUTER_TITLE=SeeMyCampus Chatbot  # Optional
+```
+
+#### OpenAI
+```env
+AI_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-3.5-turbo
+```
+
+#### Custom Provider
+```env
+AI_PROVIDER=custom
+AI_API_KEY=your_api_key
+AI_API_URL=your_api_endpoint
+AI_MODEL=your_model_name
+```
 
 ## Development
 

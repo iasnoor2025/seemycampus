@@ -1,6 +1,7 @@
 import { SYSTEM_PROMPT, checkSafety } from "./prompts"
 import { CustomAIProvider } from "./providers/custom"
 import { OpenAIProvider } from "./providers/openai"
+import { OpenRouterProvider } from "./providers/openrouter"
 import type { AIProvider } from "./providers/base"
 import { getAllColleges } from "@/lib/colleges"
 import { db } from "@/db"
@@ -29,7 +30,12 @@ export class Chatbot {
   constructor() {
     const providerType = process.env.AI_PROVIDER || "custom"
 
-    if (providerType === "openai") {
+    if (providerType === "openrouter") {
+      this.provider = new OpenRouterProvider({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        model: process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo",
+      })
+    } else if (providerType === "openai") {
       this.provider = new OpenAIProvider({
         apiKey: process.env.OPENAI_API_KEY,
         model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
@@ -49,7 +55,9 @@ export class Chatbot {
   isConfigured(): boolean {
     const providerType = process.env.AI_PROVIDER || "custom"
     
-    if (providerType === "openai") {
+    if (providerType === "openrouter") {
+      return !!process.env.OPENROUTER_API_KEY
+    } else if (providerType === "openai") {
       return !!process.env.OPENAI_API_KEY
     } else {
       return !!(process.env.AI_API_URL && process.env.AI_API_KEY)
