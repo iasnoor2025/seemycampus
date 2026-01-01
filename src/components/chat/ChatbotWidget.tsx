@@ -28,7 +28,7 @@ const getWelcomeMessage = (pathname: string | null): string => {
   if (pathname?.startsWith("/scholarships")) {
     return "Hello! I can help you find scholarship opportunities, understand eligibility criteria, or answer questions about financial aid. How can I assist you?"
   }
-  return "Hello! I'm your AI assistant for SeeMyCampus. I can help you with:\n• Finding the right colleges and courses\n• Understanding admission requirements\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations\n\nWhat would you like to explore today?"
+  return "Hello! I'm the SeeMyCampus chatbot. I can help you with:\n• Finding the right colleges and courses\n• Understanding admission requirements\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations\n\nWhat would you like to explore today?"
 }
 
 export function ChatbotWidget() {
@@ -475,7 +475,7 @@ export function ChatbotWidget() {
                   <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
                 </div>
                 <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
-                  AI Assistant
+                  SeeMyCampus Chatbot
                 </span>
               </CardTitle>
               <div className="flex items-center gap-1 sm:gap-2 relative z-10">

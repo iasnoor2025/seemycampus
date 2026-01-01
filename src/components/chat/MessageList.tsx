@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import Link from "next/link"
 import { GraduationCap, MapPin, ExternalLink } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
 interface MessageListProps {
   messages: Message[]
@@ -38,9 +39,27 @@ export function MessageList({ messages, onQuickReply, disabled = false }: Messag
                 }
               >
                 <CardContent className="p-3 sm:p-4">
-                  <p className={`text-sm sm:text-sm whitespace-pre-wrap break-words leading-relaxed ${
+                  <div className={`text-sm sm:text-sm whitespace-pre-wrap break-words leading-relaxed ${
                     message.role === "user" ? "text-white" : "text-gray-800"
-                  }`}>{message.content}</p>
+                  }`}>
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className={`mb-2 last:mb-0 ${message.role === "user" ? "text-white" : "text-gray-800"}`}>{children}</p>,
+                        strong: ({ children }) => <strong className={`font-semibold ${message.role === "user" ? "text-white" : "text-gray-900"}`}>{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        ul: ({ children }) => <ul className={`list-disc list-inside mb-2 space-y-1 ${message.role === "user" ? "text-white" : "text-gray-800"}`}>{children}</ul>,
+                        ol: ({ children }) => <ol className={`list-decimal list-inside mb-2 space-y-1 ${message.role === "user" ? "text-white" : "text-gray-800"}`}>{children}</ol>,
+                        li: ({ children }) => <li className="ml-2">{children}</li>,
+                        h1: ({ children }) => <h1 className={`text-lg font-bold mb-2 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>{children}</h1>,
+                        h2: ({ children }) => <h2 className={`text-base font-bold mb-2 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>{children}</h2>,
+                        h3: ({ children }) => <h3 className={`text-sm font-bold mb-1 ${message.role === "user" ? "text-white" : "text-gray-900"}`}>{children}</h3>,
+                        code: ({ children }) => <code className={`${message.role === "user" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-900"} px-1 py-0.5 rounded text-xs font-mono`}>{children}</code>,
+                        blockquote: ({ children }) => <blockquote className={`border-l-4 ${message.role === "user" ? "border-white/30 text-white/90" : "border-gray-300 text-gray-700"} pl-2 italic my-2`}>{children}</blockquote>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                   
                   {/* College Suggestions */}
                   {message.role === "assistant" && message.suggestions && message.suggestions.length > 0 && (

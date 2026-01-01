@@ -4,12 +4,12 @@ import { ChatInterface } from "@/components/chat/ChatInterface"
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 
 export const metadata: Metadata = {
-  title: "AI Chat Assistant | SeeMyCampus",
-  description: "Chat with our AI assistant to get answers about colleges, courses, and admissions. Get instant guidance on your educational journey.",
-  keywords: ["AI chat", "college guidance", "admission help", "education chatbot", "college counseling AI"],
+  title: "SeeMyCampus Chatbot | SeeMyCampus",
+  description: "Chat with the SeeMyCampus chatbot to get answers about colleges, courses, and admissions. Get instant guidance on your educational journey.",
+  keywords: ["SeeMyCampus chatbot", "college guidance", "admission help", "education chatbot", "college counseling"],
   openGraph: {
-    title: "AI Chat Assistant | SeeMyCampus",
-    description: "Chat with our AI assistant to get answers about colleges, courses, and admissions. Get instant guidance on your educational journey.",
+    title: "SeeMyCampus Chatbot | SeeMyCampus",
+    description: "Chat with the SeeMyCampus chatbot to get answers about colleges, courses, and admissions. Get instant guidance on your educational journey.",
     url: `${baseUrl}/chat`,
     type: "website",
     images: [
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
         url: `${baseUrl}/main-logo-xxxx.png`,
         width: 1200,
         height: 630,
-        alt: "AI Chat Assistant - SeeMyCampus",
+        alt: "SeeMyCampus Chatbot - SeeMyCampus",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Chat Assistant | SeeMyCampus",
-    description: "Chat with our AI assistant to get answers about colleges, courses, and admissions.",
+    title: "SeeMyCampus Chatbot | SeeMyCampus",
+    description: "Chat with the SeeMyCampus chatbot to get answers about colleges, courses, and admissions.",
   },
   alternates: {
     canonical: `${baseUrl}/chat`,
@@ -49,12 +49,12 @@ export default function ChatPage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-6 shadow-lg">
               <MessageCircle className="w-5 h-5" />
-              <span className="font-medium text-sm">AI Assistant</span>
+              <span className="font-medium text-sm">SeeMyCampus Chatbot</span>
             </div>
             
             {/* Main Heading */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
-              AI Chat Assistant
+              SeeMyCampus Chatbot
             </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
               Ask me anything about colleges, courses, admissions, or educational guidance.
