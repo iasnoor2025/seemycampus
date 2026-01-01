@@ -24,6 +24,7 @@
     "db:seed:featured": "tsx src/db/seed-featured-colleges.ts",
     "db:scrape:diploma": "tsx src/db/scrape-external-specific.ts",
     "db:update:exam-dates": "tsx src/db/auto-update-exam-dates.ts",
+    "db:generate-slugs": "tsx scripts/generate-missing-slugs.ts",
     "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {
