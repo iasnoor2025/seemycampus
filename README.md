@@ -100,11 +100,23 @@ See `.env.example` for required environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `NEXTAUTH_URL`: Application URL
 - `NEXTAUTH_SECRET`: Secret for NextAuth
-- `AI_PROVIDER`: AI provider type (`custom`, `openai`, or `openrouter`)
+- `AI_PROVIDER`: AI provider type (`ollama`, `openrouter`, `openai`, or `custom`)
 
 ### AI Provider Configuration
 
-#### OpenRouter (Recommended)
+#### Ollama (Local - Recommended for Privacy)
+```env
+AI_PROVIDER=ollama
+OLLAMA_API_URL=http://localhost:11434  # Default, change if Ollama runs on different port
+OLLAMA_MODEL=llama3.2:latest  # or llama3.1:8b, mistral:latest, qwen2.5:7b, etc.
+```
+
+**Setup Ollama:**
+1. Install Ollama from [ollama.com](https://ollama.com/download)
+2. Pull a model (if needed): `ollama pull llama3.2` or use an existing model
+3. Ensure Ollama is running before starting the Next.js server
+
+#### OpenRouter (Cloud)
 ```env
 AI_PROVIDER=openrouter
 OPENROUTER_API_KEY=your_openrouter_api_key
@@ -113,7 +125,7 @@ OPENROUTER_REFERER=https://yourdomain.com  # Optional
 OPENROUTER_TITLE=SeeMyCampus Chatbot  # Optional
 ```
 
-#### OpenAI
+#### OpenAI (Cloud)
 ```env
 AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key

@@ -214,10 +214,45 @@ export async function POST(request: NextRequest) {
       // If chatbot.sendMessage throws an error, handle it gracefully
       console.error("Error in chatbot.sendMessage:", chatbotError)
       
-      // Return a helpful response even if chatbot fails
+      // The chatbot.sendMessage should return a response even on error (with fallback)
+      // But if it throws, we'll provide a helpful response
+      let errorResponse = chatbotError.response
+      let errorSuggestions = chatbotError.suggestions || []
+      
+      // If no response from chatbot error, create a helpful one based on the message
+      if (!errorResponse) {
+        const lowerMessage = message.toLowerCase().trim()
+        
+        if (lowerMessage.includes("college") || lowerMessage.includes("colleges") || lowerMessage.includes("university")) {
+          errorResponse = "I can help you find colleges! You can browse our college listings to explore options, compare colleges, and view detailed information about programs, fees, and admission requirements."
+        } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
+          errorResponse = "I can help you explore courses! Visit our courses page to find programs that match your interests, check requirements, and see which colleges offer your preferred courses."
+        } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
+          errorResponse = "I can help with scholarships! Check out our scholarships page for financial aid opportunities. You can filter by category, level, and eligibility requirements."
+        } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
+          errorResponse = "I can help with fees! Use our fee calculator to estimate costs, or visit college pages for detailed fee breakdowns including tuition, hostel, and other expenses."
+        } else if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance exam")) {
+          errorResponse = "I can help with admissions! Visit our colleges page to see admission requirements, or check our entrance exams page for important dates and exam information."
+        } else {
+          errorResponse = "I'm here to help! You can browse our college listings, explore courses, check out scholarships, use our fee calculator, or contact our support team for assistance."
+        }
+        
+        // Try to get college suggestions even on error
+        try {
+          const chatbot = new Chatbot()
+          const searchResult = await chatbot.searchColleges(message || "")
+          errorSuggestions = searchResult || []
+          if (errorSuggestions.length > 0) {
+            errorResponse += `\n\n💡 I found ${errorSuggestions.length} college${errorSuggestions.length > 1 ? 's' : ''} that might interest you!`
+          }
+        } catch (e) {
+          // Ignore search errors
+        }
+      }
+      
       return NextResponse.json({
-        response: chatbotError.response || "I'm having trouble right now, but I can still help! You can browse our college listings, explore courses, check out scholarships, or contact our support team for assistance.",
-        suggestions: chatbotError.suggestions || [],
+        response: errorResponse,
+        suggestions: errorSuggestions,
         success: true, // Still return success so UI doesn't show error state
       }, {
         headers: {
@@ -255,17 +290,39 @@ export async function POST(request: NextRequest) {
     // Generic error response with helpful fallback - still return success so UI works
     // Try to get college suggestions even on error
     let suggestions: any[] = []
+    let helpfulResponse = "I'm here to help! "
+    
+    // Provide context-aware response based on the message
+    const lowerMessage = (message || "").toLowerCase().trim()
+    
+    if (lowerMessage.includes("college") || lowerMessage.includes("colleges") || lowerMessage.includes("university")) {
+      helpfulResponse += "You can browse our college listings to explore options, compare colleges, and view detailed information about programs, fees, and admission requirements."
+    } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
+      helpfulResponse += "Visit our courses page to find programs that match your interests, check requirements, and see which colleges offer your preferred courses."
+    } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
+      helpfulResponse += "Check out our scholarships page for financial aid opportunities. You can filter by category, level, and eligibility requirements."
+    } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
+      helpfulResponse += "Use our fee calculator to estimate costs, or visit college pages for detailed fee breakdowns including tuition, hostel, and other expenses."
+    } else if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance exam")) {
+      helpfulResponse += "Visit our colleges page to see admission requirements, or check our entrance exams page for important dates and exam information."
+    } else {
+      helpfulResponse += "You can:\n• Browse our college listings to find options\n• Explore courses and programs\n• Check out scholarship opportunities\n• Use our fee calculator\n• Contact our support team\n\nOr try asking me a more specific question about colleges, courses, or admissions!"
+    }
+    
     try {
       const chatbot = new Chatbot()
       const searchResult = await chatbot.searchColleges(message || "")
       suggestions = searchResult || []
+      if (suggestions.length > 0) {
+        helpfulResponse += `\n\n💡 I found ${suggestions.length} college${suggestions.length > 1 ? 's' : ''} that might interest you!`
+      }
     } catch (e) {
       // Ignore search errors
     }
 
     return NextResponse.json(
       {
-        response: "I'm having trouble processing your request right now, but I can still help! You can:\n\n• Browse our college listings to find options\n• Explore courses and programs\n• Check out scholarship opportunities\n• Use our fee calculator\n• Contact our support team\n\nOr try asking me a more specific question about colleges, courses, or admissions!",
+        response: helpfulResponse,
         suggestions: suggestions,
         success: true, // Return success so UI doesn't show error
       },

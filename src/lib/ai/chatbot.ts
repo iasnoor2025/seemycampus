@@ -2,6 +2,7 @@ import { SYSTEM_PROMPT, checkSafety } from "./prompts"
 import { CustomAIProvider } from "./providers/custom"
 import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
+import { OllamaProvider } from "./providers/ollama"
 import type { AIProvider } from "./providers/base"
 import { getAllColleges } from "@/lib/colleges"
 import { db } from "@/db"
@@ -30,7 +31,12 @@ export class Chatbot {
   constructor() {
     const providerType = process.env.AI_PROVIDER || "custom"
 
-    if (providerType === "openrouter") {
+    if (providerType === "ollama") {
+      this.provider = new OllamaProvider({
+        apiUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
+        model: process.env.OLLAMA_MODEL || "llama3.2:latest",
+      })
+    } else if (providerType === "openrouter") {
       this.provider = new OpenRouterProvider({
         apiKey: process.env.OPENROUTER_API_KEY,
         model: process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo",
@@ -55,7 +61,11 @@ export class Chatbot {
   isConfigured(): boolean {
     const providerType = process.env.AI_PROVIDER || "custom"
     
-    if (providerType === "openrouter") {
+    if (providerType === "ollama") {
+      // Ollama is configured if the URL is accessible (we'll assume it's configured)
+      // The actual connection will be tested when making requests
+      return true
+    } else if (providerType === "openrouter") {
       return !!process.env.OPENROUTER_API_KEY
     } else if (providerType === "openai") {
       return !!process.env.OPENAI_API_KEY
@@ -172,8 +182,11 @@ export class Chatbot {
     })
 
     // Check if AI is configured before attempting to use it
-    if (!this.isConfigured()) {
-      console.warn("AI provider not configured. Using intelligent fallback response.")
+    // Note: We'll still try to use the provider even if not "configured" 
+    // (e.g., Ollama might be running but not have env vars set)
+    const isConfigured = this.isConfigured()
+    if (!isConfigured) {
+      console.warn("AI provider not fully configured. Will attempt to use it anyway, with fallback available.")
       
       // Provide helpful fallback response based on message content
       const lowerMessage = actualMessage.toLowerCase().trim()
@@ -219,9 +232,13 @@ export class Chatbot {
       else if (lowerMessage.includes("rank") || lowerMessage.includes("best") || lowerMessage.includes("top") || lowerMessage.includes("ranking")) {
         fallbackResponse = "I can help you find top-ranked colleges! You can:\n\n• Browse colleges sorted by rankings\n• View ranking information on each college page\n• Compare rankings across different colleges\n• Filter colleges by ranking criteria\n\nVisit our colleges page and use the ranking filter to find top colleges!"
       }
+      // Handle "about seemycampus" queries
+      else if (lowerMessage.includes("about seemycampus") || lowerMessage.includes("what is seemycampus") || lowerMessage.includes("tell me about seemycampus")) {
+        fallbackResponse = "Welcome to SeeMyCampus! We're a platform designed to help students navigate the college admissions process in India. Here are our key features:\n\n1. **College Search**: Our database includes colleges and universities across India, helping you find the perfect match for your educational goals.\n2. **Course Explorer**: Find courses offered by each college, including degree programs, specializations, and electives.\n3. **Admission Guide**: Get information on admission requirements, entrance exams (JEE, NEET, CAT, etc.), application deadlines, and financial aid options.\n4. **Scholarship Match**: Our tool helps you find scholarships based on your interests, skills, and academic background.\n5. **Campus Insights**: Read reviews from current students and alumni to get a firsthand account of campus life.\n\nTo get started, what would you like to explore first?"
+      }
       // Default helpful response
       else {
-        fallbackResponse = "I'm here to help you with college and course information! I can assist you with:\n\n• Finding the right colleges and courses\n• Understanding admission requirements\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations and cost estimates\n• Comparing colleges\n\nTry asking me about:\n• \"Show me engineering colleges\"\n• \"What are the admission requirements?\"\n• \"Tell me about scholarships\"\n• \"Help me calculate fees\"\n\nOr browse our website to explore colleges, courses, and more!"
+        fallbackResponse = "I'm here to help you with Indian colleges and course information! I can assist you with:\n\n• Finding the right colleges and courses in India\n• Understanding admission requirements and entrance exams\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations and cost estimates\n• Comparing colleges\n\nTry asking me about:\n• \"Show me engineering colleges in India\"\n• \"What are the admission requirements?\"\n• \"Tell me about scholarships\"\n• \"Help me calculate fees\"\n\nOr browse our website to explore colleges, courses, and more!"
       }
       
       // Add college suggestions if found
@@ -254,6 +271,8 @@ export class Chatbot {
         })),
       ]
 
+      console.log("Attempting to get AI response from provider:", process.env.AI_PROVIDER || "custom")
+      
       // Get AI response with timeout handling
       const response = await Promise.race([
         this.provider.chat(messages),
@@ -261,6 +280,8 @@ export class Chatbot {
           setTimeout(() => reject(new Error("Request timeout")), 30000)
         ),
       ]) as string
+      
+      console.log("Successfully received AI response, length:", response.length)
 
       // Add assistant response to history
       this.conversationHistory.push({
@@ -274,11 +295,42 @@ export class Chatbot {
       }
     } catch (error: any) {
       console.error("Chatbot error:", error)
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        provider: process.env.AI_PROVIDER,
+      })
       
       // Provide more specific error messages
       if (error.message?.includes("timeout")) {
         return {
           response: "I'm taking longer than usual to respond. This might be due to high demand. Please try again in a moment, or feel free to browse our college listings directly while you wait.",
+          suggestions: collegeSuggestions
+        }
+      }
+
+      // Handle Ollama connection errors
+      if (error.message?.includes("Cannot connect to Ollama") || error.message?.includes("ECONNREFUSED")) {
+        const lowerMessage = actualMessage.toLowerCase()
+        let fallbackResponse = "I'm having trouble connecting to my AI service right now. "
+        
+        // Still provide helpful responses based on the query
+        if (lowerMessage.includes("college") || lowerMessage.includes("colleges")) {
+          fallbackResponse += "While I get that sorted, you can browse our college listings to find the perfect match. Visit our colleges page to explore options."
+        } else if (lowerMessage.includes("course") || lowerMessage.includes("program")) {
+          fallbackResponse += "While I get that sorted, you can explore our courses page to find programs that match your interests."
+        } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("fee")) {
+          fallbackResponse += "While I get that sorted, check out our scholarships page for financial aid opportunities, or use our fee calculator."
+        } else {
+          fallbackResponse += "While I get that sorted, you can browse our website to explore colleges, courses, scholarships, and more!"
+        }
+        
+        if (collegeSuggestions.length > 0) {
+          fallbackResponse += `\n\nI found ${collegeSuggestions.length} college${collegeSuggestions.length > 1 ? 's' : ''} that might interest you!`
+        }
+        
+        return {
+          response: fallbackResponse,
           suggestions: collegeSuggestions
         }
       }
@@ -308,12 +360,32 @@ export class Chatbot {
         }
       }
 
-      // Generic fallback with helpful suggestions
-      let fallbackResponse = "I'm having trouble processing your request right now. "
-      if (collegeSuggestions.length > 0) {
-        fallbackResponse += `However, I found ${collegeSuggestions.length} college${collegeSuggestions.length > 1 ? 's' : ''} that might interest you. `
+      // Generic fallback with helpful suggestions - try to still be helpful
+      const lowerMessage = actualMessage.toLowerCase()
+      let fallbackResponse = "I'm having a bit of trouble right now, but I can still help! "
+      
+      // Provide context-aware responses even on error
+      if (lowerMessage.includes("college") || lowerMessage.includes("colleges") || lowerMessage.includes("university")) {
+        fallbackResponse += "You can browse our college listings to explore options. "
+        if (collegeSuggestions.length > 0) {
+          fallbackResponse += `I found ${collegeSuggestions.length} college${collegeSuggestions.length > 1 ? 's' : ''} that match your search! `
+        }
+        fallbackResponse += "Visit our colleges page to see detailed information about programs, fees, and admission requirements."
+      } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
+        fallbackResponse += "You can explore our courses page to find programs that match your interests. Check out course requirements, prerequisites, and career prospects."
+      } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
+        fallbackResponse += "Check out our scholarships page for financial aid opportunities. You can filter by category, level, and eligibility requirements."
+      } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
+        fallbackResponse += "Use our fee calculator to estimate costs, or visit college pages for detailed fee breakdowns including tuition, hostel, and other expenses."
+      } else if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance exam")) {
+        fallbackResponse += "Visit our colleges page to see admission requirements, or check our entrance exams page for important dates and exam information."
+      } else {
+        fallbackResponse += "You can:\n• Browse our college listings\n• Explore courses and programs\n• Check out scholarship opportunities\n• Use our fee calculator\n• Contact our support team"
       }
-      fallbackResponse += "You can:\n• Try asking your question again\n• Browse our college listings\n• Check out our courses and scholarships\n• Contact our support team"
+      
+      if (collegeSuggestions.length > 0 && !fallbackResponse.includes("college")) {
+        fallbackResponse += `\n\n💡 I found ${collegeSuggestions.length} college${collegeSuggestions.length > 1 ? 's' : ''} that might interest you!`
+      }
       
       return {
         response: fallbackResponse,
