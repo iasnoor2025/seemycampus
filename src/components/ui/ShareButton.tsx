@@ -1,14 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Share2, Check, Copy, Twitter, Facebook, Linkedin } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
 interface ShareButtonProps {
@@ -29,8 +23,24 @@ export function ShareButton({
   showLabel = true,
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [shareUrl, setShareUrl] = useState(url || "")
+  const [MenuComponents, setMenuComponents] = useState<typeof import("@/components/ui/dropdown-menu") | null>(null)
   
-  const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "")
+  useEffect(() => {
+    setMounted(true)
+    if (!url && typeof window !== "undefined") {
+      setShareUrl(window.location.href)
+    }
+    
+    // Dynamically import Menu components only on client
+    if (typeof window !== "undefined") {
+      import("@/components/ui/dropdown-menu").then((mod) => {
+        setMenuComponents(mod)
+      })
+    }
+  }, [url])
+  
   const shareText = text || `Check out ${title} on SeeMyCampus!`
 
   const handleCopy = async () => {
@@ -79,43 +89,69 @@ export function ShareButton({
     }
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+  // Prevent hydration mismatch by only rendering dropdown after mount and Menu components are loaded
+  if (!mounted || !MenuComponents) {
+    return (
+      <button
+        type="button"
         className={cn(buttonVariants({ variant }), className)}
-        onClick={(e) => {
-          if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function" && window.innerWidth < 768) {
-            e.preventDefault()
-            nativeShare()
-          }
-        }}
+        disabled
+        aria-label="Share"
+        suppressHydrationWarning
       >
         <Share2 className={`h-4 w-4 ${showLabel ? "mr-2" : ""}`} />
         {showLabel && "Share"}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-        <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
-          {copied ? (
-            <Check className="h-4 w-4 mr-2 text-green-600" />
-          ) : (
-            <Copy className="h-4 w-4 mr-2" />
-          )}
-          {copied ? "Copied!" : "Copy Link"}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleShare("twitter")} className="cursor-pointer">
-          <Twitter className="h-4 w-4 mr-2 text-[#1DA1F2]" />
-          Twitter
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleShare("facebook")} className="cursor-pointer">
-          <Facebook className="h-4 w-4 mr-2 text-[#1877F2]" />
-          Facebook
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleShare("linkedin")} className="cursor-pointer">
-          <Linkedin className="h-4 w-4 mr-2 text-[#0A66C2]" />
-          LinkedIn
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </button>
+    )
+  }
+
+  const {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } = MenuComponents
+
+  return (
+    <div suppressHydrationWarning>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(buttonVariants({ variant }), className)}
+          onClick={(e) => {
+            if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function" && window.innerWidth < 768) {
+              e.preventDefault()
+              nativeShare()
+            }
+          }}
+        >
+          <Share2 className={`h-4 w-4 ${showLabel ? "mr-2" : ""}`} />
+          {showLabel && "Share"}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-48">
+          <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
+            {copied ? (
+              <Check className="h-4 w-4 mr-2 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4 mr-2" />
+            )}
+            {copied ? "Copied!" : "Copy Link"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleShare("twitter")} className="cursor-pointer">
+            <Twitter className="h-4 w-4 mr-2 text-[#1DA1F2]" />
+            Twitter
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleShare("facebook")} className="cursor-pointer">
+            <Facebook className="h-4 w-4 mr-2 text-[#1877F2]" />
+            Facebook
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleShare("linkedin")} className="cursor-pointer">
+            <Linkedin className="h-4 w-4 mr-2 text-[#0A66C2]" />
+            LinkedIn
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
+
 

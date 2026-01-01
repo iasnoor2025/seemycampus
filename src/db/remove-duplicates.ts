@@ -18,10 +18,20 @@ const connectionString = process.env.DATABASE_URL
 const client = postgres(connectionString)
 const db = drizzle(client, { schema })
 
-import { colleges } from "./schema"
+import { colleges, courses } from "./schema"
+import { and } from "drizzle-orm"
+
+// Function to normalize college name for comparison
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
 // Function to calculate completeness score for a college
-function getCompletenessScore(college: any): number {
+function getCompletenessScore(college: any, courseCount: number = 0): number {
   let score = 0
   
   // Basic fields (required)
@@ -62,97 +72,158 @@ function getCompletenessScore(college: any): number {
     if (hasValidImage) score += 10
   }
   
+  // Course count bonus (max 10 points)
+  if (courseCount > 0) {
+    score += Math.min(10, courseCount * 0.5) // 0.5 points per course, max 10
+  }
+  
   return score
 }
 
-async function removeDuplicates() {
+// Function to merge courses from duplicate colleges
+async function mergeCourses(keepCollegeId: number, duplicateCollegeIds: number[]): Promise<number> {
+  let mergedCount = 0
+  
+  for (const duplicateId of duplicateCollegeIds) {
+    // Get courses from duplicate college
+    const duplicateCourses = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.collegeId, duplicateId))
+    
+    for (const course of duplicateCourses) {
+      // Check if course with same name already exists in kept college
+      const existingCourse = await db
+        .select()
+        .from(courses)
+        .where(
+          and(
+            eq(courses.collegeId, keepCollegeId),
+            eq(courses.name, course.name)
+          )
+        )
+        .limit(1)
+      
+      if (existingCourse.length === 0) {
+        // Course doesn't exist in kept college, update it to point to kept college
+        await db
+          .update(courses)
+          .set({
+            collegeId: keepCollegeId,
+            updatedAt: new Date()
+          })
+          .where(eq(courses.id, course.id))
+        
+        mergedCount++
+      } else {
+        // Course already exists, delete duplicate
+        await db.delete(courses).where(eq(courses.id, course.id))
+      }
+    }
+  }
+  
+  return mergedCount
+}
+
+async function removeDuplicates(closeConnection: boolean = true) {
   try {
-    console.log("🔍 Finding and removing duplicate colleges...\n")
+    console.log("🧹 Starting duplicate college removal process...\n")
+    console.log("⚠️  This will keep colleges with the most complete data and delete duplicates\n")
 
     // Get all colleges
     const allColleges = await db.select().from(colleges)
     console.log(`📊 Total colleges: ${allColleges.length}\n`)
 
-    // Group colleges by name (case-insensitive) and slug
-    const collegesByName = new Map<string, any[]>()
-    const collegesBySlug = new Map<string, any[]>()
+    // Group colleges by normalized name and location (city + state)
+    const collegeGroups = new Map<string, any[]>()
 
     for (const college of allColleges) {
-      const nameKey = college.name.toLowerCase().trim()
-      const slugKey = college.slug.toLowerCase().trim()
-
-      // Group by name
-      if (!collegesByName.has(nameKey)) {
-        collegesByName.set(nameKey, [])
+      const normalizedName = normalizeName(college.name)
+      const city = (college.city || "").toLowerCase().trim()
+      const state = (college.state || "").toLowerCase().trim()
+      const locationKey = `${normalizedName}|${city}|${state}`
+      
+      if (!collegeGroups.has(locationKey)) {
+        collegeGroups.set(locationKey, [])
       }
-      collegesByName.get(nameKey)!.push(college)
-
-      // Group by slug
-      if (!collegesBySlug.has(slugKey)) {
-        collegesBySlug.set(slugKey, [])
-      }
-      collegesBySlug.get(slugKey)!.push(college)
+      collegeGroups.get(locationKey)!.push(college)
     }
 
-    // Find duplicates
+    // Filter to only groups with duplicates (2+ colleges)
+    const duplicateGroups = new Map<string, any[]>()
+    for (const [key, group] of collegeGroups.entries()) {
+      if (group.length > 1) {
+        duplicateGroups.set(key, group)
+      }
+    }
+
+    if (duplicateGroups.size === 0) {
+      console.log("✅ No duplicate colleges found!")
+      return {
+        duplicatesFound: 0,
+        duplicatesRemoved: 0,
+        coursesMerged: 0
+      }
+    }
+
+    console.log(`📋 Found ${duplicateGroups.size} groups of duplicate colleges\n`)
+
     const duplicatesToRemove = new Set<number>()
-    let duplicateGroups = 0
+    let totalCoursesMerged = 0
 
-    // Check name duplicates
-    for (const [name, collegesList] of collegesByName.entries()) {
-      if (collegesList.length > 1) {
-        duplicateGroups++
-        console.log(`\n🔍 Found ${collegesList.length} colleges with name: "${name}"`)
-        
-        // Calculate scores for each
-        const collegesWithScores = collegesList.map(college => ({
-          college,
-          score: getCompletenessScore(college)
-        }))
-        
-        // Sort by score (highest first), then by ID (keep the one created first)
-        collegesWithScores.sort((a, b) => {
-          if (b.score !== a.score) return b.score - a.score
-          return a.college.id - b.college.id
-        })
-
-        // Keep the first one (highest score), mark others for deletion
-        const [keep, ...toRemove] = collegesWithScores
-        console.log(`  ✅ Keeping: ID ${keep.college.id} (Score: ${keep.score})`)
-        
-        for (const { college: toDelete } of toRemove) {
-          console.log(`  ❌ Removing: ID ${toDelete.id} (Score: ${getCompletenessScore(toDelete)})`)
-          duplicatesToRemove.add(toDelete.id)
-        }
-      }
-    }
-
-    // Check slug duplicates (might catch different cases)
-    for (const [slug, collegesList] of collegesBySlug.entries()) {
-      if (collegesList.length > 1) {
-        // Only process if not already marked for removal
-        const notMarked = collegesList.filter(c => !duplicatesToRemove.has(c.id))
-        if (notMarked.length > 1) {
-          console.log(`\n🔍 Found ${collegesList.length} colleges with slug: "${slug}"`)
+    // Process each duplicate group
+    for (const [key, group] of duplicateGroups.entries()) {
+      const collegeName = group[0].name
+      console.log(`\n📦 Processing group: ${collegeName}`)
+      console.log(`   Found ${group.length} duplicates`)
+      
+      // Calculate completeness score for each college in the group (including course count)
+      const collegesWithScores = await Promise.all(
+        group.map(async (college) => {
+          // Get course count for each college
+          const courseCountResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(courses)
+            .where(eq(courses.collegeId, college.id))
           
-          const collegesWithScores = notMarked.map(college => ({
+          const coursesCount = Number(courseCountResult[0]?.count || 0)
+          
+          // Calculate completeness score
+          const score = getCompletenessScore(college, coursesCount)
+          
+          return {
             college,
-            score: getCompletenessScore(college)
-          }))
-          
-          collegesWithScores.sort((a, b) => {
-            if (b.score !== a.score) return b.score - a.score
-            return a.college.id - b.college.id
-          })
-
-          const [keep, ...toRemove] = collegesWithScores
-          console.log(`  ✅ Keeping: ID ${keep.college.id} (Score: ${keep.score})`)
-          
-          for (const { college: toDelete } of toRemove) {
-            console.log(`  ❌ Removing: ID ${toDelete.id} (Score: ${getCompletenessScore(toDelete)})`)
-            duplicatesToRemove.add(toDelete.id)
+            score,
+            coursesCount
           }
-        }
+        })
+      )
+      
+      // Sort by score (highest first), then by course count, then by ID (newest first)
+      collegesWithScores.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        if (b.coursesCount !== a.coursesCount) return b.coursesCount - a.coursesCount
+        return b.college.id - a.college.id // Keep newer one if scores are equal
+      })
+
+      const keepCollege = collegesWithScores[0].college
+      const duplicatesToRemoveInGroup = collegesWithScores.slice(1)
+      
+      console.log(`   ✅ Keeping: ${keepCollege.name} (ID: ${keepCollege.id}, Score: ${collegesWithScores[0].score.toFixed(1)}, Courses: ${collegesWithScores[0].coursesCount})`)
+      
+      // Merge courses from duplicates to kept college
+      const duplicateIds = duplicatesToRemoveInGroup.map(c => c.college.id)
+      const coursesMerged = await mergeCourses(keepCollege.id, duplicateIds)
+      totalCoursesMerged += coursesMerged
+      
+      if (coursesMerged > 0) {
+        console.log(`   📚 Merged ${coursesMerged} course(s) to kept college`)
+      }
+      
+      // Mark duplicates for removal
+      for (const duplicate of duplicatesToRemoveInGroup) {
+        console.log(`   🗑️  Marking for deletion: ${duplicate.college.name} (ID: ${duplicate.college.id}, Score: ${duplicate.score.toFixed(1)}, Courses: ${duplicate.coursesCount})`)
+        duplicatesToRemove.add(duplicate.college.id)
       }
     }
 
@@ -174,30 +245,49 @@ async function removeDuplicates() {
       
       console.log(`\n✨ Successfully removed ${idsToRemove.length} duplicate colleges!`)
     } else {
-      console.log("\n✅ No duplicates found!")
+      console.log("\n✅ No duplicates to remove!")
     }
 
     // Final count
     const finalCount = await db.select().from(colleges)
-    console.log(`\n📊 Final college count: ${finalCount.length}`)
-    console.log(`   Removed: ${allColleges.length - finalCount.length} duplicates`)
+    console.log(`\n📊 Summary:`)
+    console.log(`   - Duplicate groups found: ${duplicateGroups.size}`)
+    console.log(`   - Duplicates removed: ${duplicatesToRemove.size}`)
+    console.log(`   - Courses merged: ${totalCoursesMerged}`)
+    console.log(`   - Final college count: ${finalCount.length}`)
+    console.log(`   - Removed: ${allColleges.length - finalCount.length} duplicates`)
+    
+    return {
+      duplicatesFound: duplicateGroups.size,
+      duplicatesRemoved: duplicatesToRemove.size,
+      coursesMerged: totalCoursesMerged
+    }
     
   } catch (error) {
     console.error("❌ Error removing duplicates:", error)
     throw error
+  } finally {
+    if (closeConnection) {
+      await client.end()
+    }
   }
 }
 
-// Run
-removeDuplicates()
-  .then(() => {
-    console.log("✅ Duplicate removal script completed successfully")
-    process.exit(0)
-  })
-  .catch((error) => {
-    console.error("❌ Duplicate removal script failed:", error)
-    process.exit(1)
-  })
+// Run if called directly (from command line)
+if (require.main === module) {
+  removeDuplicates()
+    .then((result) => {
+      console.log("\n✅ Duplicate removal script completed successfully")
+      if (result) {
+        console.log(JSON.stringify(result, null, 2))
+      }
+      process.exit(0)
+    })
+    .catch((error) => {
+      console.error("\n❌ Duplicate removal script failed:", error)
+      process.exit(1)
+    })
+}
 
 export { removeDuplicates }
 

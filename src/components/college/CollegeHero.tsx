@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MapPin, Globe, Mail, Phone, GitCompare } from "lucide-react"
@@ -37,7 +37,7 @@ export function CollegeHero({
   const displayLocation = city || location || "Location not specified"
 
   const handleCompare = () => {
-    if (!collegeId) return
+    if (!collegeId || typeof window === "undefined") return
     
     // Get existing comparison colleges from localStorage
     const saved = localStorage.getItem("comparison_colleges")

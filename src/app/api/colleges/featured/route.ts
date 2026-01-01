@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 import { getAllColleges } from "@/lib/colleges"
+import { db } from "@/db"
+import { courses } from "@/db/schema"
+import { eq, or, ilike } from "drizzle-orm"
 
 // Helper function to determine college category from name and description
 function getCollegeCategory(college: { name: string; description?: string | null }): string[] {
@@ -87,6 +90,22 @@ export async function GET(request: Request) {
     // Get all colleges
     const allColleges = await getAllColleges()
 
+    // For BBA category, get colleges that have BBA courses
+    let bbaCollegeIds: Set<number> = new Set()
+    if (category === "bba") {
+      const bbaCourses = await db
+        .selectDistinct({ collegeId: courses.collegeId })
+        .from(courses)
+        .where(
+          or(
+            ilike(courses.name, "%bba%"),
+            ilike(courses.name, "%bbm%")
+          )!
+        )
+      
+      bbaCollegeIds = new Set(bbaCourses.map(c => c.collegeId))
+    }
+
     // Filter colleges by category
     const filteredColleges = allColleges
       .map((college) => {
@@ -97,6 +116,10 @@ export async function GET(request: Request) {
         }
       })
       .filter((college) => {
+        // For BBA category, check if college has BBA courses OR matches name/description
+        if (category === "bba") {
+          return bbaCollegeIds.has(college.id) || college.categories.includes("bba")
+        }
         // Handle bba as part of management for display
         if (category === "management") {
           return college.categories.includes("management") || college.categories.includes("bba")

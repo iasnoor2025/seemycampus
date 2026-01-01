@@ -20,7 +20,9 @@ import {
   BookOpen,
   Heart,
   UserCheck,
-  Shield
+  Shield,
+  Sparkles,
+  CheckCircle2
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -47,6 +49,20 @@ const allMenuItems = [
     icon: Building2,
     roles: ["admin", "moderator", "staff"],
     featureKey: "dashboard_colleges",
+  },
+  {
+    title: "AI Enrichment",
+    href: "/dashboard/enrichment",
+    icon: Sparkles,
+    roles: ["admin"],
+    featureKey: null, // AI Enrichment is always available for admins
+  },
+  {
+    title: "Enrichment Results",
+    href: "/dashboard/enrichment/results",
+    icon: CheckCircle2,
+    roles: ["admin"],
+    featureKey: null, // Enrichment Results is always available for admins
   },
   {
     title: "Cutoffs",

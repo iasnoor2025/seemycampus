@@ -25,6 +25,8 @@
     "db:scrape:diploma": "tsx src/db/scrape-external-specific.ts",
     "db:update:exam-dates": "tsx src/db/auto-update-exam-dates.ts",
     "db:generate-slugs": "tsx scripts/generate-missing-slugs.ts",
+    "db:enrich:ollama": "tsx src/db/ollama-enrich-data.ts",
+    "db:fix-review-dates": "tsx src/db/fix-review-dates.ts",
     "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {
