@@ -28,6 +28,7 @@
     "db:generate-slugs": "tsx scripts/generate-missing-slugs.ts",
     "db:enrich:ollama": "tsx src/db/ollama-enrich-data.ts",
     "db:fix-review-dates": "tsx src/db/fix-review-dates.ts",
+    "db:import:linkingsky": "tsx src/db/import-linkingsky.ts",
     "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {

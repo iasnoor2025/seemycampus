@@ -20,7 +20,30 @@ export default async function CoursesPage() {
   }
 
   const allCourses = await db.select().from(courses)
-  const totalCourses = allCourses.length
+  
+  // Count unique course names
+  const uniqueCourseNames = new Set(allCourses.map((c) => c.name.toLowerCase().trim()))
+  const totalCourses = uniqueCourseNames.size
+
+  // Count unique courses by level
+  const uniqueUndergraduate = new Set(
+    allCourses
+      .filter((c) => c.level === "undergraduate")
+      .map((c) => c.name.toLowerCase().trim())
+  ).size
+
+  const uniqueGraduate = new Set(
+    allCourses
+      .filter((c) => c.level === "graduate")
+      .map((c) => c.name.toLowerCase().trim())
+  ).size
+
+  // Count unique courses by study mode
+  const uniqueOnline = new Set(
+    allCourses
+      .filter((c) => c.studyMode === "online")
+      .map((c) => c.name.toLowerCase().trim())
+  ).size
 
   return (
     <div className="p-8">
@@ -53,7 +76,7 @@ export default async function CoursesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allCourses.filter((c) => c.level === "undergraduate").length}
+              {uniqueUndergraduate}
             </div>
             <p className="text-xs text-muted-foreground">
               UG courses
@@ -68,7 +91,7 @@ export default async function CoursesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allCourses.filter((c) => c.level === "graduate").length}
+              {uniqueGraduate}
             </div>
             <p className="text-xs text-muted-foreground">
               PG courses
@@ -83,7 +106,7 @@ export default async function CoursesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allCourses.filter((c) => c.studyMode === "online").length}
+              {uniqueOnline}
             </div>
             <p className="text-xs text-muted-foreground">
               Online courses

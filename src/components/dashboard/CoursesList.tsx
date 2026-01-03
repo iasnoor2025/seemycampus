@@ -1,8 +1,16 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { BookOpen, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { BookOpen, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -134,15 +142,14 @@ export function CoursesList() {
     return college?.name || "Unknown"
   }
 
-  // Filter courses based on search term
+  // Filter courses based on search term (by college name)
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
-      const matchesSearch =
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      return matchesSearch
+      if (!searchTerm) return true
+      const collegeName = getCollegeName(course.collegeId).toLowerCase()
+      return collegeName.includes(searchTerm.toLowerCase())
     }).sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
-  }, [courses, searchTerm])
+  }, [courses, searchTerm, colleges])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE)
@@ -202,32 +209,49 @@ export function CoursesList() {
     <>
       <div className="space-y-6">
         {/* Header with Add Button and Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="relative flex-1">
-            <input
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+          {/* Search Field */}
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
               type="text"
-              placeholder="Search courses..."
+              placeholder="Search by college name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              className="pl-10 h-10"
             />
-            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="flex gap-2 sm:gap-4">
-            <select
+          
+          {/* Filter and Action Buttons */}
+          <div className="flex gap-3 flex-shrink-0">
+            <Select
               value={selectedCollege}
-              onChange={(e) => setSelectedCollege(e.target.value)}
-              className="flex-1 sm:flex-none px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm min-w-0"
+              onValueChange={(value) => setSelectedCollege(value)}
             >
-              <option value="">All Colleges</option>
-              {colleges.map((college) => (
-                <option key={college.id} value={college.id}>
-                  {college.name}
-                </option>
-              ))}
-            </select>
-            <Button className="flex items-center gap-1 sm:gap-2 whitespace-nowrap" onClick={handleAdd}>
-              <Plus className="h-4 w-4" />
+              <SelectTrigger className="w-[220px] sm:w-[280px] lg:w-[320px] h-10 [&_[data-slot=select-value]]:truncate [&_[data-slot=select-value]]:pr-6 [&_[data-slot=select-value]]:max-w-full">
+                <SelectValue placeholder="All Colleges">
+                  {(value: string | null) => {
+                    if (!value || value === "") return "All Colleges"
+                    const college = colleges.find((c) => c.id.toString() === value)
+                    return college?.name || "All Colleges"
+                  }}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-w-[400px]">
+                <SelectItem value="">All Colleges</SelectItem>
+                {colleges.map((college) => (
+                  <SelectItem key={college.id} value={college.id.toString()}>
+                    {college.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              onClick={handleAdd}
+              className="h-10 px-4 sm:px-6 whitespace-nowrap shadow-sm flex-shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Add Course</span>
               <span className="sm:hidden">Add</span>
             </Button>

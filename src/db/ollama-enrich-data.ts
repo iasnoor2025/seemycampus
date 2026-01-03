@@ -1558,69 +1558,105 @@ async function fetchUniversitiesFromLinkingsky(): Promise<{ added: number; skipp
     const html = await response.text()
     console.log(`✅ Fetched ${html.length} characters of HTML\n`)
     
-    // Use Ollama to extract university data from HTML
-    console.log("🤖 Using Ollama to extract university data from HTML...\n")
+    // Use Ollama to extract ALL university data from HTML
+    // Send full HTML with clear instructions to extract everything
+    console.log("🤖 Using Ollama to extract ALL universities from HTML...\n")
+    console.log("⚠️  This may take a few minutes as we extract all 1198+ universities...\n")
     
-    const prompt = `Extract all universities/colleges from the following HTML content of a webpage listing universities in India.
+    let universitiesData: any[] = []
+    
+    // Process HTML in smaller chunks by state sections to avoid timeout
+    // Split by state headings (h2 or h3 with state names)
+    const statePattern = /<h[23][^>]*>.*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\(?\d+\)?.*?<\/h[23]>/gi
+    const stateMatches = [...html.matchAll(statePattern)]
+    
+    console.log(`📊 Found ${stateMatches.length} state sections in HTML\n`)
+    console.log("🔄 Processing each state section separately to avoid timeout...\n")
+    
+    // Process each state section
+    for (let i = 0; i < stateMatches.length; i++) {
+      const match = stateMatches[i]
+      const stateName = match[1]
+      const startIndex = match.index || 0
+      const endIndex = i < stateMatches.length - 1 ? (stateMatches[i + 1].index || html.length) : html.length
+      const stateSection = html.substring(startIndex, Math.min(endIndex, startIndex + 50000)) // Limit to 50KB per section
+      
+      console.log(`  Processing state ${i + 1}/${stateMatches.length}: ${stateName}...`)
+      
+      const prompt = `Extract ALL universities/colleges from this HTML section for ${stateName} state.
 
-The webpage contains universities organized by state and categories (Central Government, State Government, Private, Deemed, Autonomous Higher Education Institutes, etc.).
+The section contains universities organized by categories:
+- Central Government
+- State Government  
+- Private
+- Deemed (Private)
+- Deemed (Government)
+- Autonomous Higher Education Institutes
+- Research Institutes
+- Exam Conducting Agencies
 
-Extract each university with the following information:
+Extract EVERY university with:
 - Full official name
-- State (from the state section it appears in)
-- Category (Central Government, State Government, Private, Deemed, Autonomous Higher Education Institutes, Research Institutes, Exam Conducting Agencies)
-- City (if mentioned in the name or context)
+- State: "${stateName}"
+- Category (from subheading)
+- City (if mentioned)
 
-HTML Content:
-${html.substring(0, 50000)}${html.length > 50000 ? "\n\n... (truncated, but continue extracting from the full content)" : ""}
+HTML Section:
+${stateSection}
 
-Return a JSON array with this exact format:
+Return JSON array:
 [
-  {
-    "name": "Indian Institute of Technology Delhi",
-    "state": "Delhi",
-    "category": "Autonomous Higher Education Institutes",
-    "city": "New Delhi"
-  },
-  {
-    "name": "Delhi University",
-    "state": "Delhi",
-    "category": "State Government",
-    "city": "Delhi"
-  }
+  {"name": "University Name", "state": "${stateName}", "category": "Category", "city": "City or null"}
 ]
 
-Important:
-- Extract ALL universities from the HTML
-- Use the full official name as it appears
-- Determine state from the section heading (e.g., "Delhi (64)" means state is "Delhi")
-- Determine category from the subheading (Central Government, State Government, Private, etc.)
-- Extract city if mentioned in the name or can be inferred
-- Include universities from ALL states and ALL categories
-- Return ONLY the JSON array, no other text or markdown`
-
-    const ollamaResponse = await ollama.chat([{
-      role: "user",
-      content: prompt
-    }])
-    
-    // Extract JSON array from response
-    let jsonStr = ollamaResponse.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+Extract ALL universities from this ${stateName} section.`
+      
+      try {
+        const ollamaResponse = await ollama.chat([{
+          role: "user",
+          content: prompt
+        }])
+      
+        // Extract JSON array from response
+        let jsonStr = ollamaResponse.trim()
+        if (jsonStr.includes("```json")) {
+          jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+        } else if (jsonStr.includes("```")) {
+          jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+        }
+        
+        // Remove any leading/trailing non-JSON text
+        const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
+        if (arrayMatch) {
+          jsonStr = arrayMatch[0]
+        }
+        
+        const stateUniversities = JSON.parse(jsonStr)
+        universitiesData = universitiesData.concat(stateUniversities)
+        
+        console.log(`    ✅ Extracted ${stateUniversities.length} universities from ${stateName}`)
+        
+        // Small delay between states
+        await new Promise(resolve => setTimeout(resolve, 3000))
+      } catch (error) {
+        console.error(`    ⚠️  Error processing ${stateName}:`, error)
+        // Continue with next state
+      }
     }
     
-    // Remove any leading/trailing non-JSON text
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
+    // Remove duplicates based on normalized name
+    const uniqueUniversities = new Map<string, any>()
+    for (const uni of universitiesData) {
+      if (!uni.name) continue
+      const normalized = normalizeName(uni.name)
+      if (!uniqueUniversities.has(normalized)) {
+        uniqueUniversities.set(normalized, uni)
+      }
     }
     
-    const universitiesData = JSON.parse(jsonStr)
+    universitiesData = Array.from(uniqueUniversities.values())
     
-    console.log(`📋 Extracted ${universitiesData.length} universities from HTML\n`)
+    console.log(`\n📋 Extracted ${universitiesData.length} unique universities from HTML\n`)
     
     // Get existing college names and slugs for comparison
     const existingColleges = await db.select({ name: colleges.name, slug: colleges.slug, city: colleges.city, state: colleges.state }).from(colleges)
