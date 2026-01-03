@@ -34,8 +34,8 @@ export function MessageList({ messages, onQuickReply, disabled = false }: Messag
               <Card
                 className={
                   message.role === "user"
-                    ? "bg-gradient-to-br from-[#18254a] to-[#1a2d5a] text-white shadow-md border-0"
-                    : "bg-white border border-gray-200 shadow-sm"
+                    ? "bg-gradient-to-br from-[#18254a] to-[#1a2d5a] text-white shadow-lg border-0 backdrop-blur-sm"
+                    : "bg-white border-2 border-gray-300 shadow-lg backdrop-blur-sm"
                 }
               >
                 <CardContent className="p-3 sm:p-4">

@@ -108,10 +108,54 @@ Return ONLY the corrected name, no explanation, no quotes, no JSON, just the nam
   }
 }
 
-// Function to check what data is missing for a college
-function getMissingFields(college: any): string[] {
-  const missing: string[] = []
+// Function to validate Indian phone number format
+function isValidIndianPhone(phone: string | null | undefined): boolean {
+  if (!phone) return false
   
+  const cleaned = phone.replace(/[\s\-()]/g, "")
+  // Indian phone numbers: +91 followed by 10 digits, or 10 digits starting with 6-9
+  const patterns = [
+    /^\+91[6-9]\d{9}$/, // +91XXXXXXXXXX
+    /^91[6-9]\d{9}$/,   // 91XXXXXXXXXX
+    /^0[6-9]\d{9}$/,    // 0XXXXXXXXXX
+    /^[6-9]\d{9}$/      // XXXXXXXXXX
+  ]
+  
+  return patterns.some(pattern => pattern.test(cleaned))
+}
+
+// Function to normalize Indian phone number
+function normalizePhoneNumber(phone: string): string {
+  if (!phone) return phone
+  
+  let cleaned = phone.replace(/[\s\-()]/g, "")
+  
+  // Remove country code if present
+  if (cleaned.startsWith("+91")) {
+    cleaned = cleaned.substring(3)
+  } else if (cleaned.startsWith("91") && cleaned.length === 12) {
+    cleaned = cleaned.substring(2)
+  }
+  
+  // Remove leading 0 if present
+  if (cleaned.startsWith("0") && cleaned.length === 11) {
+    cleaned = cleaned.substring(1)
+  }
+  
+  // Format as +91-XXXXXXXXXX
+  if (cleaned.length === 10 && /^[6-9]\d{9}$/.test(cleaned)) {
+    return `+91-${cleaned}`
+  }
+  
+  return phone // Return original if can't normalize
+}
+
+// Function to check what data is missing or needs verification for a college
+function getFieldsToCheck(college: any): { missing: string[]; needsVerification: string[] } {
+  const missing: string[] = []
+  const needsVerification: string[] = []
+  
+  // Check missing fields
   if (!college.description || college.description.trim() === "") missing.push("description")
   if (!college.ranking) missing.push("ranking")
   if (!college.establishedYear) missing.push("establishedYear")
@@ -127,22 +171,89 @@ function getMissingFields(college: any): string[] {
   if (!college.email) missing.push("email")
   if (!college.phone) missing.push("phone")
   
-  return missing
+  // Check fields that need verification (even if they exist)
+  if (college.ranking) {
+    // Verify ranking is realistic (1-1000 for NIRF, or reasonable range)
+    if (college.ranking < 1 || college.ranking > 10000) {
+      needsVerification.push("ranking")
+    }
+  }
+  
+  if (college.phone) {
+    // Verify phone number format
+    if (!isValidIndianPhone(college.phone)) {
+      needsVerification.push("phone")
+    }
+  }
+  
+  if (college.establishedYear) {
+    // Verify established year is realistic (1800-2024)
+    if (college.establishedYear < 1800 || college.establishedYear > new Date().getFullYear()) {
+      needsVerification.push("establishedYear")
+    }
+  }
+  
+  if (college.email) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(college.email)) {
+      needsVerification.push("email")
+    }
+  }
+  
+  if (college.website) {
+    // Basic URL validation
+    try {
+      new URL(college.website)
+    } catch {
+      needsVerification.push("website")
+    }
+  }
+  
+  return { missing, needsVerification }
 }
 
-// Function to enrich college data using Ollama
-async function enrichCollegeData(college: any, missingFields: string[]): Promise<Partial<any>> {
-  const prompt = `You are a data enrichment assistant for Indian colleges. Based on the following college information, provide the missing data in JSON format.
+// Function to enrich and verify college data using Ollama
+async function enrichCollegeData(college: any, missingFields: string[], needsVerification: string[]): Promise<Partial<any>> {
+  const allFieldsToCheck = [...new Set([...missingFields, ...needsVerification])]
+  
+  if (allFieldsToCheck.length === 0) {
+    return {}
+  }
+  
+  const currentData: any = {}
+  if (college.ranking) currentData.ranking = college.ranking
+  if (college.phone) currentData.phone = college.phone
+  if (college.email) currentData.email = college.email
+  if (college.website) currentData.website = college.website
+  if (college.establishedYear) currentData.establishedYear = college.establishedYear
+  if (college.description) currentData.description = college.description.substring(0, 200)
+  if (college.accreditation) currentData.accreditation = college.accreditation
+  if (college.ownership) currentData.ownership = college.ownership
+  
+  const prompt = `You are a data verification and enrichment assistant for Indian colleges. Search the internet to find ACCURATE and VERIFIED information.
 
 College Name: ${college.name}
 Location: ${college.location || "Unknown"}
 City: ${college.city || "Unknown"}
 State: ${college.state || "Unknown"}
-${college.website ? `Website: ${college.website}` : ""}
+${college.website ? `Current Website: ${college.website}` : ""}
 
-Missing fields to fill: ${missingFields.join(", ")}
+Fields to check/update: ${allFieldsToCheck.join(", ")}
 
-Please provide a JSON object with ONLY the missing fields. Use this exact format:
+${needsVerification.length > 0 ? `Current data that needs verification:
+${needsVerification.map(field => {
+  if (field === "ranking" && currentData.ranking) return `- Ranking: ${currentData.ranking} (verify if this is correct NIRF/other ranking)`
+  if (field === "phone" && currentData.phone) return `- Phone: ${currentData.phone} (verify and correct format if needed)`
+  if (field === "email" && currentData.email) return `- Email: ${currentData.email} (verify if this is the official email)`
+  if (field === "website" && currentData.website) return `- Website: ${currentData.website} (verify if this is the official website)`
+  if (field === "establishedYear" && currentData.establishedYear) return `- Established Year: ${currentData.establishedYear} (verify if this is correct)`
+  return `- ${field}: ${currentData[field] || "N/A"} (verify and correct)`
+}).join("\n")}
+
+IMPORTANT: Verify these fields by searching the internet. If the current data is WRONG, provide the CORRECTED value.` : ""}
+
+Please provide a JSON object with ALL fields that need to be updated (missing or corrected). Use this exact format:
 {
   "description": "Brief description of the college (2-3 sentences)",
   "ranking": 123,
@@ -155,15 +266,20 @@ Please provide a JSON object with ONLY the missing fields. Use this exact format
   "ownership": "Private",
   "campusSize": "50 acres",
   "totalStudents": 5000,
-  "website": "https://example.com",
-  "email": "info@example.com",
+  "website": "https://www.example.ac.in",
+  "email": "info@example.ac.in",
   "phone": "+91-1234567890"
 }
 
-Important:
-- Only include fields that are in the missing fields list
-- Use realistic values for Indian colleges
-- Ranking should be a number (NIRF ranking if available)
+CRITICAL REQUIREMENTS:
+- Search the internet/college website to find OFFICIAL and ACCURATE information
+- For RANKING: Provide NIRF ranking if available, or other official ranking. Must be a number between 1-1000 for top colleges, or reasonable range.
+- For PHONE: Must be valid Indian phone number format: +91-XXXXXXXXXX (10 digits starting with 6-9). Verify from official website.
+- For EMAIL: Must be valid email format from official college domain.
+- For WEBSITE: Must be valid URL, preferably official college website (.ac.in, .edu.in, etc.)
+- For ESTABLISHED YEAR: Must be realistic year (1800-2024)
+- Only include fields that are in the list: ${allFieldsToCheck.join(", ")}
+- Use REALISTIC values based on actual internet search
 - Fees should be in INR (no currency symbols)
 - Entrance exams should be an array of strings
 - Return ONLY valid JSON, no other text or markdown`
@@ -192,21 +308,71 @@ Important:
     
     // Validate and clean the data
     const cleaned: any = {}
-    for (const field of missingFields) {
+    for (const field of allFieldsToCheck) {
       if (enrichedData[field] !== undefined && enrichedData[field] !== null) {
-        // Type validation
-        if (field === "ranking" || field === "establishedYear" || field === "hostelFees" || 
-            field === "averagePackage" || field === "highestPackage" || field === "totalStudents") {
+        // Type validation and correction
+        if (field === "ranking") {
+          const numValue = parseInt(enrichedData[field])
+          if (!isNaN(numValue) && numValue > 0 && numValue <= 10000) {
+            // Only update if significantly different or if current is invalid
+            if (!college.ranking || Math.abs(college.ranking - numValue) > 10 || college.ranking < 1 || college.ranking > 10000) {
+              cleaned[field] = numValue
+            }
+          }
+        } else if (field === "phone") {
+          const phoneStr = String(enrichedData[field]).trim()
+          const normalized = normalizePhoneNumber(phoneStr)
+          if (isValidIndianPhone(normalized)) {
+            // Only update if current is invalid or significantly different
+            if (!college.phone || !isValidIndianPhone(college.phone) || normalized !== college.phone) {
+              cleaned[field] = normalized
+            }
+          }
+        } else if (field === "email") {
+          const emailStr = String(enrichedData[field]).trim()
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (emailRegex.test(emailStr)) {
+            // Only update if current is invalid or different
+            if (!college.email || !emailRegex.test(college.email) || emailStr !== college.email) {
+              cleaned[field] = emailStr
+            }
+          }
+        } else if (field === "website") {
+          const websiteStr = String(enrichedData[field]).trim()
+          try {
+            const url = new URL(websiteStr)
+            // Only update if current is invalid or different
+            if (!college.website || websiteStr !== college.website) {
+              cleaned[field] = websiteStr
+            }
+          } catch {
+            // Invalid URL, skip
+          }
+        } else if (field === "establishedYear") {
+          const numValue = parseInt(enrichedData[field])
+          const currentYear = new Date().getFullYear()
+          if (!isNaN(numValue) && numValue >= 1800 && numValue <= currentYear) {
+            // Only update if current is invalid or significantly different
+            if (!college.establishedYear || college.establishedYear < 1800 || college.establishedYear > currentYear || 
+                Math.abs(college.establishedYear - numValue) > 5) {
+              cleaned[field] = numValue
+            }
+          }
+        } else if (field === "hostelFees" || field === "averagePackage" || field === "highestPackage" || field === "totalStudents") {
           const numValue = parseInt(enrichedData[field])
           if (!isNaN(numValue) && numValue > 0) {
             cleaned[field] = numValue
           }
         } else if (field === "entranceExams") {
-          if (Array.isArray(enrichedData[field])) {
+          if (Array.isArray(enrichedData[field]) && enrichedData[field].length > 0) {
             cleaned[field] = enrichedData[field]
           }
         } else if (typeof enrichedData[field] === "string" && enrichedData[field].trim() !== "") {
-          cleaned[field] = enrichedData[field].trim()
+          const strValue = enrichedData[field].trim()
+          // Only update if field is missing or significantly different
+          if (!college[field] || strValue !== college[field]) {
+            cleaned[field] = strValue
+          }
         }
       }
     }
@@ -676,8 +842,11 @@ Important:
 
 // Main enrichment function
 async function enrichAllColleges() {
-  console.log("🤖 Starting AI-powered data enrichment with Ollama...\n")
-  console.log("⚠️  This will only update MISSING fields - existing data will be preserved\n")
+  console.log("🤖 Starting AI-powered data enrichment and verification with Ollama...\n")
+  console.log("⚠️  This will:")
+  console.log("   - Fill MISSING fields")
+  console.log("   - VERIFY and CORRECT existing data (ranking, phone, email, website, etc.)")
+  console.log("   - Search internet for accurate information\n")
   
   try {
     const allColleges = await db.select().from(colleges)
@@ -738,15 +907,23 @@ async function enrichAllColleges() {
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
       
-      // 1. Enrich missing data fields
-      const missingFields = getMissingFields(college)
-      if (missingFields.length > 0) {
-        console.log(`  📝 Missing fields: ${missingFields.join(", ")}`)
-        console.log(`  🤖 Enriching with Ollama...`)
+      // 1. Enrich and verify all data fields
+      const { missing, needsVerification } = getFieldsToCheck(college)
+      const allFieldsToCheck = [...new Set([...missing, ...needsVerification])]
+      
+      if (allFieldsToCheck.length > 0) {
+        if (missing.length > 0) {
+          console.log(`  📝 Missing fields: ${missing.join(", ")}`)
+        }
+        if (needsVerification.length > 0) {
+          console.log(`  🔍 Fields needing verification: ${needsVerification.join(", ")}`)
+        }
+        console.log(`  🤖 Searching internet and verifying with Ollama...`)
         
-        const enrichedData = await enrichCollegeData(college, missingFields)
+        const enrichedData = await enrichCollegeData(college, missing, needsVerification)
         
         if (Object.keys(enrichedData).length > 0) {
+          const updatedFields = Object.keys(enrichedData)
           await db
             .update(colleges)
             .set({
@@ -755,17 +932,32 @@ async function enrichAllColleges() {
             })
             .where(eq(colleges.id, college.id))
           
-          console.log(`  ✅ Enriched ${Object.keys(enrichedData).length} fields`)
+          console.log(`  ✅ Updated ${updatedFields.length} field(s): ${updatedFields.join(", ")}`)
+          
+          // Log specific corrections
+          if (enrichedData.ranking && needsVerification.includes("ranking")) {
+            console.log(`    📊 Ranking corrected: ${college.ranking} → ${enrichedData.ranking}`)
+          }
+          if (enrichedData.phone && needsVerification.includes("phone")) {
+            console.log(`    📞 Phone corrected: ${college.phone} → ${enrichedData.phone}`)
+          }
+          if (enrichedData.email && needsVerification.includes("email")) {
+            console.log(`    📧 Email corrected: ${college.email} → ${enrichedData.email}`)
+          }
+          if (enrichedData.website && needsVerification.includes("website")) {
+            console.log(`    🌐 Website corrected: ${college.website} → ${enrichedData.website}`)
+          }
+          
           enrichedCount++
           collegeUpdated = true
         } else {
-          console.log(`  ⚠️  No data extracted`)
+          console.log(`  ⚠️  No data updates needed`)
         }
         
         // Small delay to avoid overwhelming Ollama
         await new Promise(resolve => setTimeout(resolve, 2000))
       } else {
-        console.log(`  ✅ All data fields present`)
+        console.log(`  ✅ All data fields present and verified`)
       }
       
       // 2. Enrich images (logo + campus) - only if logo missing
@@ -792,7 +984,7 @@ async function enrichAllColleges() {
         reviewsAddedCount++
       }
       
-      if (!collegeUpdated && missingFields.length === 0) {
+      if (!collegeUpdated && allFieldsToCheck.length === 0) {
         skippedCount++
       }
       
@@ -1344,5 +1536,186 @@ async function discoverEnrichAndCleanup(state?: string, city?: string) {
   }
 }
 
-export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, correctCollegeName, correctAllCollegeNames }
+// Function to fetch and parse universities from linkingsky.com
+async function fetchUniversitiesFromLinkingsky(): Promise<{ added: number; skipped: number }> {
+  console.log("🌐 Fetching universities from linkingsky.com...\n")
+  
+  const url = "https://linkingsky.com/career-news/universities-list.html"
+  
+  try {
+    // Fetch the webpage
+    console.log(`📡 Fetching: ${url}`)
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+    }
+    
+    const html = await response.text()
+    console.log(`✅ Fetched ${html.length} characters of HTML\n`)
+    
+    // Use Ollama to extract university data from HTML
+    console.log("🤖 Using Ollama to extract university data from HTML...\n")
+    
+    const prompt = `Extract all universities/colleges from the following HTML content of a webpage listing universities in India.
+
+The webpage contains universities organized by state and categories (Central Government, State Government, Private, Deemed, Autonomous Higher Education Institutes, etc.).
+
+Extract each university with the following information:
+- Full official name
+- State (from the state section it appears in)
+- Category (Central Government, State Government, Private, Deemed, Autonomous Higher Education Institutes, Research Institutes, Exam Conducting Agencies)
+- City (if mentioned in the name or context)
+
+HTML Content:
+${html.substring(0, 50000)}${html.length > 50000 ? "\n\n... (truncated, but continue extracting from the full content)" : ""}
+
+Return a JSON array with this exact format:
+[
+  {
+    "name": "Indian Institute of Technology Delhi",
+    "state": "Delhi",
+    "category": "Autonomous Higher Education Institutes",
+    "city": "New Delhi"
+  },
+  {
+    "name": "Delhi University",
+    "state": "Delhi",
+    "category": "State Government",
+    "city": "Delhi"
+  }
+]
+
+Important:
+- Extract ALL universities from the HTML
+- Use the full official name as it appears
+- Determine state from the section heading (e.g., "Delhi (64)" means state is "Delhi")
+- Determine category from the subheading (Central Government, State Government, Private, etc.)
+- Extract city if mentioned in the name or can be inferred
+- Include universities from ALL states and ALL categories
+- Return ONLY the JSON array, no other text or markdown`
+
+    const ollamaResponse = await ollama.chat([{
+      role: "user",
+      content: prompt
+    }])
+    
+    // Extract JSON array from response
+    let jsonStr = ollamaResponse.trim()
+    if (jsonStr.includes("```json")) {
+      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+    } else if (jsonStr.includes("```")) {
+      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    }
+    
+    // Remove any leading/trailing non-JSON text
+    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0]
+    }
+    
+    const universitiesData = JSON.parse(jsonStr)
+    
+    console.log(`📋 Extracted ${universitiesData.length} universities from HTML\n`)
+    
+    // Get existing college names and slugs for comparison
+    const existingColleges = await db.select({ name: colleges.name, slug: colleges.slug, city: colleges.city, state: colleges.state }).from(colleges)
+    const existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
+    const existingSlugs = new Set(existingColleges.map(c => c.slug))
+    
+    console.log(`📊 Found ${existingColleges.length} existing colleges in database\n`)
+    
+    let added = 0
+    let skipped = 0
+    
+    // Process each university
+    for (let i = 0; i < universitiesData.length; i++) {
+      const universityData = universitiesData[i]
+      if (!universityData.name) continue
+      
+      const normalizedName = normalizeName(universityData.name)
+      
+      // Skip if university already exists
+      if (existingNames.has(normalizedName)) {
+        skipped++
+        if (i % 50 === 0) {
+          console.log(`  ⏭️  Progress: ${i}/${universitiesData.length} (Skipped: ${skipped}, Added: ${added})`)
+        }
+        continue
+      }
+      
+      // Generate slug
+      let slug = generateSlug(universityData.name)
+      let slugCounter = 1
+      while (existingSlugs.has(slug)) {
+        slug = `${generateSlug(universityData.name)}-${slugCounter}`
+        slugCounter++
+      }
+      existingSlugs.add(slug)
+      
+      // Extract city from name or use state as fallback
+      let city = universityData.city || null
+      if (!city && universityData.name) {
+        // Try to extract city from name (common patterns)
+        const cityMatch = universityData.name.match(/(?:in|at|,)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/)
+        if (cityMatch) {
+          city = cityMatch[1].trim()
+        }
+      }
+      
+      try {
+        // Insert new university/college
+        await db.insert(colleges).values({
+          name: universityData.name,
+          slug: slug,
+          city: city,
+          state: universityData.state || null,
+          country: "India",
+          location: city && universityData.state 
+            ? `${city}, ${universityData.state}`
+            : city || universityData.state || null,
+          description: `${universityData.name}${universityData.state ? ` located in ${universityData.state}` : ""}${universityData.category ? ` - ${universityData.category}` : ""}`,
+          ownership: universityData.category?.includes("Private") ? "Private" : 
+                    universityData.category?.includes("Government") ? "Government" : null,
+        })
+        
+        if (i % 10 === 0 || added < 20) {
+          console.log(`  ✅ Added: ${universityData.name}${universityData.state ? ` (${universityData.state})` : ""}`)
+        }
+        added++
+        existingNames.add(normalizedName)
+        
+        // Small delay to avoid overwhelming database
+        await new Promise(resolve => setTimeout(resolve, 50))
+      } catch (error: any) {
+        if (error?.code === "23505") { // Duplicate slug
+          skipped++
+          console.log(`  ⏭️  Skipped (duplicate slug): ${universityData.name}`)
+        } else {
+          console.error(`  ❌ Error adding ${universityData.name}:`, error.message)
+        }
+      }
+    }
+    
+    console.log(`\n✨ Linkingsky import completed!`)
+    console.log(`📊 Summary:`)
+    console.log(`   - Universities added: ${added}`)
+    console.log(`   - Universities skipped (already exist): ${skipped}`)
+    console.log(`   - Total universities processed: ${universitiesData.length}`)
+    
+    return { added, skipped }
+  } catch (error) {
+    console.error("❌ Error fetching universities from linkingsky:", error)
+    throw error
+  } finally {
+    // Don't close connection - API route may need it
+    // await client.end()
+  }
+}
+
+export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, correctCollegeName, correctAllCollegeNames, fetchUniversitiesFromLinkingsky }
 

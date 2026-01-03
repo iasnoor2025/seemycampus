@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { GraduationCap, BookOpen, Briefcase, Calculator, MapPin } from "lucide-react"
+import { GraduationCap, BookOpen, Briefcase, Calculator, MapPin, Info, FileText, Award } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
@@ -15,43 +15,36 @@ export interface QuickReply {
 
 export const COMMON_QUESTIONS: QuickReply[] = [
   {
+    label: "About Us",
+    message: "Tell me more about SeeMyCampus and how you can help me with my college search.",
+    icon: <Info className="h-4 w-4" />,
+    action: "navigate",
+    path: "/about",
+  },
+  {
     label: "Find Colleges",
     message: "I'm a student looking for colleges in India. Can you help me find the best colleges based on my interests?",
     icon: <GraduationCap className="h-4 w-4" />,
     action: "message",
   },
   {
-    label: "Admissions",
+    label: "Admission Process",
     message: "I'm preparing for college admissions in India. What are the admission requirements and entrance exams like JEE, NEET, CAT that I need to know about?",
-    icon: <BookOpen className="h-4 w-4" />,
+    icon: <FileText className="h-4 w-4" />,
     action: "message",
   },
   {
-    label: "Scholarships",
+    label: "Scholarship",
     message: "I'm looking for scholarships to help fund my college education in India. What options are available?",
-    icon: <span className="text-base">₹</span>,
+    icon: <Award className="h-4 w-4" />,
     action: "navigate",
     path: "/scholarships",
   },
   {
-    label: "Career Help",
-    message: "I need help choosing the right career path and college in India. Can you guide me?",
-    icon: <Briefcase className="h-4 w-4" />,
-    action: "navigate",
-    path: "/career-counseling",
-  },
-  {
-    label: "Fee Calculator",
-    message: "I want to calculate the total cost of college education in India including tuition, hostel, and other fees.",
-    icon: <Calculator className="h-4 w-4" />,
-    action: "navigate",
-    path: "/fee-calculator",
-  },
-  {
-    label: "Near Me",
-    message: "I want to find colleges near my location in India",
-    icon: <MapPin className="h-4 w-4" />,
-    action: "location",
+    label: "Apply Now",
+    message: "I want to apply to colleges. Can you guide me through the application process?",
+    icon: <BookOpen className="h-4 w-4" />,
+    action: "message",
   },
 ]
 
@@ -104,7 +97,7 @@ export function QuickReplies({
   }
 
   return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
+    <div className={cn("grid grid-cols-2 gap-2.5 sm:gap-3", className)}>
       {replies.map((reply, index) => (
         <Button
           key={index}
@@ -112,10 +105,10 @@ export function QuickReplies({
           size="sm"
           onClick={() => handleClick(reply)}
           disabled={disabled}
-          className="h-auto py-2 px-3 text-xs sm:text-sm whitespace-nowrap touch-manipulation border-gray-300 hover:border-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all duration-200 rounded-lg shadow-sm hover:shadow-md bg-white"
+          className="h-auto py-3 px-4 text-xs sm:text-sm touch-manipulation border-2 border-[#18254a]/20 hover:border-[#18254a] hover:bg-gradient-to-r hover:from-[#18254a] hover:to-[#1a2d5a] hover:text-white transition-all duration-200 rounded-lg shadow-sm hover:shadow-md bg-white text-[#18254a] font-medium hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
         >
-          {reply.icon && <span className="mr-1.5">{reply.icon}</span>}
-          {reply.label}
+          {reply.icon && <span className="flex-shrink-0">{reply.icon}</span>}
+          <span className="text-center">{reply.label}</span>
         </Button>
       ))}
     </div>

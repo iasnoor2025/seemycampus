@@ -7,28 +7,48 @@ import { MessageList } from "./MessageList"
 import { QuickReplies } from "./QuickReplies"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { X, MessageCircle, Trash2, Minimize2, Bot } from "lucide-react"
+import { X, MessageCircle, Trash2, Minimize2, Bot, RotateCcw } from "lucide-react"
 import { Message, CollegeSuggestion } from "./ChatInterface"
 import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "seemycampus_chat_history"
 const USER_INFO_KEY = "seemycampus_user_info"
 
-// Enhanced welcome message
-const getWelcomeMessage = (pathname: string | null): string => {
+// Enhanced welcome messages - split into multiple for better UX
+const getWelcomeMessages = (pathname: string | null): string[] => {
   if (pathname?.startsWith("/colleges/")) {
-    return "Hello! I can help you learn more about this college, compare it with others, or answer questions about admissions, courses, and fees. What would you like to know?"
+    return [
+      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
+      "I can help you learn more about this college, compare it with others, or answer questions about admissions, courses, and fees.",
+      "How can I help you today?"
+    ]
   }
   if (pathname?.startsWith("/colleges")) {
-    return "Hello! I'm here to help you find the perfect college. I can help you search for colleges, compare options, understand admission requirements, or answer any questions about courses and programs. How can I assist you today?"
+    return [
+      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
+      "I'm here to help you find the perfect college. I can help you search for colleges, compare options, understand admission requirements, or answer any questions about courses and programs.",
+      "How can I help you today?"
+    ]
   }
   if (pathname?.startsWith("/courses")) {
-    return "Hello! I can help you explore courses, understand requirements, find colleges offering specific programs, or answer questions about career paths. What would you like to know?"
+    return [
+      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
+      "I can help you explore courses, understand requirements, find colleges offering specific programs, or answer questions about career paths.",
+      "How can I help you today?"
+    ]
   }
   if (pathname?.startsWith("/scholarships")) {
-    return "Hello! I can help you find scholarship opportunities, understand eligibility criteria, or answer questions about financial aid. How can I assist you?"
+    return [
+      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
+      "I can help you find scholarship opportunities, understand eligibility criteria, or answer questions about financial aid.",
+      "How can I help you today?"
+    ]
   }
-  return "Hello! I'm the SeeMyCampus chatbot. I can help you with:\n• Finding the right colleges and courses\n• Understanding admission requirements\n• Exploring scholarship opportunities\n• Career counseling guidance\n• Fee calculations\n\nWhat would you like to explore today?"
+  return [
+    "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
+    "I can help you with finding the right colleges and courses, understanding admission requirements, exploring scholarship opportunities, career counseling guidance, and fee calculations.",
+    "How can I help you today?"
+  ]
 }
 
 export function ChatbotWidget() {
@@ -94,37 +114,37 @@ export function ChatbotWidget() {
         if (history.length > 0) {
           setMessages(history)
         } else {
-          // Initialize with welcome message if no history
-          setMessages([
-            {
-              role: "assistant",
-              content: getWelcomeMessage(pathname),
+          // Initialize with welcome messages if no history
+          const welcomeMessages = getWelcomeMessages(pathname)
+          const initialMessages = welcomeMessages.map((msg, index) => ({
+            role: "assistant" as const,
+            content: msg,
               timestamp: new Date(),
-              showQuickReplies: true,
-            },
-          ])
+            showQuickReplies: index === welcomeMessages.length - 1, // Show quick replies only on last message
+          }))
+          setMessages(initialMessages)
         }
       } else {
-        // Initialize with welcome message
-        setMessages([
-          {
-            role: "assistant",
-            content: getWelcomeMessage(pathname),
+        // Initialize with welcome messages
+        const welcomeMessages = getWelcomeMessages(pathname)
+        const initialMessages = welcomeMessages.map((msg, index) => ({
+          role: "assistant" as const,
+          content: msg,
             timestamp: new Date(),
-            showQuickReplies: true,
-          },
-        ])
+          showQuickReplies: index === welcomeMessages.length - 1, // Show quick replies only on last message
+        }))
+        setMessages(initialMessages)
       }
     } catch (error) {
       console.error("Error loading chat history:", error)
-      setMessages([
-        {
-          role: "assistant",
-          content: getWelcomeMessage(pathname),
+      const welcomeMessages = getWelcomeMessages(pathname)
+      const initialMessages = welcomeMessages.map((msg, index) => ({
+        role: "assistant" as const,
+        content: msg,
           timestamp: new Date(),
-          showQuickReplies: true,
-        },
-      ])
+        showQuickReplies: index === welcomeMessages.length - 1,
+      }))
+      setMessages(initialMessages)
     }
   }, [pathname])
 
@@ -375,15 +395,23 @@ export function ChatbotWidget() {
   }
 
   const handleClearChat = () => {
-    setMessages([
-      {
-        role: "assistant",
-        content: getWelcomeMessage(pathname),
+    const welcomeMessages = getWelcomeMessages(pathname)
+    const initialMessages = welcomeMessages.map((msg, index) => ({
+      role: "assistant" as const,
+      content: msg,
         timestamp: new Date(),
-        showQuickReplies: true,
-      },
-    ])
+      showQuickReplies: index === welcomeMessages.length - 1,
+    }))
+    setMessages(initialMessages)
     localStorage.removeItem(STORAGE_KEY)
+  }
+
+  const handleRefresh = () => {
+    handleClearChat()
+    // Also reset user info if needed
+    setUserInfo(null)
+    setAwaitingUserInfo(null)
+    localStorage.removeItem(USER_INFO_KEY)
   }
 
   const handleToggle = () => {
@@ -453,32 +481,47 @@ export function ChatbotWidget() {
             "sm:bottom-6 sm:right-6 sm:left-auto sm:w-[380px]",
             isMinimized 
               ? "h-16" 
-              : "h-[calc(100vh-4rem)] sm:h-[600px] sm:max-h-[600px]"
+              : "h-[calc(100vh-4rem)] sm:h-[700px] sm:max-h-[700px]"
           )}
         >
-          <Card className="flex flex-col h-full shadow-2xl border border-gray-200 sm:rounded-lg overflow-hidden bg-white">
-            <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-3 sm:p-4 relative overflow-hidden">
+          <Card className="flex flex-col h-full shadow-2xl border-2 border-gray-300 sm:rounded-lg overflow-hidden bg-white backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-[#18254a] via-[#1a2d5a] to-[#18254a] text-white p-3 sm:p-4 relative overflow-hidden">
               {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
               
-              {/* Animated background pattern */}
-              <div className="absolute inset-0 opacity-5">
+              {/* Futuristic tech grid pattern */}
+              <div className="absolute inset-0 opacity-[0.04]">
                 <div className="absolute inset-0" style={{
-                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                  backgroundSize: '20px 20px'
+                  backgroundImage: `
+                    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '30px 30px'
                 }} />
               </div>
               
-              <CardTitle className="text-base sm:text-lg font-semibold relative z-10 flex items-center gap-2.5">
+              <CardTitle className="text-base sm:text-lg font-semibold relative z-10 flex items-center gap-3">
+                {/* Avatar with logo */}
                 <div className="relative flex items-center justify-center">
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
+                  <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center overflow-hidden shadow-lg">
+                    <Bot className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-[#18254a] animate-pulse shadow-lg shadow-green-400/50" />
                 </div>
-                <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
-                  SeeMyCampus Chatbot
+                <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent font-bold">
+                  SeeMyCampus
                 </span>
               </CardTitle>
               <div className="flex items-center gap-1 sm:gap-2 relative z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRefresh}
+                  title="Refresh chat"
+                  className="h-8 w-8 sm:h-8 sm:w-8 text-white/90 hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -509,8 +552,28 @@ export function ChatbotWidget() {
               </div>
             </CardHeader>
             {!isMinimized && (
-              <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
-                <div className="flex-1 overflow-y-auto p-3 sm:p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+              <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-white relative">
+                {/* Futuristic gradient mesh background */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {/* Subtle gradient mesh */}
+                  <div className="absolute inset-0 opacity-[0.03]" style={{
+                    backgroundImage: `
+                      radial-gradient(circle at 20% 30%, rgba(24, 37, 74, 0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 70%, rgba(26, 45, 90, 0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)
+                    `,
+                  }} />
+                  {/* Subtle grid lines - futuristic tech grid */}
+                  <div className="absolute inset-0 opacity-[0.02]" style={{
+                    backgroundImage: `
+                      linear-gradient(rgba(24, 37, 74, 0.1) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(24, 37, 74, 0.1) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px'
+                  }} />
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 sm:p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
                   <MessageList 
                     messages={messages} 
                     onQuickReply={handleSendMessage}
@@ -518,16 +581,28 @@ export function ChatbotWidget() {
                   />
                   {loading && (
                     <div className="flex items-center gap-2 text-muted-foreground text-sm mt-4">
-                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" />
-                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce [animation-delay:0.2s]" />
-                      <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce" />
+                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.4s]" />
                       <span className="ml-2 font-medium">Thinking...</span>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
                 </div>
-                <div className="border-t border-gray-200 bg-white/80 backdrop-blur-sm p-3 sm:p-4 space-y-3">
+                
+                {/* Footer with branding */}
+                <div className="border-t-2 border-gray-300 bg-white p-4 sm:p-5 space-y-3 relative z-10">
                   <ChatInput onSend={handleSendMessage} disabled={loading} />
+                  {/* Footer branding */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#18254a] to-[#1a2d5a] flex items-center justify-center shadow-sm">
+                        <Bot className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700">SeeMyCampus</span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Powered by AI</span>
+                  </div>
                 </div>
               </CardContent>
             )}

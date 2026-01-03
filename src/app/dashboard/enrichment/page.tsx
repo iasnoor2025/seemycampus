@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Sparkles, CheckCircle2, AlertCircle, Info, RefreshCw, Trash2, Search, Building2, Edit } from "lucide-react"
+import { Loader2, Sparkles, CheckCircle2, AlertCircle, Info, RefreshCw, Trash2, Search, Building2, Edit, Book, Globe } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 interface RequirementStatus {
@@ -30,6 +30,12 @@ export default function EnrichmentPage() {
   const [correctingNames, setCorrectingNames] = useState(false)
   const [nameCorrectionStatus, setNameCorrectionStatus] = useState<"idle" | "running" | "success" | "error">("idle")
   const [nameCorrectionMessage, setNameCorrectionMessage] = useState("")
+  const [removingDuplicateCourses, setRemovingDuplicateCourses] = useState(false)
+  const [duplicateCoursesStatus, setDuplicateCoursesStatus] = useState<"idle" | "running" | "success" | "error">("idle")
+  const [duplicateCoursesMessage, setDuplicateCoursesMessage] = useState("")
+  const [importingLinkingsky, setImportingLinkingsky] = useState(false)
+  const [linkingskyStatus, setLinkingskyStatus] = useState<"idle" | "running" | "success" | "error">("idle")
+  const [linkingskyMessage, setLinkingskyMessage] = useState("")
   const { toast } = useToast()
 
   const checkRequirements = async () => {
@@ -233,6 +239,86 @@ export default function EnrichmentPage() {
     }
   }
 
+  const handleRemoveDuplicateCourses = async () => {
+    setRemovingDuplicateCourses(true)
+    setDuplicateCoursesStatus("running")
+    setDuplicateCoursesMessage("Starting duplicate course removal process...")
+
+    try {
+      const response = await fetch("/api/admin/remove-duplicate-courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start duplicate course removal")
+      }
+
+      setDuplicateCoursesStatus("success")
+      setDuplicateCoursesMessage(data.message || "Duplicate course removal started successfully!")
+      
+      toast({
+        title: "Duplicate Course Removal Started",
+        description: "The duplicate course removal process is running in the background. Check server logs for progress.",
+      })
+    } catch (error: any) {
+      setDuplicateCoursesStatus("error")
+      setDuplicateCoursesMessage(error.message || "An error occurred while starting duplicate course removal")
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start duplicate course removal",
+        variant: "destructive",
+      })
+    } finally {
+      setRemovingDuplicateCourses(false)
+    }
+  }
+
+  const handleImportLinkingsky = async () => {
+    setImportingLinkingsky(true)
+    setLinkingskyStatus("running")
+    setLinkingskyMessage("Starting Linkingsky university import...")
+
+    try {
+      const response = await fetch("/api/admin/import-linkingsky", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start linkingsky import")
+      }
+
+      setLinkingskyStatus("success")
+      setLinkingskyMessage(data.message || "Linkingsky import started successfully!")
+      
+      toast({
+        title: "Linkingsky Import Started",
+        description: "The university import from linkingsky.com is running in the background. Check server logs for progress.",
+      })
+    } catch (error: any) {
+      setLinkingskyStatus("error")
+      setLinkingskyMessage(error.message || "An error occurred while starting linkingsky import")
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start linkingsky import",
+        variant: "destructive",
+      })
+    } finally {
+      setImportingLinkingsky(false)
+    }
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -262,6 +348,9 @@ export default function EnrichmentPage() {
                 <ul className="list-disc list-inside mt-2 space-y-1">
                   <li>Correct college names (fix typos, capitalization, formatting)</li>
                   <li>Fill missing college data (description, ranking, fees, etc.)</li>
+                  <li>Verify and correct ALL existing data (ranking, phone, email, website, etc.)</li>
+                  <li>Validate phone numbers (Indian format: +91-XXXXXXXXXX)</li>
+                  <li>Verify rankings (NIRF and other official rankings)</li>
                   <li>Add logos (only if college doesn't have one)</li>
                   <li>Add campus images</li>
                   <li>Add courses (if college has none, or add new courses if more are found)</li>
@@ -359,6 +448,78 @@ export default function EnrichmentPage() {
                 <strong>SEO Safe:</strong> This process only adds missing data. It never modifies existing data or changes URLs/slugs.
               </AlertDescription>
             </Alert>
+          </CardContent>
+        </Card>
+
+        {/* Import from Linkingsky Card */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Import Universities from Linkingsky
+            </CardTitle>
+            <CardDescription>
+              Fetch and import all universities from linkingsky.com using Ollama AI
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                This process will:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Fetch the complete university list from linkingsky.com</li>
+                  <li>Use Ollama AI to extract and structure university data</li>
+                  <li>Add universities that don't exist in the database</li>
+                  <li>Include all states and categories (Central, State, Private, Deemed, etc.)</li>
+                  <li>Extract state, city, and category information</li>
+                </ul>
+                <p className="mt-2 font-semibold">⚠️ This may take a while - check server logs for progress.</p>
+                <p className="mt-1 text-sm">Source: <a href="https://linkingsky.com/career-news/universities-list.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">linkingsky.com</a></p>
+              </AlertDescription>
+            </Alert>
+
+            {linkingskyStatus === "success" && (
+              <Alert className="border-green-500 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  {linkingskyMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {linkingskyStatus === "error" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {linkingskyMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              onClick={handleImportLinkingsky}
+              disabled={importingLinkingsky || linkingskyStatus === "running" || !allRequirementsOk}
+              className="w-full"
+              size="lg"
+            >
+              {importingLinkingsky || linkingskyStatus === "running" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Importing Universities...
+                </>
+              ) : !allRequirementsOk ? (
+                <>
+                  <AlertCircle className="mr-2 h-4 w-4" />
+                  Fix Requirements First
+                </>
+              ) : (
+                <>
+                  <Globe className="mr-2 h-4 w-4" />
+                  Import from Linkingsky
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
 
@@ -521,7 +682,7 @@ export default function EnrichmentPage() {
           </CardContent>
         </Card>
 
-        {/* Duplicate Removal Card */}
+        {/* Duplicate College Removal Card */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -582,6 +743,72 @@ export default function EnrichmentPage() {
                 <>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Remove Duplicate Colleges
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Duplicate Course Removal Card */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Book className="h-5 w-5" />
+              Remove Duplicate Courses
+            </CardTitle>
+            <CardDescription>
+              Find and remove duplicate courses within the same college, keeping only the ones with the most complete data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                This process will:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Find duplicate courses (by normalized name and college)</li>
+                  <li>Calculate completeness score for each duplicate</li>
+                  <li>Keep the course with the highest score (most complete data)</li>
+                  <li>Delete duplicate courses</li>
+                </ul>
+                <p className="mt-2 font-semibold">⚠️ This action cannot be undone. Check server logs for details.</p>
+              </AlertDescription>
+            </Alert>
+
+            {duplicateCoursesStatus === "success" && (
+              <Alert className="border-green-500 bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  {duplicateCoursesMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {duplicateCoursesStatus === "error" && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {duplicateCoursesMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              onClick={handleRemoveDuplicateCourses}
+              disabled={removingDuplicateCourses || duplicateCoursesStatus === "running"}
+              className="w-full"
+              size="lg"
+              variant="destructive"
+            >
+              {removingDuplicateCourses || duplicateCoursesStatus === "running" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Removing Duplicate Courses...
+                </>
+              ) : (
+                <>
+                  <Book className="mr-2 h-4 w-4" />
+                  Remove Duplicate Courses
                 </>
               )}
             </Button>

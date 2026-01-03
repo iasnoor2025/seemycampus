@@ -18,6 +18,7 @@
     "db:seed:leads": "tsx src/db/seed-leads.ts",
     "db:seed:counselor": "tsx src/db/seed-counselor.ts",
     "db:remove-duplicates": "tsx src/db/remove-duplicates.ts",
+    "db:remove-duplicate-courses": "tsx src/db/remove-duplicate-courses.ts",
     "db:remove-duplicate-testimonials": "tsx src/db/remove-duplicate-testimonials.ts",
     "db:clean-course-names": "tsx src/db/clean-course-names.ts",
     "db:seed:comprehensive-courses": "tsx src/db/seed-comprehensive-courses.ts",
