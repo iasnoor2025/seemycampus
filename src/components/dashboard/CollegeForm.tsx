@@ -24,6 +24,10 @@ interface College {
   isAcademicAlliance: boolean
   images?: string[] | null
   googlePlaceId?: string | null
+  ranking?: number | null
+  establishedYear?: number | null
+  averagePackage?: number | null
+  accreditation?: string | null
 }
 
 interface CollegeFormProps {
@@ -46,6 +50,10 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
     isAcademicAlliance: false,
     images: null,
     googlePlaceId: null,
+    ranking: null,
+    establishedYear: null,
+    averagePackage: null,
+    accreditation: null,
   })
   const [logoUrl, setLogoUrl] = useState("")
   const [loading, setLoading] = useState(false)
@@ -53,7 +61,25 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
 
   useEffect(() => {
     if (college) {
-      setFormData(college)
+      setFormData({
+        name: college.name || "",
+        slug: college.slug || "",
+        location: college.location || null,
+        city: college.city || null,
+        state: college.state || null,
+        country: college.country || "India",
+        description: college.description || null,
+        website: college.website || null,
+        email: college.email || null,
+        phone: college.phone || null,
+        isAcademicAlliance: college.isAcademicAlliance || false,
+        images: college.images || null,
+        googlePlaceId: college.googlePlaceId || null,
+        ranking: college.ranking ?? null,
+        establishedYear: college.establishedYear ?? null,
+        averagePackage: college.averagePackage ?? null,
+        accreditation: college.accreditation || null,
+      })
       // Set logo URL from images array
       if (college.images && Array.isArray(college.images) && college.images.length > 0) {
         setLogoUrl(college.images[0])
@@ -255,6 +281,83 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
                   setFormData({ ...formData, phone: e.target.value || null })
                 }
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="ranking">Ranking</Label>
+                <Input
+                  id="ranking"
+                  type="number"
+                  placeholder="e.g., 55"
+                  value={formData.ranking || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ranking: e.target.value ? parseInt(e.target.value) : null,
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  College ranking number
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="establishedYear">Established Year</Label>
+                <Input
+                  id="establishedYear"
+                  type="number"
+                  placeholder="e.g., 2003"
+                  value={formData.establishedYear || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      establishedYear: e.target.value ? parseInt(e.target.value) : null,
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Year the college was established
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="averagePackage">Average Package (₹)</Label>
+                <Input
+                  id="averagePackage"
+                  type="number"
+                  placeholder="e.g., 750000"
+                  value={formData.averagePackage || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      averagePackage: e.target.value ? parseInt(e.target.value) : null,
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Average placement package in INR
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="accreditation">Accreditation</Label>
+                <Input
+                  id="accreditation"
+                  placeholder="e.g., UGC, AICTE"
+                  value={formData.accreditation || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      accreditation: e.target.value || null,
+                    })
+                  }
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Accreditation bodies (comma-separated)
+                </p>
+              </div>
             </div>
 
             <div>

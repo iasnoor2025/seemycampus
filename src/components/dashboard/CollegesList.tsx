@@ -38,6 +38,11 @@ interface College {
   phone: string | null
   isAcademicAlliance: boolean
   images: string[] | null
+  googlePlaceId?: string | null
+  ranking?: number | null
+  establishedYear?: number | null
+  averagePackage?: number | null
+  accreditation?: string | null
   createdAt: Date | string
   updatedAt: Date | string
 }
@@ -112,9 +117,25 @@ export function CollegesList() {
     }
   }
 
-  const handleEdit = (college: College) => {
-    setEditingCollege(college)
-    setIsFormOpen(true)
+  const handleEdit = async (college: College) => {
+    try {
+      // Fetch full college data to ensure we have all fields
+      const response = await fetch(`/api/dashboard/colleges/${college.id}`)
+      if (response.ok) {
+        const fullCollege = await response.json()
+        setEditingCollege(fullCollege)
+        setIsFormOpen(true)
+      } else {
+        // Fallback to the college from the list if fetch fails
+        setEditingCollege(college)
+        setIsFormOpen(true)
+      }
+    } catch (error) {
+      console.error("Error fetching college:", error)
+      // Fallback to the college from the list if fetch fails
+      setEditingCollege(college)
+      setIsFormOpen(true)
+    }
   }
 
   const handleAdd = () => {
