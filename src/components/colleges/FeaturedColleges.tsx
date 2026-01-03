@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MapPin, GraduationCap, ArrowRight, Star } from "lucide-react"
 
@@ -13,6 +14,7 @@ interface College {
   location: string | null
   slug: string
   logo?: string
+  images?: string[] | null
 }
 
 const categoryMap: Record<CollegeCategory, string> = {
@@ -38,6 +40,7 @@ export function FeaturedColleges() {
   const [showAll, setShowAll] = useState(false)
   const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(true)
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
 
   // Fetch colleges from API
   useEffect(() => {
@@ -163,8 +166,23 @@ export function FeaturedColleges() {
                       <span className="text-white text-sm font-bold">4.{Math.floor(Math.random() * 5) + 5}</span>
                     </div>
                   </div>
-                  <div className={`w-20 h-20 bg-white rounded-xl flex items-center justify-center ${getCardTextColor(index)} font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    {getInitials(college.name)}
+                  <div className={`w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 overflow-hidden relative`}>
+                    {college.images && Array.isArray(college.images) && college.images.length > 0 && !imageErrors.has(college.id) ? (
+                      <Image
+                        src={college.images[0]}
+                        alt={`${college.name} logo`}
+                        fill
+                        sizes="80px"
+                        className="object-contain p-1"
+                        onError={() => {
+                          setImageErrors(prev => new Set(prev).add(college.id))
+                        }}
+                      />
+                    ) : (
+                      <span className={`${getCardTextColor(index)} font-bold text-lg`}>
+                        {getInitials(college.name)}
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -78,13 +78,22 @@ export function ChatInterface() {
   )
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Only auto-scroll if user is already near the bottom (within 150px)
   useEffect(() => {
-    scrollToBottom()
+    if (scrollContainerRef.current && messagesEndRef.current) {
+      const scrollContainer = scrollContainerRef.current
+      const distanceFromBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight
+      // Only scroll if user is within 150px of bottom
+      if (distanceFromBottom < 150) {
+        setTimeout(() => scrollToBottom(), 100)
+      }
+    }
   }, [messages])
 
   const handleSendMessage = async (content: string) => {
@@ -234,7 +243,7 @@ export function ChatInterface() {
           }} />
         </div>
         
-        <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
           <MessageList 
             messages={messages} 
             onQuickReply={handleSendMessage}

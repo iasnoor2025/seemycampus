@@ -64,9 +64,6 @@ export function MessageList({ messages, onQuickReply, disabled = false }: Messag
                   {/* College Suggestions */}
                   {message.role === "assistant" && message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-xs font-semibold mb-3 text-gray-600 uppercase tracking-wide">
-                        Suggested Colleges:
-                      </p>
                       <div className="space-y-2">
                         {message.suggestions.map((college) => (
                         <Link

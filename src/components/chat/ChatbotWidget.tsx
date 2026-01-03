@@ -61,6 +61,7 @@ export function ChatbotWidget() {
   const [userInfo, setUserInfo] = useState<{ name?: string; phone?: string; email?: string } | null>(null)
   const [awaitingUserInfo, setAwaitingUserInfo] = useState<"name" | "phone" | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Track scroll position to detect when back-to-top button is visible
   useEffect(() => {
@@ -163,9 +164,15 @@ export function ChatbotWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Only auto-scroll if user is already near the bottom (within 150px)
   useEffect(() => {
-    if (isOpen && !isMinimized) {
-      scrollToBottom()
+    if (isOpen && !isMinimized && scrollContainerRef.current && messagesEndRef.current) {
+      const scrollContainer = scrollContainerRef.current
+      const distanceFromBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight
+      // Only scroll if user is within 150px of bottom
+      if (distanceFromBottom < 150) {
+        setTimeout(() => scrollToBottom(), 100)
+      }
     }
   }, [messages, isOpen, isMinimized])
 
@@ -573,7 +580,7 @@ export function ChatbotWidget() {
                   }} />
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
+                <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
                   <MessageList 
                     messages={messages} 
                     onQuickReply={handleSendMessage}
