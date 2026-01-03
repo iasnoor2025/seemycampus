@@ -49,35 +49,46 @@ interface ConversionFunnelProps {
 }
 
 export function ConversionFunnel({ stages }: ConversionFunnelProps) {
+  const totalLeads = stages[0]?.count || 0
+  const hasNoData = totalLeads === 0
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Conversion Funnel</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {stages.map((stage, index) => (
-            <div key={index} className="relative">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">{stage.label}</span>
-                <span className="text-sm text-muted-foreground">
-                  {stage.count} ({stage.percentage.toFixed(1)}%)
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
-                  style={{ width: `${stage.percentage}%` }}
-                />
-              </div>
-              {index < stages.length - 1 && (
-                <div className="flex justify-center my-1">
-                  <ArrowDownRight className="h-4 w-4 text-gray-400" />
+        {hasNoData ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">
+              No leads yet. The conversion funnel will appear here once you have leads.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {stages.map((stage, index) => (
+              <div key={index} className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">{stage.label}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {stage.count} ({stage.percentage > 0 ? stage.percentage.toFixed(1) : "0.0"}%)
+                  </span>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
+                    style={{ width: `${Math.max(stage.percentage, 0)}%` }}
+                  />
+                </div>
+                {index < stages.length - 1 && (
+                  <div className="flex justify-center my-1">
+                    <ArrowDownRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
