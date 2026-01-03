@@ -81,11 +81,6 @@ export function ApplicationGuideForm({
   const [newDoc, setNewDoc] = useState("")
   const [newPaymentMethod, setNewPaymentMethod] = useState("")
 
-  // Get selected course name for display
-  const selectedCourseName = formData.courseId 
-    ? courses.find((c) => c.id.toString() === formData.courseId)?.name 
-    : null
-
   useEffect(() => {
     if (collegeId) {
       fetchCourses()
@@ -223,20 +218,14 @@ export function ApplicationGuideForm({
           <div>
             <Label htmlFor="courseId">Course (Optional - leave empty for general guide)</Label>
             <Select
-              value={formData.courseId}
-              onValueChange={(value) => setFormData({ ...formData, courseId: value ?? "" })}
+              value={formData.courseId || undefined}
+              onValueChange={(value) => setFormData({ ...formData, courseId: value === "all" ? "" : value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select course (optional)">
-                  {(value: string | null) => {
-                    if (!value || value === "") return "Select course (optional)"
-                    const course = courses.find((c) => c.id.toString() === value)
-                    return course?.name || "Select course (optional)"
-                  }}
-                </SelectValue>
+                <SelectValue placeholder="Select course (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">General (All Courses)</SelectItem>
+                <SelectItem value="all">General (All Courses)</SelectItem>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
                     {course.name}

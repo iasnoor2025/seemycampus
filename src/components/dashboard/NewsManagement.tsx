@@ -163,13 +163,7 @@ export function NewsManagement() {
             <div className="flex-1">
               <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "")}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select college">
-                    {(value: string | null) => {
-                      if (!value) return "Select college"
-                      const college = colleges.find((c) => c.id.toString() === value)
-                      return college?.name || "Select college"
-                    }}
-                  </SelectValue>
+                  <SelectValue placeholder="Select college" />
                 </SelectTrigger>
                 <SelectContent>
                   {colleges.map((college) => (
@@ -183,19 +177,7 @@ export function NewsManagement() {
             <div className="flex-1">
               <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value ?? "all")}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by category">
-                    {(value: string | null) => {
-                      if (!value || value === "all") return "All Categories"
-                      const categoryLabels: Record<string, string> = {
-                        admissions: "Admissions",
-                        placements: "Placements",
-                        events: "Events",
-                        achievements: "Achievements",
-                        general: "General",
-                      }
-                      return categoryLabels[value] || value
-                    }}
-                  </SelectValue>
+                  <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>

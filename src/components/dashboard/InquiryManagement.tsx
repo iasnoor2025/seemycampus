@@ -213,13 +213,7 @@ export function InquiryManagement() {
             <div className="flex-1">
               <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "all")}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select college">
-                    {(value: string | null) => {
-                      if (!value || value === "all") return "All Colleges"
-                      const college = colleges.find((c) => c.id.toString() === value)
-                      return college?.name || "Select college"
-                    }}
-                  </SelectValue>
+                  <SelectValue placeholder="Select college" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Colleges</SelectItem>

@@ -22,6 +22,12 @@ interface Cutoff {
   quota?: string | null
 }
 
+interface College {
+  id: number
+  name: string
+  slug: string
+}
+
 interface CutoffFormProps {
   cutoff: Cutoff | null
   collegeId?: number
@@ -52,8 +58,26 @@ export function CutoffForm({ cutoff, collegeId, onClose, onSuccess }: CutoffForm
     round: 1,
     quota: null,
   })
+  const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const fetchColleges = async () => {
+      try {
+        const response = await fetch("/api/dashboard/colleges?all=true")
+        if (response.ok) {
+          const data = await response.json()
+          setColleges(data.colleges || [])
+        }
+      } catch (error) {
+        console.error("Error fetching colleges:", error)
+      }
+    }
+    fetchColleges()
+  }, [])
 
   useEffect(() => {
     if (cutoff) {
@@ -117,16 +141,33 @@ export function CutoffForm({ cutoff, collegeId, onClose, onSuccess }: CutoffForm
 
           {!collegeId && (
             <div>
-              <Label htmlFor="collegeId">College ID *</Label>
-              <Input
-                id="collegeId"
-                type="number"
-                required
-                value={formData.collegeId || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, collegeId: parseInt(e.target.value) })
-                }
-              />
+              <Label htmlFor="collegeId">College *</Label>
+              {mounted ? (
+                <Select
+                  value={formData.collegeId ? formData.collegeId.toString() : undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, collegeId: parseInt(value) })
+                  }
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a college" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colleges.map((college) => (
+                      <SelectItem key={college.id} value={college.id.toString()}>
+                        {college.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select disabled>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a college" />
+                  </SelectTrigger>
+                </Select>
+              )}
             </div>
           )}
 
@@ -134,8 +175,8 @@ export function CutoffForm({ cutoff, collegeId, onClose, onSuccess }: CutoffForm
             <div>
               <Label htmlFor="examName">Exam Name *</Label>
               <Select
-                value={formData.examName}
-                onValueChange={(value) => setFormData({ ...formData, examName: value ?? "" })}
+                value={formData.examName || undefined}
+                onValueChange={(value) => setFormData({ ...formData, examName: value })}
                 required
               >
                 <SelectTrigger>
@@ -181,16 +222,16 @@ export function CutoffForm({ cutoff, collegeId, onClose, onSuccess }: CutoffForm
             <div>
               <Label htmlFor="category">Category</Label>
               <Select
-                value={formData.category || ""}
+                value={formData.category || undefined}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, category: value || null })
+                  setFormData({ ...formData, category: value === "all" ? null : value })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {CUTOFF_CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}

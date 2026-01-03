@@ -62,6 +62,7 @@ export function CutoffManagement() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(20)
+  const [mounted, setMounted] = useState(false)
 
   const fetchCutoffs = async () => {
     try {
@@ -102,9 +103,15 @@ export function CutoffManagement() {
   }
 
   useEffect(() => {
-    fetchColleges()
-    fetchCutoffs()
-  }, [selectedCollegeId, filterYear, filterExam])
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      fetchColleges()
+      fetchCutoffs()
+    }
+  }, [selectedCollegeId, filterYear, filterExam, mounted])
 
   const handleDelete = async () => {
     if (!deleteCutoffId) return
@@ -267,29 +274,28 @@ export function CutoffManagement() {
         </div>
         <div className="w-full sm:w-48">
           <Select
-            value={selectedCollegeId?.toString() || ""}
+            value={mounted && selectedCollegeId ? selectedCollegeId.toString() : "all"}
             onValueChange={(value) => {
-              setSelectedCollegeId(value ? parseInt(value) : null)
-              setCurrentPage(1)
+              if (mounted) {
+                setSelectedCollegeId(value === "all" ? null : parseInt(value))
+                setCurrentPage(1)
+              }
             }}
+            disabled={!mounted}
           >
             <SelectTrigger>
-              <SelectValue placeholder="All Colleges">
-                {(value: string | null) => {
-                  if (!value || value === "") return "All Colleges"
-                  const college = colleges.find((c) => c.id.toString() === value)
-                  return college?.name || "All Colleges"
-                }}
-              </SelectValue>
+              <SelectValue placeholder="All Colleges" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Colleges</SelectItem>
-              {colleges.map((college) => (
-                <SelectItem key={college.id} value={college.id.toString()}>
-                  {college.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            {mounted && (
+              <SelectContent>
+                <SelectItem value="all">All Colleges</SelectItem>
+                {colleges.map((college) => (
+                  <SelectItem key={college.id} value={college.id.toString()}>
+                    {college.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            )}
           </Select>
         </div>
         <div className="w-full sm:w-32">

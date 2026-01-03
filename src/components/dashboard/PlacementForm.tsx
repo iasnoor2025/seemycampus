@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
 
 interface Placement {
@@ -20,6 +21,12 @@ interface Placement {
   lowestPackage?: number | null
   topRecruiters?: string[]
   departmentWiseData?: Record<string, any>
+}
+
+interface College {
+  id: number
+  name: string
+  slug: string
 }
 
 interface PlacementFormProps {
@@ -43,9 +50,27 @@ export function PlacementForm({ placement, collegeId, onClose, onSuccess }: Plac
     topRecruiters: [],
     departmentWiseData: {},
   })
+  const [colleges, setColleges] = useState<College[]>([])
   const [topRecruitersText, setTopRecruitersText] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const fetchColleges = async () => {
+      try {
+        const response = await fetch("/api/dashboard/colleges?all=true")
+        if (response.ok) {
+          const data = await response.json()
+          setColleges(data.colleges || [])
+        }
+      } catch (error) {
+        console.error("Error fetching colleges:", error)
+      }
+    }
+    fetchColleges()
+  }, [])
 
   useEffect(() => {
     if (placement) {
@@ -121,16 +146,33 @@ export function PlacementForm({ placement, collegeId, onClose, onSuccess }: Plac
 
           {!collegeId && (
             <div>
-              <Label htmlFor="collegeId">College ID *</Label>
-              <Input
-                id="collegeId"
-                type="number"
-                required
-                value={formData.collegeId || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, collegeId: parseInt(e.target.value) })
-                }
-              />
+              <Label htmlFor="collegeId">College *</Label>
+              {mounted ? (
+                <Select
+                  value={formData.collegeId ? formData.collegeId.toString() : undefined}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, collegeId: parseInt(value) })
+                  }
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a college" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colleges.map((college) => (
+                      <SelectItem key={college.id} value={college.id.toString()}>
+                        {college.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select disabled>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a college" />
+                  </SelectTrigger>
+                </Select>
+              )}
             </div>
           )}
 

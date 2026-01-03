@@ -149,13 +149,7 @@ export function ApplicationGuideManagement() {
             <div className="flex-1">
               <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "")}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select college">
-                    {(value: string | null) => {
-                      if (!value) return "Select college"
-                      const college = colleges.find((c) => c.id.toString() === value)
-                      return college?.name || "Select college"
-                    }}
-                  </SelectValue>
+                  <SelectValue placeholder="Select college" />
                 </SelectTrigger>
                 <SelectContent>
                   {colleges.map((college) => (

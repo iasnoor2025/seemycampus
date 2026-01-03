@@ -101,12 +101,12 @@ export function CollegePlacements({ collegeId, collegeSlug }: CollegePlacementsP
             Placement Statistics
           </CardTitle>
           {years.length > 0 && (
-            <Select value={selectedYear} onValueChange={(value) => setSelectedYear(value ?? "")}>
+            <Select value={selectedYear || undefined} onValueChange={(value) => setSelectedYear(value === "all" ? "" : value)}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="All Years" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Years</SelectItem>
+                <SelectItem value="all">All Years</SelectItem>
                 {years.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}

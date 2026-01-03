@@ -124,7 +124,7 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
   const years = Array.from(new Set(cutoffs.map((c) => c.year))).sort((a, b) => b - a)
   const exams = Array.from(new Set(cutoffs.map((c) => c.examName))).sort()
   const categories = Array.from(
-    new Set(cutoffs.map((c) => c.category).filter(Boolean))
+    new Set(cutoffs.map((c) => c.category).filter((cat): cat is string => Boolean(cat)))
   ).sort()
 
   // Group cutoffs by exam
@@ -183,12 +183,12 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
           </CardTitle>
           <div className="flex gap-2">
             {years.length > 0 && (
-              <Select value={selectedYear} onValueChange={(value) => setSelectedYear(value || "")}>
+              <Select value={selectedYear || undefined} onValueChange={(value) => setSelectedYear(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   {years.map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}
@@ -198,12 +198,12 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               </Select>
             )}
             {exams.length > 0 && (
-              <Select value={selectedExam} onValueChange={(value) => setSelectedExam(value || "")}>
+              <Select value={selectedExam || undefined} onValueChange={(value) => setSelectedExam(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Exams" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Exams</SelectItem>
+                  <SelectItem value="all">All Exams</SelectItem>
                   {exams.map((exam) => (
                     <SelectItem key={exam} value={exam}>
                       {exam}
@@ -213,12 +213,12 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               </Select>
             )}
             {categories.length > 0 && (
-              <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value || "")}>
+              <Select value={selectedCategory || undefined} onValueChange={(value) => setSelectedCategory(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -361,12 +361,12 @@ export function CollegeCutoffs({ collegeId, collegeSlug }: CollegeCutoffsProps) 
               {categories.length > 0 && (
                 <div>
                   <label className="text-sm font-medium mb-2 block">Select Category (Optional)</label>
-                  <Select value={trendCategory} onValueChange={(value) => setTrendCategory(value || "")}>
+                  <Select value={trendCategory || undefined} onValueChange={(value) => setTrendCategory(value === "all" ? "" : value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}

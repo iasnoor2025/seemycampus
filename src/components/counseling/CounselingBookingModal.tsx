@@ -231,13 +231,13 @@ export function CounselingBookingModal({ packageData, onClose }: CounselingBooki
                 <Label htmlFor="counselorId">Preferred Counselor (Optional)</Label>
                 <Select
                   value={formData.counselorId || undefined}
-                  onValueChange={(value: string | null) => setFormData({ ...formData, counselorId: value || "" })}
+                  onValueChange={(value: string | null) => setFormData({ ...formData, counselorId: value === "any" ? "" : value || "" })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select counselor" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Available</SelectItem>
+                    <SelectItem value="any">Any Available</SelectItem>
                     {counselors.map((counselor) => (
                       <SelectItem key={counselor.id} value={counselor.id.toString()}>
                         {counselor.name}

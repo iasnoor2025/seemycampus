@@ -225,20 +225,14 @@ export function CoursesList() {
           {/* Filter and Action Buttons */}
           <div className="flex gap-3 flex-shrink-0">
             <Select
-              value={selectedCollege}
-              onValueChange={(value) => setSelectedCollege(value || "")}
+              value={selectedCollege || undefined}
+              onValueChange={(value) => setSelectedCollege(value === "all" ? "" : value)}
             >
               <SelectTrigger className="w-[220px] sm:w-[280px] lg:w-[320px] h-10 [&_[data-slot=select-value]]:truncate [&_[data-slot=select-value]]:pr-6 [&_[data-slot=select-value]]:max-w-full">
-                <SelectValue placeholder="All Colleges">
-                  {(value: string | null) => {
-                    if (!value || value === "") return "All Colleges"
-                    const college = colleges.find((c) => c.id.toString() === value)
-                    return college?.name || "All Colleges"
-                  }}
-                </SelectValue>
+                <SelectValue placeholder="All Colleges" />
               </SelectTrigger>
               <SelectContent className="max-w-[400px]">
-                <SelectItem value="">All Colleges</SelectItem>
+                <SelectItem value="all">All Colleges</SelectItem>
                 {colleges.map((college) => (
                   <SelectItem key={college.id} value={college.id.toString()}>
                     {college.name}

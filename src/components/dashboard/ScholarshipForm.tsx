@@ -245,16 +245,16 @@ export function ScholarshipForm({ scholarship, onClose }: ScholarshipFormProps) 
             <div>
               <Label htmlFor="collegeId">College (Optional)</Label>
               <Select
-                value={formData.collegeId?.toString() || ""}
+                value={formData.collegeId ? formData.collegeId.toString() : undefined}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, collegeId: value ? parseInt(value) : null })
+                  setFormData({ ...formData, collegeId: value === "none" ? null : parseInt(value) })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select college" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {colleges.map((college) => (
                     <SelectItem key={college.id} value={college.id.toString()}>
                       {college.name}

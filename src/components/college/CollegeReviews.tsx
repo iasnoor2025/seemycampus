@@ -355,14 +355,14 @@ export function CollegeReviews({ collegeSlug }: CollegeReviewsProps) {
               <div>
                 <label className="text-sm font-medium mb-2 block">Category (Optional)</label>
                 <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value || "" })}
+                  value={formData.category || undefined}
+                  onValueChange={(value) => setFormData({ ...formData, category: value === "none" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {reviewCategories.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}

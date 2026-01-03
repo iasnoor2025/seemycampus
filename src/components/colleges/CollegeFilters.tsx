@@ -245,14 +245,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 State
               </label>
               <Select
-                value={filters.state}
-                onValueChange={(value) => handleFilterChange("state", value)}
+                value={filters.state || undefined}
+                onValueChange={(value) => handleFilterChange("state", value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue>{filters.state || "Select state"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All States</SelectItem>
+                  <SelectItem value="all">All States</SelectItem>
                   {INDIAN_STATES.map((state) => (
                     <SelectItem key={state} value={state}>
                       {state}
@@ -268,14 +268,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 Course Type
               </label>
               <Select
-                value={filters.course}
-                onValueChange={(value) => handleFilterChange("course", value)}
+                value={filters.course || undefined}
+                onValueChange={(value) => handleFilterChange("course", value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue>{filters.course || "Select course"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Courses</SelectItem>
+                  <SelectItem value="all">All Courses</SelectItem>
                   {COURSE_TYPES.map((course) => (
                     <SelectItem key={course} value={course}>
                       {course}
@@ -291,14 +291,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 Entrance Exam
               </label>
               <Select
-                value={filters.entranceExam}
-                onValueChange={(value) => handleFilterChange("entranceExam", value)}
+                value={filters.entranceExam || undefined}
+                onValueChange={(value) => handleFilterChange("entranceExam", value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue>{filters.entranceExam || "Select exam"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Exams</SelectItem>
+                  <SelectItem value="all">All Exams</SelectItem>
                   {ENTRANCE_EXAMS.map((exam) => (
                     <SelectItem key={exam} value={exam}>
                       {exam}
@@ -339,14 +339,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 Ownership
               </label>
               <Select
-                value={filters.ownership}
-                onValueChange={(value) => handleFilterChange("ownership", value)}
+                value={filters.ownership || undefined}
+                onValueChange={(value) => handleFilterChange("ownership", value === "all" ? "" : value)}
               >
                 <SelectTrigger>
                   <SelectValue>{filters.ownership || "Select ownership"}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="Private">Private</SelectItem>
                   <SelectItem value="Government">Government</SelectItem>
                   <SelectItem value="Public">Public</SelectItem>
@@ -362,7 +362,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
               <Select
                 value={
                   filters.academicAlliance === null
-                    ? ""
+                    ? undefined
                     : filters.academicAlliance
                     ? "true"
                     : "false"
@@ -370,7 +370,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                 onValueChange={(value) =>
                   handleFilterChange(
                     "academicAlliance",
-                    value === "" ? null : value === "true"
+                    value === "all" ? null : value === "true"
                   )
                 }
               >
@@ -384,7 +384,7 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Colleges</SelectItem>
+                  <SelectItem value="all">All Colleges</SelectItem>
                   <SelectItem value="true">Academic Alliance Only</SelectItem>
                   <SelectItem value="false">Non-Alliance</SelectItem>
                 </SelectContent>
@@ -400,14 +400,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                     Exam for Cutoff
                   </label>
                   <Select
-                    value={filters.cutoffExam}
-                    onValueChange={(value) => handleFilterChange("cutoffExam", value)}
+                    value={filters.cutoffExam || undefined}
+                    onValueChange={(value) => handleFilterChange("cutoffExam", value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue>{filters.cutoffExam || "Select exam"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Exams</SelectItem>
+                      <SelectItem value="all">All Exams</SelectItem>
                       {ENTRANCE_EXAMS.map((exam) => (
                         <SelectItem key={exam} value={exam}>
                           {exam}
@@ -422,14 +422,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                     Category
                   </label>
                   <Select
-                    value={filters.cutoffCategory}
-                    onValueChange={(value) => handleFilterChange("cutoffCategory", value)}
+                    value={filters.cutoffCategory || undefined}
+                    onValueChange={(value) => handleFilterChange("cutoffCategory", value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue>{filters.cutoffCategory || "Select category"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {CUTOFF_CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
@@ -528,14 +528,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                     Ranking Source
                   </label>
                   <Select
-                    value={filters.rankingSource}
-                    onValueChange={(value) => handleFilterChange("rankingSource", value)}
+                    value={filters.rankingSource || undefined}
+                    onValueChange={(value) => handleFilterChange("rankingSource", value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue>{filters.rankingSource || "Select source"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Sources</SelectItem>
+                      <SelectItem value="all">All Sources</SelectItem>
                       {RANKING_SOURCES.map((source) => (
                         <SelectItem key={source} value={source}>
                           {source}
@@ -550,14 +550,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                     Ranking Category
                   </label>
                   <Select
-                    value={filters.rankingCategory}
-                    onValueChange={(value) => handleFilterChange("rankingCategory", value)}
+                    value={filters.rankingCategory || undefined}
+                    onValueChange={(value) => handleFilterChange("rankingCategory", value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue>{filters.rankingCategory || "Select category"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {RANKING_CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
@@ -602,14 +602,14 @@ export function CollegeFilters({ onFilterChange, onSearchChange }: CollegeFilter
                     Accreditation
                   </label>
                   <Select
-                    value={filters.accreditation}
-                    onValueChange={(value) => handleFilterChange("accreditation", value)}
+                    value={filters.accreditation || undefined}
+                    onValueChange={(value) => handleFilterChange("accreditation", value === "all" ? "" : value)}
                   >
                     <SelectTrigger>
                       <SelectValue>{filters.accreditation || "Select accreditation"}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                       {ACCREDITATIONS.map((acc) => (
                         <SelectItem key={acc} value={acc}>
                           {acc}
