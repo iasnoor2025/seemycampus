@@ -18,9 +18,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
+    // Get options from request body
+    const body = await request.json().catch(() => ({}))
+    const { discoverFirst = false, importLinkingsky = false } = body
+    
     // Run enrichment in background (don't await - return immediately)
     // This allows the API to return while enrichment runs
-    enrichAllColleges()
+    enrichAllColleges({ discoverFirst, importLinkingsky })
       .then(() => {
         console.log("✅ Enrichment completed successfully")
       })

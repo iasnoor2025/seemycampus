@@ -841,11 +841,62 @@ Important:
 }
 
 // Main enrichment function
-async function enrichAllColleges() {
+async function enrichAllColleges(options: { discoverFirst?: boolean; importLinkingsky?: boolean } = {}) {
+  const { discoverFirst = false, importLinkingsky = false } = options
+  
+  // Step 0: Discover/Import colleges first if requested
+  if (importLinkingsky) {
+    console.log("=" .repeat(60))
+    console.log("STEP 0: Importing Universities from Linkingsky")
+    console.log("=" .repeat(60))
+    try {
+      const linkingskyResult = await fetchUniversitiesFromLinkingsky()
+      console.log(`✅ Imported ${linkingskyResult.added} universities from Linkingsky\n`)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error("⚠️  Linkingsky import failed, continuing with enrichment:", error)
+    }
+  }
+  
+  if (discoverFirst) {
+    console.log("=" .repeat(60))
+    console.log("STEP 0: Discovering Missing Colleges")
+    console.log("=" .repeat(60))
+    try {
+      const discoveryResult = await discoverAndAddMissingColleges()
+      console.log(`✅ Discovered and added ${discoveryResult.added} colleges\n`)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error("⚠️  Discovery failed, continuing with enrichment:", error)
+    }
+  }
+  
+  // Step 1: Remove duplicates before enrichment
+  if (discoverFirst || importLinkingsky) {
+    console.log("=" .repeat(60))
+    console.log("STEP 1: Removing Duplicate Colleges")
+    console.log("=" .repeat(60))
+    try {
+      const duplicateResult = await removeDuplicates(false) // Don't close connection
+      console.log(`✅ Removed ${duplicateResult?.duplicatesRemoved || 0} duplicate colleges\n`)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error("⚠️  Duplicate removal failed, continuing with enrichment:", error)
+    }
+  }
+  
+  // Step 2: Enrichment process
+  console.log("=" .repeat(60))
+  console.log("STEP 2: Enriching All Colleges")
+  console.log("=" .repeat(60))
   console.log("🤖 Starting AI-powered data enrichment and verification with Ollama...\n")
   console.log("⚠️  This will:")
+  console.log("   - Correct college names (fix typos, capitalization)")
   console.log("   - Fill MISSING fields")
   console.log("   - VERIFY and CORRECT existing data (ranking, phone, email, website, etc.)")
+  console.log("   - Add logos and campus images")
+  console.log("   - Add courses")
+  console.log("   - Add reviews and ratings")
   console.log("   - Search internet for accurate information\n")
   
   try {
@@ -1000,6 +1051,12 @@ async function enrichAllColleges() {
     console.log(`   - Colleges processed for reviews: ${reviewsAddedCount}`)
     console.log(`   - Colleges skipped (already complete): ${skippedCount}`)
     console.log(`   - Total colleges processed: ${allColleges.length}`)
+    
+    if (discoverFirst || importLinkingsky) {
+      console.log(`\n${"=".repeat(60)}`)
+      console.log("✨ Complete Process Finished!")
+      console.log(`${"=".repeat(60)}`)
+    }
     
   } catch (error) {
     console.error("❌ Enrichment failed:", error)

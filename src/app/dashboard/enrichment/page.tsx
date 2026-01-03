@@ -36,6 +36,8 @@ export default function EnrichmentPage() {
   const [importingLinkingsky, setImportingLinkingsky] = useState(false)
   const [linkingskyStatus, setLinkingskyStatus] = useState<"idle" | "running" | "success" | "error">("idle")
   const [linkingskyMessage, setLinkingskyMessage] = useState("")
+  const [discoverFirst, setDiscoverFirst] = useState(false)
+  const [importLinkingskyFirst, setImportLinkingskyFirst] = useState(false)
   const { toast } = useToast()
 
   const checkRequirements = async () => {
@@ -85,6 +87,10 @@ export default function EnrichmentPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          discoverFirst: discoverFirst,
+          importLinkingsky: importLinkingskyFirst,
+        }),
       })
 
       const data = await response.json()
@@ -344,18 +350,49 @@ export default function EnrichmentPage() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                This process will:
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Correct college names (fix typos, capitalization, formatting)</li>
-                  <li>Fill missing college data (description, ranking, fees, etc.)</li>
-                  <li>Verify and correct ALL existing data (ranking, phone, email, website, etc.)</li>
-                  <li>Validate phone numbers (Indian format: +91-XXXXXXXXXX)</li>
-                  <li>Verify rankings (NIRF and other official rankings)</li>
-                  <li>Add logos (only if college doesn't have one)</li>
-                  <li>Add campus images</li>
-                  <li>Add courses (if college has none, or add new courses if more are found)</li>
-                  <li>Add reviews and ratings (if college has less than 5 reviews)</li>
-                </ul>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold mb-2">Process Order:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      {importLinkingskyFirst && (
+                        <li className="text-blue-600 font-medium">Import universities from Linkingsky (1198+ universities)</li>
+                      )}
+                      {discoverFirst && !importLinkingskyFirst && (
+                        <li className="text-blue-600 font-medium">Discover and add missing Indian colleges</li>
+                      )}
+                      {(importLinkingskyFirst || discoverFirst) && (
+                        <li className="text-blue-600 font-medium">Remove duplicate colleges</li>
+                      )}
+                      <li>Correct college names (fix typos, capitalization, formatting)</li>
+                      <li>Fill missing college data (description, ranking, fees, etc.)</li>
+                      <li>Verify and correct ALL existing data (ranking, phone, email, website, etc.)</li>
+                      <li>Add logos and campus images</li>
+                      <li>Add courses</li>
+                      <li>Add reviews and ratings</li>
+                    </ol>
+                  </div>
+                  <div className="flex flex-col space-y-2 pt-2 border-t">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={importLinkingskyFirst}
+                        onChange={(e) => setImportLinkingskyFirst(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm font-medium">Import from Linkingsky first (1198+ universities)</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={discoverFirst}
+                        onChange={(e) => setDiscoverFirst(e.target.checked)}
+                        disabled={importLinkingskyFirst}
+                        className="h-4 w-4 rounded border-gray-300 disabled:opacity-50"
+                      />
+                      <span className="text-sm font-medium">Discover missing colleges first (if Linkingsky not selected)</span>
+                    </label>
+                  </div>
+                </div>
                 <p className="mt-2 font-semibold">⚠️ This may take a while - check server logs for progress.</p>
               </AlertDescription>
             </Alert>

@@ -226,7 +226,7 @@ export function CoursesList() {
           <div className="flex gap-3 flex-shrink-0">
             <Select
               value={selectedCollege}
-              onValueChange={(value) => setSelectedCollege(value)}
+              onValueChange={(value) => setSelectedCollege(value || "")}
             >
               <SelectTrigger className="w-[220px] sm:w-[280px] lg:w-[320px] h-10 [&_[data-slot=select-value]]:truncate [&_[data-slot=select-value]]:pr-6 [&_[data-slot=select-value]]:max-w-full">
                 <SelectValue placeholder="All Colleges">
