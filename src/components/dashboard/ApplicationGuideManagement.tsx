@@ -47,12 +47,14 @@ export function ApplicationGuideManagement() {
   const [loadingColleges, setLoadingColleges] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCollege, setSelectedCollege] = useState<string>("")
+  const [mounted, setMounted] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingGuide, setEditingGuide] = useState<ApplicationGuide | null>(null)
   const [deletingGuide, setDeletingGuide] = useState<number | null>(null)
   const [currentCollege, setCurrentCollege] = useState<College | null>(null)
 
   useEffect(() => {
+    setMounted(true)
     fetchColleges()
   }, [])
 
@@ -126,88 +128,139 @@ export function ApplicationGuideManagement() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Application Guides</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">Application Guides</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage application form guides and requirements for colleges
           </p>
         </div>
-        <Button onClick={() => {
-          setEditingGuide(null)
-          setShowForm(true)
-        }} disabled={!selectedCollege}>
+        <Button 
+          onClick={() => {
+            setEditingGuide(null)
+            setShowForm(true)
+          }} 
+          disabled={!selectedCollege}
+          className="w-full sm:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Guide
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Select value={selectedCollege} onValueChange={(value) => setSelectedCollege(value ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select college" />
-                </SelectTrigger>
-                <SelectContent>
-                  {colleges.map((college) => (
-                    <SelectItem key={college.id} value={college.id.toString()}>
-                      {college.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search guides..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      {/* Filters Section */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end pb-2">
+        <div className="w-full sm:w-64">
+          <Select 
+            value={mounted && selectedCollege ? selectedCollege : undefined} 
+            onValueChange={(value) => {
+              if (mounted) {
+                setSelectedCollege(value || "")
+              }
+            }}
+            disabled={!mounted || loadingColleges}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select college" />
+            </SelectTrigger>
+            {mounted && (
+              <SelectContent>
+                {colleges.map((college) => (
+                  <SelectItem key={college.id} value={college.id.toString()}>
+                    {college.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            )}
+          </Select>
+        </div>
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search guides..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+              disabled={!selectedCollege}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <Card>
+        <CardContent className="p-6 sm:p-8">
           {loadingColleges ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : loading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : !selectedCollege ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Please select a college to view application guides
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
+                <Search className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-lg font-medium mb-2">
+                Please select a college to view application guides
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Choose a college from the dropdown above to get started
+              </p>
             </div>
           ) : filteredGuides.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "No guides found matching your search" : "No application guides yet. Create one to get started."}
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
+                {searchQuery ? (
+                  <Search className="h-10 w-10 text-muted-foreground" />
+                ) : (
+                  <Plus className="h-10 w-10 text-muted-foreground" />
+                )}
+              </div>
+              <p className="text-muted-foreground text-lg font-medium mb-2">
+                {searchQuery ? "No guides found matching your search" : "No application guides yet"}
+              </p>
+              <p className="text-muted-foreground text-sm mb-6">
+                {searchQuery 
+                  ? "Try adjusting your search terms" 
+                  : "Create your first guide to get started"}
+              </p>
+              {!searchQuery && (
+                <Button 
+                  onClick={() => {
+                    setEditingGuide(null)
+                    setShowForm(true)
+                  }}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Guide
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
               {filteredGuides.map((guide) => (
-                <Card key={guide.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">
+                <Card key={guide.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg mb-3">
                           {guide.course?.name || "General Application Guide"}
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {guide.guideContent.substring(0, 150)}...
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          {guide.guideContent.substring(0, 150)}
+                          {guide.guideContent.length > 150 && "..."}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-shrink-0">
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             setEditingGuide(guide)
                             setShowForm(true)
@@ -216,37 +269,42 @@ export function ApplicationGuideManagement() {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => setDeletingGuide(guide.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-4 text-sm pt-2 border-t">
                       {guide.requiredDocs.length > 0 && (
-                        <div>
-                          <span className="font-medium">Documents: </span>
-                          <span>{guide.requiredDocs.length}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-muted-foreground">Documents:</span>
+                          <span className="font-semibold">{guide.requiredDocs.length}</span>
                         </div>
                       )}
                       {guide.feeInfo?.amount && (
-                        <div>
-                          <span className="font-medium">Fee: </span>
-                          <span>{guide.feeInfo.currency || "₹"}{guide.feeInfo.amount.toLocaleString()}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-muted-foreground">Fee:</span>
+                          <span className="font-semibold">
+                            {guide.feeInfo.currency || "₹"}{guide.feeInfo.amount.toLocaleString()}
+                          </span>
                         </div>
                       )}
                       {guide.applicationUrl && (
-                        <div>
-                          <span className="font-medium">Has Application Link</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-green-500"></span>
+                          <span className="text-muted-foreground">Application Link</span>
                         </div>
                       )}
                       {guide.contactInfo && (
-                        <div>
-                          <span className="font-medium">Has Contact Info</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-blue-500"></span>
+                          <span className="text-muted-foreground">Contact Info</span>
                         </div>
                       )}
                     </div>

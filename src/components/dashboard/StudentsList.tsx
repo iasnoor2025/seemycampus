@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Calendar, MapPin, GraduationCap, Search } from "lucide-react"
+import { Users, Calendar, MapPin, GraduationCap, Search, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface StudentAnswer {
   id: number
@@ -30,6 +38,9 @@ export function StudentsList() {
   const [students, setStudents] = useState<StudentAnswer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<StudentAnswer | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchStudents = async () => {
     try {
@@ -59,6 +70,38 @@ export function StudentsList() {
       student.interests.some((interest) => interest.toLowerCase().includes(searchLower))
     )
   })
+
+  const handleDeleteClick = (student: StudentAnswer) => {
+    setStudentToDelete(student)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return
+
+    try {
+      setDeleting(true)
+      const response = await fetch(`/api/dashboard/students/${studentToDelete.id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        // Remove the deleted student from the list
+        setStudents(students.filter((s) => s.id !== studentToDelete.id))
+        setDeleteDialogOpen(false)
+        setStudentToDelete(null)
+      } else {
+        const error = await response.json()
+        console.error("Error deleting student:", error)
+        alert("Failed to delete student response")
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error)
+      alert("Failed to delete student response")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -105,6 +148,7 @@ export function StudentsList() {
                 <TableHead>Study Mode</TableHead>
                 <TableHead>Level</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -162,6 +206,16 @@ export function StudentsList() {
                       {new Date(student.createdAt).toLocaleDateString()}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(student)}
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -173,6 +227,56 @@ export function StudentsList() {
           <p className="text-muted-foreground">No students found</p>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Student Response</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this student quiz response? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {studentToDelete && (
+            <div className="py-4">
+              <div className="text-sm space-y-1">
+                <p>
+                  <span className="font-medium">Interests:</span>{" "}
+                  {studentToDelete.interests.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium">Location:</span>{" "}
+                  {studentToDelete.preferredLocation || "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Level:</span>{" "}
+                  {studentToDelete.academicLevel || "N/A"}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setStudentToDelete(null)
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

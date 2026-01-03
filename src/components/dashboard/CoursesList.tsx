@@ -60,7 +60,7 @@ export function CoursesList() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCollege, setSelectedCollege] = useState<string>("")
+  const [selectedCollege, setSelectedCollege] = useState<string>("all")
   const [deleteCourseId, setDeleteCourseId] = useState<number | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -68,7 +68,7 @@ export function CoursesList() {
   const fetchCourses = async () => {
     try {
       setLoading(true)
-      const url = selectedCollege
+      const url = selectedCollege && selectedCollege !== "all"
         ? `/api/dashboard/courses?limit=1000&collegeId=${selectedCollege}`
         : "/api/dashboard/courses?limit=1000"
       const response = await fetch(url)
@@ -225,8 +225,8 @@ export function CoursesList() {
           {/* Filter and Action Buttons */}
           <div className="flex gap-3 flex-shrink-0">
             <Select
-              value={selectedCollege || undefined}
-              onValueChange={(value) => setSelectedCollege(value === "all" ? "" : value)}
+              value={selectedCollege}
+              onValueChange={(value) => setSelectedCollege(value)}
             >
               <SelectTrigger className="w-[220px] sm:w-[280px] lg:w-[320px] h-10 [&_[data-slot=select-value]]:truncate [&_[data-slot=select-value]]:pr-6 [&_[data-slot=select-value]]:max-w-full">
                 <SelectValue placeholder="All Colleges" />
