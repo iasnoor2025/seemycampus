@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CheckCircle2, XCircle, Loader2, Edit2, MoreVertical, Eye, Trash2, AlertTriangle } from "lucide-react"
+import { CheckCircle2, XCircle, Loader2, Edit2, MoreVertical, Eye, Trash2, AlertTriangle, UserPlus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
   DropdownMenu,
@@ -38,6 +38,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   USER_ROLES,
   ROLE_DISPLAY_NAMES,
@@ -63,6 +74,15 @@ export function UsersList() {
   const [editingRole, setEditingRole] = useState<number | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: USER_ROLES.STUDENT as UserRole,
+    isApproved: false,
+  })
   const { toast } = useToast()
 
   const fetchUsers = async () => {
@@ -198,6 +218,75 @@ export function UsersList() {
     }
   }
 
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newUser.password.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCreating(true)
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.role,
+          isApproved: newUser.isApproved,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create user")
+      }
+
+      toast({
+        title: "Success",
+        description: `User ${newUser.name} created successfully`,
+      })
+
+      // Reset form
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        role: USER_ROLES.STUDENT,
+        isApproved: false,
+      })
+      setCreateDialogOpen(false)
+
+      // Refresh users list
+      await fetchUsers()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user",
+        variant: "destructive",
+      })
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const getRoleBadgeVariant = (role: string | null) => {
     switch (role) {
       case USER_ROLES.ADMIN:
@@ -227,6 +316,145 @@ export function UsersList() {
 
   return (
     <div className="space-y-6">
+      {/* Create User Button */}
+      <div className="flex justify-end">
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Create User
+        </Button>
+      </div>
+
+      {/* Create User Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} modal={true}>
+        <DialogContent 
+          className="sm:max-w-[500px] [&>*]:overflow-visible" 
+          style={{ overflow: 'visible' }}
+          onInteractOutside={(e) => {
+            // Don't close dialog when clicking on Select dropdown
+            const target = e.target as HTMLElement
+            if (target.closest('[data-slot="select-content"]') || 
+                target.closest('[data-baseui-select-popup]') ||
+                target.closest('[data-baseui-select-positioner]')) {
+              e.preventDefault()
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account. The user will be able to sign in with the provided credentials.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 overflow-visible">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                placeholder="Enter user's full name"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter user's email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password *</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter password (min 8 characters)"
+                value={newUser.password}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role *</Label>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) => {
+                  const role = value as UserRole
+                  setNewUser({
+                    ...newUser,
+                    role,
+                    // Auto-approve if role is auto-approved
+                    isApproved: isAutoApproved(role) ? true : newUser.isApproved,
+                  })
+                }}
+              >
+                <SelectTrigger id="role" className="w-full">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSIGNABLE_ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {ROLE_DISPLAY_NAMES[role]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {!isAutoApproved(newUser.role) && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isApproved"
+                  checked={newUser.isApproved}
+                  onCheckedChange={(checked) =>
+                    setNewUser({ ...newUser, isApproved: checked === true })
+                  }
+                />
+                <Label
+                  htmlFor="isApproved"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Approve user immediately
+                </Label>
+              </div>
+            )}
+            {isAutoApproved(newUser.role) && (
+              <p className="text-sm text-muted-foreground">
+                This role is automatically approved
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreateDialogOpen(false)
+                setNewUser({
+                  name: "",
+                  email: "",
+                  password: "",
+                  role: USER_ROLES.STUDENT,
+                  isApproved: false,
+                })
+              }}
+              disabled={creating}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser} disabled={creating}>
+              {creating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create User"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Pending Approvals */}
       {pendingUsers.length > 0 && (
         <div>

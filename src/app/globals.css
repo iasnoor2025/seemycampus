@@ -102,11 +102,31 @@ html, body {
   z-index: 9999 !important;
 }
 
-/* Fix Select dropdown z-index and overflow in dialogs */
+/* Fix Radix UI Select dropdown z-index in dialogs */
+[data-radix-select-content] {
+  z-index: 100 !important;
+}
+
+/* Ensure Radix UI Select is clickable in dialogs */
+[data-radix-portal] [data-radix-select-content] {
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix Dialog overlay to not block Select */
+[data-radix-dialog-overlay] {
+  z-index: 50 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 50 !important;
+}
+
+/* Legacy base-ui Select support (if still used elsewhere) */
 [data-slot="select-content"],
 [data-baseui-select-popup],
 [data-baseui-select-positioner] {
-  z-index: 9999 !important;
+  z-index: 10000 !important;
 }
 
 /* Fix NavigationMenu viewport overflow */

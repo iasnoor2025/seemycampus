@@ -32,8 +32,9 @@ interface PredictionResult {
 }
 
 export function AdmissionPredictorClient() {
-  const [examName, setExamName] = useState("")
-  const [category, setCategory] = useState("")
+  const [mounted, setMounted] = useState(false)
+  const [examName, setExamName] = useState<string>("")
+  const [category, setCategory] = useState<string>("")
   const [score, setScore] = useState<string>("")
   const [rank, setRank] = useState<string>("")
   const [courseName, setCourseName] = useState<string>("")
@@ -44,6 +45,11 @@ export function AdmissionPredictorClient() {
   const [predictions, setPredictions] = useState<PredictionResult[]>([])
   const [error, setError] = useState<string>("")
 
+  // Ensure component is mounted to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Load available exams on mount
   useEffect(() => {
     const fetchExams = async () => {
@@ -51,10 +57,23 @@ export function AdmissionPredictorClient() {
         const response = await fetch("/api/admission/predict")
         if (response.ok) {
           const data = await response.json()
-          setAvailableExams(data.exams || [])
+          console.log("Fetched exams data:", data)
+          const exams = data.exams || []
+          console.log(`Loaded ${exams.length} exams:`, exams)
+          setAvailableExams(exams)
+          // Clear any previous errors on successful load
+          setError("")
+          // Don't show error for empty exams - just show empty dropdown
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          console.error("Failed to fetch exams:", response.status, errorData)
+          // Only show error for actual failures, not empty data
+          setError("Unable to load exams. Please try again later.")
         }
       } catch (err) {
         console.error("Error fetching exams:", err)
+        // Only show error for network/connection issues
+        setError("Unable to load exams. Please check your connection and try again.")
       } finally {
         setLoadingExams(false)
       }
@@ -180,40 +199,68 @@ export function AdmissionPredictorClient() {
               <Label htmlFor="examName" className="text-base font-semibold text-gray-900">
                 Exam Name <span className="text-red-500">*</span>
               </Label>
-              <Select value={examName} onValueChange={(value) => setExamName(value || "")} disabled={loadingExams}>
-                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
-                  <SelectValue placeholder={loadingExams ? "Loading..." : "Select exam"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableExams.map((exam) => (
-                    <SelectItem key={exam} value={exam}>
-                      {exam}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {mounted ? (
+                <Select 
+                  value={examName || undefined} 
+                  onValueChange={(value) => setExamName(value || "")} 
+                  disabled={loadingExams}
+                >
+                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
+                    <SelectValue placeholder={loadingExams ? "Loading..." : availableExams.length === 0 ? "No exams available" : "Select exam"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableExams.length > 0 ? (
+                      availableExams.map((exam) => (
+                        <SelectItem key={exam} value={exam}>
+                          {exam}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-exams" disabled>
+                        No exams available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="h-12 border-2 border-gray-200 rounded-md bg-background flex items-center px-3 text-sm text-muted-foreground">
+                  Loading...
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="category" className="text-base font-semibold text-gray-900">
                 Category <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={category}
-                onValueChange={(value) => setCategory(value || "")}
-                disabled={!examName || loadingExams}
-              >
-                <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCategories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {mounted ? (
+                <Select
+                  value={category || undefined}
+                  onValueChange={(value) => setCategory(value || "")}
+                  disabled={!examName || loadingExams}
+                >
+                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
+                    <SelectValue placeholder={!examName ? "Select exam first" : availableCategories.length === 0 ? "No categories available" : "Select category"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.length > 0 ? (
+                      availableCategories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-categories" disabled>
+                        {!examName ? "Select an exam first" : "No categories available"}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="h-12 border-2 border-gray-200 rounded-md bg-background flex items-center px-3 text-sm text-muted-foreground">
+                  Loading...
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

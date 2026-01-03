@@ -188,7 +188,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
 
             {/* Colleges Grid - Modern Card Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {collegesList.map((college, index) => {
+              {collegesList.map((college) => {
                 const collegeCourses = coursesWithColleges
                   .filter(({ college: c }) => c.id === college.id)
                   .map(({ course }) => course)
@@ -201,7 +201,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                   "from-sky-500 to-blue-600",
                   "from-purple-500 to-pink-600",
                 ]
-                const gradient = gradients[index % gradients.length]
+                // Use college.id for stable gradient selection (prevents hydration mismatch)
+                const gradient = gradients[college.id % gradients.length]
 
                 return (
                   <div
@@ -319,7 +320,7 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
 
             {/* Courses Grid - Modern Card Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {matchingCourses.map(({ course, college }, index) => {
+              {matchingCourses.map(({ course, college }) => {
                 const gradients = [
                   "from-blue-500 to-cyan-600",
                   "from-indigo-500 to-purple-600",
@@ -328,7 +329,8 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
                   "from-sky-500 to-blue-600",
                   "from-purple-500 to-pink-600",
                 ]
-                const gradient = gradients[index % gradients.length]
+                // Use course.id for stable gradient selection (prevents hydration mismatch)
+                const gradient = gradients[course.id % gradients.length]
 
                 return (
                   <div

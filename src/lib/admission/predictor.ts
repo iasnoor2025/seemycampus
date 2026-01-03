@@ -5,7 +5,7 @@
 
 import { db } from "@/db"
 import { cutoffs, colleges } from "@/db/schema"
-import { eq, and, gte, lte, sql, desc } from "drizzle-orm"
+import { eq, and, gte, lte, sql, desc, isNotNull } from "drizzle-orm"
 
 export interface PredictionInput {
   examName: string
@@ -387,9 +387,15 @@ export async function getAvailableExams(): Promise<string[]> {
     const exams = await db
       .selectDistinct({ examName: cutoffs.examName })
       .from(cutoffs)
+      .where(isNotNull(cutoffs.examName))
       .orderBy(cutoffs.examName)
 
-    return exams.map((e) => e.examName)
+    const examNames = exams
+      .map((e) => e.examName)
+      .filter((name): name is string => name !== null && name.trim() !== "")
+
+    console.log(`Found ${examNames.length} available exams:`, examNames)
+    return examNames
   } catch (error) {
     console.error("Error fetching available exams:", error)
     return []
