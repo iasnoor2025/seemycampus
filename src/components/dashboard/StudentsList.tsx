@@ -211,9 +211,10 @@ export function StudentsList() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteClick(student)}
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                      aria-label="Delete student"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </TableCell>
                 </TableRow>

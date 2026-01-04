@@ -518,15 +518,15 @@ export function UsersList() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
+                            size="icon"
+                            className="min-h-[44px] min-w-[44px]"
                             disabled={updating === user.id}
                             asChild
                           >
                             {updating === user.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                              <MoreVertical className="h-4 w-4" />
+                              <MoreVertical className="h-5 w-5" />
                             )}
                           </Button>
                         </DropdownMenuTrigger>
@@ -628,13 +628,14 @@ export function UsersList() {
                         </Badge>
                         {user.role !== USER_ROLES.ADMIN && (
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="h-6 w-6 p-0"
+                            className="min-h-[44px] min-w-[44px]"
                             onClick={() => setEditingRole(user.id)}
                             disabled={updating === user.id}
+                            aria-label="Edit role"
                           >
-                            <Edit2 className="h-3 w-3" />
+                            <Edit2 className="h-5 w-5" />
                           </Button>
                         )}
                       </div>
@@ -661,8 +662,8 @@ export function UsersList() {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
+                          size="icon"
+                          className="min-h-[44px] min-w-[44px]"
                           disabled={updating === user.id}
                           asChild
                         >

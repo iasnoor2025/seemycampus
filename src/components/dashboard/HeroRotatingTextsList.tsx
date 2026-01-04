@@ -193,18 +193,20 @@ export function HeroRotatingTextsList() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => handleOrderChange(text, "up")}
                         disabled={texts.findIndex((t) => t.id === text.id) === 0}
+                        aria-label="Move up"
                       >
-                        <ArrowUp className="h-3 w-3" />
+                        <ArrowUp className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => handleOrderChange(text, "down")}
                         disabled={texts.findIndex((t) => t.id === text.id) === texts.length - 1}
+                        aria-label="Move down"
                       >
                         <ArrowDown className="h-3 w-3" />
                       </Button>

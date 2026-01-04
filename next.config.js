@@ -23,6 +23,15 @@ const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@/components'],
+  },
+  // Optimize production builds
+  swcMinify: true,
+  // Reduce JavaScript bundle size
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
   },
   // Headers for caching and performance
   async headers() {
@@ -50,6 +59,15 @@ const nextConfig = {
       },
       {
         source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.(jpg|jpeg|png|gif|webp|avif|svg)',
         headers: [
           {
             key: 'Cache-Control',

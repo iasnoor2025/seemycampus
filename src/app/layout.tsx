@@ -4,14 +4,32 @@ import "./globals.css"
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout"
 import { SessionProvider } from "@/components/providers/SessionProvider"
 import { Toaster } from "@/components/ui/toaster"
-import { ContactFormPopup } from "@/components/contact/ContactFormPopup"
-import { ChatbotWidget } from "@/components/chat/ChatbotWidget"
+import dynamic from "next/dynamic"
+
+// Dynamically import heavy components to reduce initial bundle size
+const ContactFormPopup = dynamic(
+  () => import("@/components/contact/ContactFormPopup").then(mod => ({ default: mod.ContactFormPopup })),
+  { 
+    ssr: false,
+    loading: () => null, // Don't show loading state for popup
+  }
+)
+
+const ChatbotWidget = dynamic(
+  () => import("@/components/chat/ChatbotWidget").then(mod => ({ default: mod.ChatbotWidget })),
+  { 
+    ssr: false,
+    loading: () => null, // Don't show loading state for widget
+  }
+)
 
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
   preload: true,
   variable: '--font-inter',
+  adjustFontFallback: true,
+  fallback: ['system-ui', 'arial'],
 })
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
@@ -255,11 +273,14 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href={`${baseUrl}/main-logo-xxxx.png`} as="image" />
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
         <link rel="alternate icon" href="/logo.svg" />
         <link rel="apple-touch-icon" href="/logo.svg" />
         <link rel="image_src" href={`${baseUrl}/main-logo-xxxx.png`} />
         <meta name="image" content={`${baseUrl}/main-logo-xxxx.png`} />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

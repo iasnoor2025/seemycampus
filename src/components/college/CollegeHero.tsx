@@ -77,6 +77,8 @@ export function CollegeHero({
         className="object-cover"
         priority
         sizes="100vw"
+        quality={85}
+        fetchPriority="high"
         onError={() => {
           setImageError(true)
         }}

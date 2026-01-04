@@ -216,9 +216,9 @@ export function ChatInterface() {
             size="icon"
             onClick={handleClearChat}
             title="Clear chat"
-            className="h-8 w-8 text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 rounded-lg"
+            className="min-h-[44px] min-w-[44px] text-white hover:text-white hover:bg-white/20 transition-all duration-200 rounded-lg"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-5 w-5" />
           </Button>
         </div>
       </CardHeader>
@@ -271,7 +271,7 @@ export function ChatInterface() {
               </div>
               <span className="text-xs font-semibold text-gray-700">SeeMyCampus</span>
             </div>
-            <span className="text-xs text-gray-500 font-medium">Powered by AI</span>
+            <span className="text-xs text-gray-600 font-medium">Powered by AI</span>
           </div>
         </div>
       </CardContent>

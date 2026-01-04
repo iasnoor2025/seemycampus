@@ -85,6 +85,8 @@ export function CollegeLogo({
         unoptimized={useUnoptimized}
         loading="lazy"
         decoding="async"
+        quality={75}
+        sizes={`${imageSize}px`}
         onError={(e) => {
           // Silently handle image errors
           setImageError(true)

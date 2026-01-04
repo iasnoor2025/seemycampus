@@ -519,42 +519,46 @@ export function ChatbotWidget() {
                   SeeMyCampus
                 </span>
               </CardTitle>
-              <div className="flex items-center gap-1 sm:gap-2 relative z-10">
+              <div className="flex items-center gap-2 sm:gap-3 relative z-10">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleRefresh}
                   title="Refresh chat"
-                  className="h-8 w-8 sm:h-8 sm:w-8 text-white/90 hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  className="min-h-[44px] min-w-[44px] text-white hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  aria-label="Refresh chat"
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleClearChat}
                   title="Clear chat"
-                  className="h-8 w-8 sm:h-8 sm:w-8 text-white/90 hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  className="min-h-[44px] min-w-[44px] text-white hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  aria-label="Clear chat"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsMinimized(!isMinimized)}
                   title={isMinimized ? "Expand" : "Minimize"}
-                  className="h-8 w-8 sm:h-8 sm:w-8 text-white/90 hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg hidden sm:flex"
+                  className="min-h-[44px] min-w-[44px] text-white hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg hidden sm:flex"
+                  aria-label={isMinimized ? "Expand" : "Minimize"}
                 >
-                  <Minimize2 className="h-4 w-4" />
+                  <Minimize2 className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleClose}
                   title="Close"
-                  className="h-8 w-8 sm:h-8 sm:w-8 text-white/90 hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  className="min-h-[44px] min-w-[44px] text-white hover:text-white hover:bg-white/20 touch-manipulation transition-all duration-200 rounded-lg"
+                  aria-label="Close chat"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             </CardHeader>

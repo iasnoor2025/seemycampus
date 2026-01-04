@@ -312,25 +312,27 @@ export function CoursesList() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => window.open(`/courses/${course.slug}`, "_blank")}
                         title="View"
+                        aria-label="View course"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => handleEdit(course)}
                         title="Edit"
+                        aria-label="Edit course"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => {
                           setDeleteCourseId(course.id)
                           setShowDeleteDialog(true)
@@ -393,31 +395,33 @@ export function CoursesList() {
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="min-h-[44px] min-w-[44px]"
                             onClick={() =>
                               window.open(`/courses/${course.slug}`, "_blank")
                             }
                             title="View"
+                            aria-label="View course"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-5 w-5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="min-h-[44px] min-w-[44px]"
                             onClick={() => handleEdit(course)}
                             title="Edit"
+                            aria-label="Edit course"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-5 w-5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="min-h-[44px] min-w-[44px]"
                             onClick={() => {
                               setDeleteCourseId(course.id)
                               setShowDeleteDialog(true)
@@ -476,11 +480,11 @@ export function CoursesList() {
                     Previous
                   </Button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     {getPageNumbers().map((page, index) => {
                       if (page === "...") {
                         return (
-                          <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+                          <span key={`ellipsis-${index}`} className="px-2 text-gray-600">
                             ...
                           </span>
                         )

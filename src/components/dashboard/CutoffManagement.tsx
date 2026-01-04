@@ -232,7 +232,7 @@ export function CutoffManagement() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Cutoff Management</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage entrance exam cutoffs for colleges</p>
+          <p className="text-gray-700 mt-1 text-sm sm:text-base">Manage entrance exam cutoffs for colleges</p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleExport}>
@@ -344,7 +344,7 @@ export function CutoffManagement() {
               <TableBody>
                 {paginatedCutoffs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={9} className="text-center py-8 text-gray-600">
                       No cutoffs found
                     </TableCell>
                   </TableRow>
@@ -392,7 +392,7 @@ export function CutoffManagement() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-700">
                 Showing {(currentPage - 1) * pageSize + 1} to{" "}
                 {Math.min(currentPage * pageSize, filteredCutoffs.length)} of{" "}
                 {filteredCutoffs.length} cutoffs

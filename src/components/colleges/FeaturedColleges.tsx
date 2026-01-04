@@ -174,6 +174,9 @@ export function FeaturedColleges() {
                         fill
                         sizes="80px"
                         className="object-contain p-1"
+                        loading="lazy"
+                        quality={75}
+                        decoding="async"
                         onError={() => {
                           setImageErrors(prev => new Set(prev).add(college.id))
                         }}
