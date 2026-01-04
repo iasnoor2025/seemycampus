@@ -4,24 +4,7 @@ import "./globals.css"
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout"
 import { SessionProvider } from "@/components/providers/SessionProvider"
 import { Toaster } from "@/components/ui/toaster"
-import dynamic from "next/dynamic"
-
-// Dynamically import heavy components to reduce initial bundle size
-const ContactFormPopup = dynamic(
-  () => import("@/components/contact/ContactFormPopup").then(mod => ({ default: mod.ContactFormPopup })),
-  { 
-    ssr: false,
-    loading: () => null, // Don't show loading state for popup
-  }
-)
-
-const ChatbotWidget = dynamic(
-  () => import("@/components/chat/ChatbotWidget").then(mod => ({ default: mod.ChatbotWidget })),
-  { 
-    ssr: false,
-    loading: () => null, // Don't show loading state for widget
-  }
-)
+import { ClientWidgets } from "@/components/layout/ClientWidgets"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -298,8 +281,7 @@ export default function RootLayout({
         <SessionProvider>
         <ConditionalLayout>{children}</ConditionalLayout>
         <Toaster />
-        <ContactFormPopup />
-        <ChatbotWidget />
+        <ClientWidgets />
         </SessionProvider>
       </body>
     </html>

@@ -25,8 +25,6 @@ const nextConfig = {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@/components'],
   },
-  // Optimize production builds
-  swcMinify: true,
   // Reduce JavaScript bundle size
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
