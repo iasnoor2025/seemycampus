@@ -7,13 +7,20 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    // Use modern formats (AVIF/WebP) for better compression while maintaining quality
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 31536000, // 1 year cache
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Note: quality is set per-image using the quality prop in Image component
+    // High quality default - individual images can override if needed
+    // Note: quality is set per-image using the quality prop in Image component (default 90-95)
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Optimize remote URL images with Next.js Image Optimization API
+    unoptimized: false,
+    loader: 'default',
+    // Enable image optimization for remote URLs
+    domains: [],
   },
   // Compress responses
   compress: true,
@@ -23,9 +30,44 @@ const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['lucide-react', '@/components'],
+    optimizePackageImports: ['lucide-react', '@/components', '@tabler/icons-react'],
     // Enable partial prerendering for better performance
     ppr: false, // Keep false for now, can enable later
+  },
+  // Optimize bundle size
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Tree-shake unused exports
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        // Split chunks for better caching
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk for node_modules
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Common chunk for shared code
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      }
+    }
+    return config
   },
   // Optimize production builds
   productionBrowserSourceMaps: false,

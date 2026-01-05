@@ -85,11 +85,15 @@ export function CollegeLogo({
         unoptimized={useUnoptimized}
         loading="lazy"
         decoding="async"
-        quality={75}
+        quality={90}
         sizes={`${imageSize}px`}
         onError={(e) => {
-          // Silently handle image errors
+          // Silently handle image errors to prevent 400 errors
           setImageError(true)
+          const target = e.target as HTMLImageElement
+          if (target) {
+            target.style.display = 'none'
+          }
         }}
       />
     </div>

@@ -29,6 +29,8 @@ function NavigationMenuList({
   className,
   ...props
 }: NavigationMenuPrimitive.List.Props) {
+  // Remove invalid aria-orientation attribute if present
+  const { 'aria-orientation': _, ...restProps } = props as any
   return (
     <NavigationMenuPrimitive.List
       data-slot="navigation-menu-list"
@@ -36,7 +38,7 @@ function NavigationMenuList({
         "gap-0 group flex flex-1 list-none items-center justify-center",
         className
       )}
-      {...props}
+      {...restProps}
     />
   )
 }

@@ -327,7 +327,7 @@ export function CollegesListClient({ initialColleges, initialTotalCount = 0 }: C
                                 height={64}
                                 className="object-contain p-1"
                                 loading="lazy"
-                                quality={75}
+                                quality={90}
                                 decoding="async"
                                 sizes="64px"
                                 onError={() => {

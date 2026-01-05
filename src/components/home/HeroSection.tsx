@@ -55,16 +55,24 @@ export function HeroSection() {
 
   useEffect(() => {
     // Use Promise.all for parallel fetching to improve performance
+    // Use AbortController for timeout handling
+    const abortController = new AbortController()
+    const timeoutId = setTimeout(() => abortController.abort(), 5000) // 5s timeout
+
     const fetchData = async () => {
       try {
         const [slidesResponse, textsResponse] = await Promise.all([
           fetch("/api/hero-slides", { 
-            cache: 'force-cache'
+            cache: 'default',
+            signal: abortController.signal
           }),
           fetch("/api/hero-rotating-texts", {
-            cache: 'force-cache'
+            cache: 'default',
+            signal: abortController.signal
           })
         ])
+
+        clearTimeout(timeoutId)
 
         if (slidesResponse.ok) {
           const slidesData = await slidesResponse.json()
@@ -84,8 +92,10 @@ export function HeroSection() {
             "Find Over 250+ Exams in India",
           ])
         }
-      } catch (error) {
-        console.error("Error fetching hero data:", error)
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error("Error fetching hero data:", error)
+        }
         // Fallback to default texts
         setRotatingTexts([
           "Find Over 4 Lakh Reviews in India",
@@ -94,19 +104,42 @@ export function HeroSection() {
           "Find Over 250+ Exams in India",
         ])
       } finally {
+        clearTimeout(timeoutId)
         setLoading(false)
       }
     }
 
     fetchData()
 
-    // Fetch study goals
+    return () => {
+      abortController.abort()
+      clearTimeout(timeoutId)
+    }
+
+    // Fetch study goals - defer to not block critical rendering
     const fetchStudyGoals = async () => {
       try {
-        const response = await fetch("/api/study-goals")
-        if (response.ok) {
-          const data = await response.json()
-          setStudyGoalsData(data.studyGoals || [])
+        // Use requestIdleCallback if available, otherwise setTimeout
+        const scheduleFetch = () => {
+          fetch("/api/study-goals")
+            .then(response => {
+              if (response.ok) {
+                return response.json()
+              }
+              return { studyGoals: [] }
+            })
+            .then(data => {
+              setStudyGoalsData(data.studyGoals || [])
+            })
+            .catch(error => {
+              console.error("Error fetching study goals:", error)
+            })
+        }
+
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(scheduleFetch, { timeout: 2000 })
+        } else {
+          setTimeout(scheduleFetch, 1000)
         }
       } catch (error) {
         console.error("Error fetching study goals:", error)
@@ -186,10 +219,14 @@ export function HeroSection() {
 
   return (
     <>
-      {/* Hero Section */}
+      {/* Hero Section - Fixed height to prevent layout shift */}
       <section 
         className="relative w-full h-[450px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center overflow-hidden"
-        style={{ contain: 'layout style paint' }}
+        style={{ 
+          contain: 'layout style paint',
+          minHeight: '450px',
+          aspectRatio: 'auto'
+        }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -211,12 +248,19 @@ export function HeroSection() {
                   className="object-cover"
                   priority={index === 0}
                   loading={index === 0 ? "eager" : "lazy"}
-                  quality={index === 0 ? 85 : 75}
+                  quality={index === 0 ? 95 : 90}
                   sizes="100vw"
                   fetchPriority={index === 0 ? "high" : "auto"}
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//9k="
                   style={{ willChange: index === 0 ? 'auto' : 'opacity' }}
+                  onError={(e) => {
+                    // Silently handle image errors to prevent 400 errors in console
+                    const target = e.target as HTMLImageElement
+                    if (target) {
+                      target.style.display = 'none'
+                    }
+                  }}
                 />
               </div>
             ))
@@ -230,9 +274,16 @@ export function HeroSection() {
         <div className="container mx-auto px-3 sm:px-4 relative z-20">
           <div className="max-w-4xl mx-auto text-center">
             {/* Main Heading - Typewriter animation with delete and type effect */}
-            <div className="relative h-[50px] sm:h-[60px] md:h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1" style={{ aspectRatio: 'auto' }}>
+            <div 
+              className="relative h-[50px] sm:h-[60px] md:h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1" 
+              style={{ 
+                aspectRatio: 'auto',
+                minHeight: '50px',
+                contain: 'layout'
+              }}
+            >
               <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words lg:whitespace-nowrap max-w-full">
-                <span className="inline-block min-w-[1ch]">{displayText || '\u00A0'}</span>
+                <span className="inline-block min-w-[1ch]" style={{ minWidth: '1ch' }}>{displayText || '\u00A0'}</span>
                 <span className="animate-pulse">|</span>
               </h1>
             </div>
@@ -259,7 +310,8 @@ export function HeroSection() {
                 <Button
                   onClick={handleSearch}
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
+                  style={{ color: '#ffffff' }}
                 >
                   Search
                 </Button>
@@ -271,7 +323,8 @@ export function HeroSection() {
               <Link href="/career-counseling">
                 <Button
                   size="lg"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg"
+                  style={{ color: '#ffffff' }}
                 >
                   Get Expert Guidance
                 </Button>

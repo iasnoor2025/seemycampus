@@ -1,11 +1,25 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import dynamic from "next/dynamic"
 import { TopBar } from "./TopBar"
 import { HeaderClient } from "./HeaderClient"
-import { Footer } from "./Footer"
-import { SocialIcons } from "./SocialIcons"
-import { ScrollToTop } from "./ScrollToTop"
+
+// Lazy load below-the-fold components
+const Footer = dynamic(() => import("./Footer").then(mod => ({ default: mod.Footer })), {
+  ssr: true,
+  loading: () => null,
+})
+
+const SocialIcons = dynamic(() => import("./SocialIcons").then(mod => ({ default: mod.SocialIcons })), {
+  ssr: false,
+  loading: () => null,
+})
+
+const ScrollToTop = dynamic(() => import("./ScrollToTop").then(mod => ({ default: mod.ScrollToTop })), {
+  ssr: false,
+  loading: () => null,
+})
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

@@ -176,11 +176,16 @@ export function FeaturedColleges() {
                         sizes="80px"
                         className="object-contain p-1"
                         loading="lazy"
-                        quality={75}
+                        quality={90}
                         decoding="async"
                         style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
-                        onError={() => {
+                        onError={(e) => {
                           setImageErrors(prev => new Set(prev).add(college.id))
+                          // Hide broken image to prevent 400 errors
+                          const target = e.target as HTMLImageElement
+                          if (target) {
+                            target.style.display = 'none'
+                          }
                         }}
                       />
                     ) : (

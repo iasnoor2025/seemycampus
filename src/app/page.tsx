@@ -1,11 +1,25 @@
 import { Metadata } from "next"
-import { FeaturedColleges } from "@/components/colleges/FeaturedColleges"
+import dynamic from "next/dynamic"
 import { HeroSection } from "@/components/home/HeroSection"
-import { TestimonialsSection } from "@/components/home/TestimonialsSection"
 import { StatsSection } from "@/components/home/StatsSection"
 import { QuickToolsSection } from "@/components/home/QuickToolsSection"
-import { UpcomingExamsSection } from "@/components/home/UpcomingExamsSection"
 import { generateFAQStructuredData } from "@/lib/seo/generateMeta"
+
+// Lazy load below-the-fold sections for better initial load performance
+const FeaturedColleges = dynamic(() => import("@/components/colleges/FeaturedColleges").then(mod => ({ default: mod.FeaturedColleges })), {
+  loading: () => <div className="py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50" />,
+  ssr: true,
+})
+
+const UpcomingExamsSection = dynamic(() => import("@/components/home/UpcomingExamsSection").then(mod => ({ default: mod.UpcomingExamsSection })), {
+  loading: () => <div className="py-20 bg-white" />,
+  ssr: true,
+})
+
+const TestimonialsSection = dynamic(() => import("@/components/home/TestimonialsSection").then(mod => ({ default: mod.TestimonialsSection })), {
+  loading: () => null,
+  ssr: true,
+})
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
 

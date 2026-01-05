@@ -11,6 +11,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Optimize rendering performance */
+img {
+  content-visibility: auto;
+}
+
+/* Reduce layout shifts */
+picture, img {
+  height: auto;
+  max-width: 100%;
+}
+
 /* Prevent horizontal scroll and hide scrollbars */
 html, body {
   overflow-x: hidden;
