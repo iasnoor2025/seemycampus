@@ -24,7 +24,11 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@/components'],
+    // Enable partial prerendering for better performance
+    ppr: false, // Keep false for now, can enable later
   },
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
   // Reduce JavaScript bundle size
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
@@ -52,6 +56,10 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
           },
         ],
       },

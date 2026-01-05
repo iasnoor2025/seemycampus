@@ -54,30 +54,38 @@ export function HeroSection() {
   const [rotatingTexts, setRotatingTexts] = useState<string[]>([])
 
   useEffect(() => {
-    const fetchSlides = async () => {
+    // Use Promise.all for parallel fetching to improve performance
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/hero-slides")
-        if (response.ok) {
-          const data = await response.json()
-          setSlides(data.slides || [])
-        }
-      } catch (error) {
-        console.error("Error fetching hero slides:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
+        const [slidesResponse, textsResponse] = await Promise.all([
+          fetch("/api/hero-slides", { 
+            cache: 'force-cache'
+          }),
+          fetch("/api/hero-rotating-texts", {
+            cache: 'force-cache'
+          })
+        ])
 
-    const fetchRotatingTexts = async () => {
-      try {
-        const response = await fetch("/api/hero-rotating-texts")
-        if (response.ok) {
-          const data = await response.json()
-          const texts = (data.texts || []).map((t: { text: string }) => t.text)
+        if (slidesResponse.ok) {
+          const slidesData = await slidesResponse.json()
+          setSlides(slidesData.slides || [])
+        }
+
+        if (textsResponse.ok) {
+          const textsData = await textsResponse.json()
+          const texts = (textsData.texts || []).map((t: { text: string }) => t.text)
           setRotatingTexts(texts.length > 0 ? texts : ["Find Over 25000+ Colleges in India"])
+        } else {
+          // Fallback to default texts
+          setRotatingTexts([
+            "Find Over 4 Lakh Reviews in India",
+            "Find Over 11000+ Courses in India",
+            "Find Over 25000+ Colleges in India",
+            "Find Over 250+ Exams in India",
+          ])
         }
       } catch (error) {
-        console.error("Error fetching rotating texts:", error)
+        console.error("Error fetching hero data:", error)
         // Fallback to default texts
         setRotatingTexts([
           "Find Over 4 Lakh Reviews in India",
@@ -85,11 +93,12 @@ export function HeroSection() {
           "Find Over 25000+ Colleges in India",
           "Find Over 250+ Exams in India",
         ])
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchSlides()
-    fetchRotatingTexts()
+    fetchData()
 
     // Fetch study goals
     const fetchStudyGoals = async () => {
@@ -180,11 +189,12 @@ export function HeroSection() {
       {/* Hero Section */}
       <section 
         className="relative w-full h-[450px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center overflow-hidden"
+        style={{ contain: 'layout style paint' }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         {/* Background Images - All slides for smooth transition */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ contain: 'layout style paint' }}>
           {slides.length > 0 ? (
             slides.map((slide, index) => (
               <div
@@ -192,6 +202,7 @@ export function HeroSection() {
                 className={`absolute inset-0 transition-opacity duration-1000 ${
                   index === currentIndex ? "opacity-100 z-0" : "opacity-0 z-0"
                 }`}
+                style={{ willChange: index === currentIndex ? 'opacity' : 'auto' }}
               >
                 <Image
                   src={slide.imageUrl}
@@ -200,11 +211,12 @@ export function HeroSection() {
                   className="object-cover"
                   priority={index === 0}
                   loading={index === 0 ? "eager" : "lazy"}
-                  quality={index === 0 ? 90 : 75}
+                  quality={index === 0 ? 85 : 75}
                   sizes="100vw"
                   fetchPriority={index === 0 ? "high" : "auto"}
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//9k="
+                  style={{ willChange: index === 0 ? 'auto' : 'opacity' }}
                 />
               </div>
             ))
@@ -218,16 +230,16 @@ export function HeroSection() {
         <div className="container mx-auto px-3 sm:px-4 relative z-20">
           <div className="max-w-4xl mx-auto text-center">
             {/* Main Heading - Typewriter animation with delete and type effect */}
-            <div className="relative min-h-[50px] sm:min-h-[60px] md:min-h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1">
+            <div className="relative h-[50px] sm:h-[60px] md:h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1" style={{ aspectRatio: 'auto' }}>
               <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words lg:whitespace-nowrap max-w-full">
-                {displayText}
+                <span className="inline-block min-w-[1ch]">{displayText || '\u00A0'}</span>
                 <span className="animate-pulse">|</span>
               </h1>
             </div>
 
             {/* Subtitle - Optional, can show slide subtitle if needed */}
             {slides.length > 0 && slides[currentIndex]?.subtitle && (
-              <div className="relative min-h-[30px] sm:min-h-[40px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-2">
+              <div className="relative h-[30px] sm:h-[40px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-2" style={{ aspectRatio: 'auto' }}>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 transition-opacity duration-500">
                   {slides[currentIndex].subtitle}
                 </p>

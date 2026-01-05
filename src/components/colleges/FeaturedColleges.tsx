@@ -166,17 +166,19 @@ export function FeaturedColleges() {
                       <span className="text-white text-sm font-bold">4.{Math.floor(Math.random() * 5) + 5}</span>
                     </div>
                   </div>
-                  <div className={`w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 overflow-hidden relative`}>
+                  <div className={`w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 overflow-hidden relative`} style={{ aspectRatio: '1/1' }}>
                     {college.images && Array.isArray(college.images) && college.images.length > 0 && !imageErrors.has(college.id) ? (
                       <Image
                         src={college.images[0]}
                         alt={`${college.name} logo`}
-                        fill
+                        width={80}
+                        height={80}
                         sizes="80px"
                         className="object-contain p-1"
                         loading="lazy"
                         quality={75}
                         decoding="async"
+                        style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
                         onError={() => {
                           setImageErrors(prev => new Set(prev).add(college.id))
                         }}

@@ -13,6 +13,8 @@ const inter = Inter({
   variable: '--font-inter',
   adjustFontFallback: true,
   fallback: ['system-ui', 'arial'],
+  // Optimize font loading
+  weight: ['400', '500', '600', '700'],
 })
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
@@ -256,14 +258,16 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
-        <link rel="preload" href={`${baseUrl}/main-logo-xxxx.png`} as="image" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" fetchPriority="high" />
+        <link rel="preload" href={`${baseUrl}/main-logo-xxxx.png`} as="image" fetchPriority="high" />
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
         <link rel="alternate icon" href="/logo.svg" />
         <link rel="apple-touch-icon" href="/logo.svg" />
         <link rel="image_src" href={`${baseUrl}/main-logo-xxxx.png`} />
         <meta name="image" content={`${baseUrl}/main-logo-xxxx.png`} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta name="theme-color" content="#2563eb" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
