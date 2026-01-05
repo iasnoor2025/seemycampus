@@ -34,41 +34,13 @@ const nextConfig = {
     // Enable partial prerendering for better performance
     ppr: false, // Keep false for now, can enable later
   },
-  // Optimize bundle size
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Tree-shake unused exports
-      config.optimization = {
-        ...config.optimization,
-        usedExports: true,
-        sideEffects: false,
-        // Split chunks for better caching
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk for node_modules
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /node_modules/,
-              priority: 20,
-            },
-            // Common chunk for shared code
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-            },
-          },
-        },
-      }
-    }
-    return config
-  },
+  // Note: Next.js 16 uses Turbopack by default for development
+  // Turbopack automatically handles:
+  // - Code splitting and chunk optimization
+  // - Tree shaking
+  // - Fast refresh
+  // - Module resolution
+  // No manual configuration needed - Turbopack is faster and handles optimizations automatically
   // Optimize production builds
   productionBrowserSourceMaps: false,
   // Reduce JavaScript bundle size
