@@ -18,7 +18,7 @@ const connectionString = process.env.DATABASE_URL
 const client = postgres(connectionString)
 const db = drizzle(client, { schema })
 
-import { colleges, courses, collegeReviews } from "./schema"
+import { colleges, courses, collegeReviews, cutoffs, placementStats, applicationGuides } from "./schema"
 import { OllamaProvider } from "@/lib/ai/providers/ollama"
 import { removeDuplicates } from "./remove-duplicates"
 
@@ -907,6 +907,9 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
     let imagesAddedCount = 0
     let coursesAddedCount = 0
     let reviewsAddedCount = 0
+    let cutoffsAddedCount = 0
+    let placementsAddedCount = 0
+    let guidesAddedCount = 0
     let skippedCount = 0
     
     for (let i = 0; i < allColleges.length; i++) {
@@ -1034,6 +1037,52 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
       if (existingReviewsAfter.length > existingReviewsBefore.length) {
         reviewsAddedCount++
       }
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // 5. Enrich cutoffs - only if college has less than 5 cutoff records
+      const existingCutoffsBefore = await db
+        .select()
+        .from(cutoffs)
+        .where(eq(cutoffs.collegeId, college.id))
+      await enrichCollegeCutoffs(college)
+      const existingCutoffsAfter = await db
+        .select()
+        .from(cutoffs)
+        .where(eq(cutoffs.collegeId, college.id))
+      if (existingCutoffsAfter.length > existingCutoffsBefore.length) {
+        cutoffsAddedCount++
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // 6. Enrich placement stats - only if college has less than 3 placement records
+      const existingPlacementsBefore = await db
+        .select()
+        .from(placementStats)
+        .where(eq(placementStats.collegeId, college.id))
+      await enrichPlacementStats(college)
+      const existingPlacementsAfter = await db
+        .select()
+        .from(placementStats)
+        .where(eq(placementStats.collegeId, college.id))
+      if (existingPlacementsAfter.length > existingPlacementsBefore.length) {
+        placementsAddedCount++
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // 7. Enrich application guides - only if college has no guides
+      const existingGuidesBefore = await db
+        .select()
+        .from(applicationGuides)
+        .where(eq(applicationGuides.collegeId, college.id))
+      await enrichApplicationGuides(college)
+      const existingGuidesAfter = await db
+        .select()
+        .from(applicationGuides)
+        .where(eq(applicationGuides.collegeId, college.id))
+      if (existingGuidesAfter.length > existingGuidesBefore.length) {
+        guidesAddedCount++
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
       if (!collegeUpdated && allFieldsToCheck.length === 0) {
         skippedCount++
@@ -1049,6 +1098,9 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
     console.log(`   - Colleges processed for images: ${imagesAddedCount}`)
     console.log(`   - Colleges processed for courses: ${coursesAddedCount}`)
     console.log(`   - Colleges processed for reviews: ${reviewsAddedCount}`)
+    console.log(`   - Colleges processed for cutoffs: ${cutoffsAddedCount}`)
+    console.log(`   - Colleges processed for placements: ${placementsAddedCount}`)
+    console.log(`   - Colleges processed for application guides: ${guidesAddedCount}`)
     console.log(`   - Colleges skipped (already complete): ${skippedCount}`)
     console.log(`   - Total colleges processed: ${allColleges.length}`)
     
@@ -1089,7 +1141,7 @@ function generateSlug(name: string): string {
 }
 
 // Function to discover and add missing Indian colleges
-async function discoverAndAddMissingColleges(state?: string, city?: string): Promise<{ added: number; skipped: number }> {
+async function discoverAndAddMissingColleges(state?: string, city?: string, batchSize: number = 50): Promise<{ added: number; skipped: number }> {
   console.log("🔍 Starting discovery of missing Indian colleges...\n")
   
   if (state || city) {
@@ -1105,15 +1157,18 @@ async function discoverAndAddMissingColleges(state?: string, city?: string): Pro
   
   console.log(`📊 Found ${existingColleges.length} existing colleges in database\n`)
   
-  const prompt = `List well-known and reputable colleges/universities in India${state ? ` in the state of ${state}` : ""}${city ? ` in the city of ${city}` : ""}.
+  const prompt = `List ALL colleges/universities in India${state ? ` in the state of ${state}` : ""}${city ? ` in the city of ${city}` : ""}.
 
-Focus on:
-- Engineering colleges (IITs, NITs, state engineering colleges, private engineering colleges)
-- Management colleges (IIMs, top B-schools, private management institutes)
-- Medical colleges (AIIMS, state medical colleges, private medical colleges)
+Focus on ALL types of colleges:
+- Engineering colleges (IITs, NITs, state engineering colleges, private engineering colleges, polytechnics)
+- Management colleges (IIMs, top B-schools, private management institutes, business schools)
+- Medical colleges (AIIMS, state medical colleges, private medical colleges, dental colleges, nursing colleges)
 - Law colleges (NLUs, state law colleges, private law colleges)
-- Arts, Science, Commerce colleges
-- Universities (central universities, state universities, private universities)
+- Arts, Science, Commerce colleges (degree colleges, autonomous colleges)
+- Universities (central universities, state universities, private universities, deemed universities)
+- Specialized colleges (pharmacy, architecture, design, agriculture, veterinary)
+- Government and private colleges
+- Both well-known and lesser-known but established colleges
 
 For each college, provide:
 - Full official name
@@ -1141,10 +1196,12 @@ Return a JSON array with this exact format:
 ]
 
 Important:
-- Include only real, established colleges/universities
-- Include colleges that are well-known and reputable
-- Return at least 20-30 colleges per request
-- If state/city is specified, focus on that location
+- Include ALL real, established colleges/universities (not just well-known ones)
+- Include both government and private colleges
+- Include colleges of all sizes and rankings
+- Return at least ${batchSize} colleges per request (aim for comprehensive coverage)
+- If state/city is specified, list ALL colleges in that location
+- Search your knowledge base thoroughly - India has over 3,300 colleges
 - Return ONLY the JSON array, no other text or markdown`
 
   try {
@@ -1466,6 +1523,391 @@ async function enrichAllCollegeReviews(): Promise<void> {
     throw error
   } finally {
     await client.end()
+  }
+}
+
+// Function to enrich cutoffs for a college
+async function enrichCollegeCutoffs(college: any): Promise<void> {
+  // Check if college already has cutoffs
+  const existingCutoffs = await db
+    .select()
+    .from(cutoffs)
+    .where(eq(cutoffs.collegeId, college.id))
+  
+  // Only add cutoffs if college has less than 5 cutoff records
+  if (existingCutoffs.length >= 5) {
+    console.log(`  ⏭️  College already has ${existingCutoffs.length} cutoff records`)
+    return
+  }
+  
+  // Get college courses to know which exams/courses to look for
+  const collegeCourses = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.collegeId, college.id))
+  
+  const courseNames = collegeCourses.map(c => c.name).join(", ") || "various courses"
+  
+  console.log(`  📊 Finding cutoff data (college has ${existingCutoffs.length} records)...`)
+  
+  const prompt = `Find entrance exam cutoff data for ${college.name} located in ${college.city || college.location || "India"}.
+
+${college.website ? `College website: ${college.website} - check this website for cutoff information.` : ""}
+${college.description ? `College description: ${college.description.substring(0, 500)}` : ""}
+${collegeCourses.length > 0 ? `College offers: ${courseNames}` : ""}
+
+Find cutoff data for recent years (2022-2024) including:
+- Entrance exam names (JEE, NEET, CAT, GMAT, etc.)
+- Course names
+- Opening and closing ranks/scores
+- Categories (General, OBC, SC, ST, EWS)
+- Quota (All India, State, Management, etc.)
+
+Return a JSON array with this exact format:
+[
+  {
+    "examName": "JEE Advanced",
+    "courseName": "B.Tech Computer Science",
+    "year": 2024,
+    "category": "General",
+    "openingRank": 1500,
+    "closingRank": 3500,
+    "openingScore": 95,
+    "closingScore": 88,
+    "round": 1,
+    "quota": "All India"
+  },
+  {
+    "examName": "CAT",
+    "courseName": "MBA",
+    "year": 2024,
+    "category": "General",
+    "openingScore": 98,
+    "closingScore": 92,
+    "round": 1,
+    "quota": "All India"
+  }
+]
+
+Important:
+- Include cutoff data for at least 3-5 different exams/courses if available
+- Use realistic rank/score values based on actual cutoff trends
+- Include data for multiple categories (General, OBC, SC, ST) if available
+- Years should be 2022, 2023, or 2024
+- Return ONLY the JSON array, no other text or markdown`
+
+  try {
+    const response = await ollama.chat([{
+      role: "user",
+      content: prompt
+    }])
+    
+    // Extract JSON array
+    let jsonStr = response.trim()
+    if (jsonStr.includes("```json")) {
+      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+    } else if (jsonStr.includes("```")) {
+      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    }
+    
+    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0]
+    }
+    
+    const cutoffsData = JSON.parse(jsonStr)
+    
+    let cutoffsAdded = 0
+    
+    // Add cutoffs to database
+    for (const cutoffData of cutoffsData) {
+      if (!cutoffData.examName || !cutoffData.year) continue
+      
+      // Validate year (2020-2024)
+      const year = parseInt(cutoffData.year)
+      if (isNaN(year) || year < 2020 || year > new Date().getFullYear()) continue
+      
+      try {
+        await db.insert(cutoffs).values({
+          collegeId: college.id,
+          examName: cutoffData.examName,
+          courseName: cutoffData.courseName || null,
+          year: year,
+          category: cutoffData.category || null,
+          openingRank: cutoffData.openingRank ? parseInt(cutoffData.openingRank) : null,
+          closingRank: cutoffData.closingRank ? parseInt(cutoffData.closingRank) : null,
+          openingScore: cutoffData.openingScore ? parseInt(cutoffData.openingScore) : null,
+          closingScore: cutoffData.closingScore ? parseInt(cutoffData.closingScore) : null,
+          round: cutoffData.round ? parseInt(cutoffData.round) : 1,
+          quota: cutoffData.quota || null,
+        })
+        
+        console.log(`    ✅ Added cutoff: ${cutoffData.examName} - ${cutoffData.courseName || "General"} (${year})`)
+        cutoffsAdded++
+      } catch (error: any) {
+        if (error?.code !== "23505") { // Ignore duplicate errors
+          console.error(`    ❌ Error adding cutoff:`, error.message)
+        }
+      }
+    }
+    
+    if (cutoffsAdded > 0) {
+      console.log(`  ✅ Added ${cutoffsAdded} cutoff record(s)`)
+    } else {
+      console.log(`  ⚠️  No cutoff data found or added`)
+    }
+  } catch (error) {
+    console.error(`Error enriching cutoffs for ${college.name}:`, error)
+  }
+}
+
+// Function to enrich placement stats for a college
+async function enrichPlacementStats(college: any): Promise<void> {
+  // Check if college already has placement stats
+  const existingPlacements = await db
+    .select()
+    .from(placementStats)
+    .where(eq(placementStats.collegeId, college.id))
+  
+  // Only add if college has less than 3 placement records
+  if (existingPlacements.length >= 3) {
+    console.log(`  ⏭️  College already has ${existingPlacements.length} placement records`)
+    return
+  }
+  
+  console.log(`  💼 Finding placement statistics (college has ${existingPlacements.length} records)...`)
+  
+  const prompt = `Find placement statistics for ${college.name} located in ${college.city || college.location || "India"}.
+
+${college.website ? `College website: ${college.website} - check this website for placement data.` : ""}
+${college.description ? `College description: ${college.description.substring(0, 500)}` : ""}
+${college.averagePackage ? `Current average package: ₹${college.averagePackage.toLocaleString()}` : ""}
+${college.highestPackage ? `Current highest package: ₹${college.highestPackage.toLocaleString()}` : ""}
+
+Find placement statistics for recent years (2022-2024) including:
+- Total students eligible for placement
+- Number of students placed
+- Placement percentage
+- Average, median, highest, and lowest packages (in INR)
+- Top recruiting companies
+- Department-wise placement data (if available)
+
+Return a JSON array with this exact format:
+[
+  {
+    "year": 2024,
+    "totalStudents": 500,
+    "placedStudents": 450,
+    "placementPercentage": 90,
+    "averagePackage": 800000,
+    "medianPackage": 750000,
+    "highestPackage": 1500000,
+    "lowestPackage": 400000,
+    "topRecruiters": ["TCS", "Infosys", "Wipro", "Accenture", "Cognizant"],
+    "departmentWiseData": {
+      "Computer Science": {
+        "placedStudents": 120,
+        "averagePackage": 1200000
+      },
+      "Mechanical": {
+        "placedStudents": 80,
+        "averagePackage": 700000
+      }
+    }
+  }
+]
+
+Important:
+- Include placement data for at least 1-2 recent years
+- Use realistic package values based on college type and ranking
+- Top recruiters should be real companies that recruit from Indian colleges
+- Department-wise data is optional but valuable
+- Packages should be in INR (no currency symbols)
+- Return ONLY the JSON array, no other text or markdown`
+
+  try {
+    const response = await ollama.chat([{
+      role: "user",
+      content: prompt
+    }])
+    
+    // Extract JSON array
+    let jsonStr = response.trim()
+    if (jsonStr.includes("```json")) {
+      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+    } else if (jsonStr.includes("```")) {
+      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    }
+    
+    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0]
+    }
+    
+    const placementsData = JSON.parse(jsonStr)
+    
+    let placementsAdded = 0
+    
+    // Add placement stats to database
+    for (const placementData of placementsData) {
+      if (!placementData.year) continue
+      
+      // Validate year (2020-2024)
+      const year = parseInt(placementData.year)
+      if (isNaN(year) || year < 2020 || year > new Date().getFullYear()) continue
+      
+      try {
+        await db.insert(placementStats).values({
+          collegeId: college.id,
+          year: year,
+          totalStudents: placementData.totalStudents ? parseInt(placementData.totalStudents) : null,
+          placedStudents: placementData.placedStudents ? parseInt(placementData.placedStudents) : null,
+          placementPercentage: placementData.placementPercentage ? parseInt(placementData.placementPercentage) : null,
+          averagePackage: placementData.averagePackage ? parseInt(placementData.averagePackage) : null,
+          medianPackage: placementData.medianPackage ? parseInt(placementData.medianPackage) : null,
+          highestPackage: placementData.highestPackage ? parseInt(placementData.highestPackage) : null,
+          lowestPackage: placementData.lowestPackage ? parseInt(placementData.lowestPackage) : null,
+          topRecruiters: placementData.topRecruiters || [],
+          departmentWiseData: placementData.departmentWiseData || {},
+        })
+        
+        console.log(`    ✅ Added placement stats: ${year} (${placementData.placementPercentage || "N/A"}% placement)`)
+        placementsAdded++
+      } catch (error: any) {
+        if (error?.code !== "23505") { // Ignore duplicate errors
+          console.error(`    ❌ Error adding placement:`, error.message)
+        }
+      }
+    }
+    
+    if (placementsAdded > 0) {
+      console.log(`  ✅ Added ${placementsAdded} placement record(s)`)
+    } else {
+      console.log(`  ⚠️  No placement data found or added`)
+    }
+  } catch (error) {
+    console.error(`Error enriching placement stats for ${college.name}:`, error)
+  }
+}
+
+// Function to enrich application guides for a college
+async function enrichApplicationGuides(college: any): Promise<void> {
+  // Check if college already has application guides
+  const existingGuides = await db
+    .select()
+    .from(applicationGuides)
+    .where(eq(applicationGuides.collegeId, college.id))
+  
+  // Only add if college has no application guides
+  if (existingGuides.length > 0) {
+    console.log(`  ⏭️  College already has ${existingGuides.length} application guide(s)`)
+    return
+  }
+  
+  // Get college courses to create course-specific guides
+  const collegeCourses = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.collegeId, college.id))
+  
+  console.log(`  📝 Creating application guide (college has ${existingGuides.length} guides)...`)
+  
+  const prompt = `Create a comprehensive application guide for ${college.name} located in ${college.city || college.location || "India"}.
+
+${college.website ? `College website: ${college.website} - check this website for application information.` : ""}
+${college.description ? `College description: ${college.description.substring(0, 500)}` : ""}
+${collegeCourses.length > 0 ? `College offers: ${collegeCourses.map(c => c.name).join(", ")}` : ""}
+${college.entranceExams && Array.isArray(college.entranceExams) ? `Entrance exams: ${college.entranceExams.join(", ")}` : ""}
+
+Create a detailed application guide including:
+1. Step-by-step application process
+2. Required documents list
+3. Application fee information
+4. Important deadlines (application start, end, document submission)
+5. Form filling tips and common mistakes
+6. Application URL (if available)
+7. Contact information for application queries
+
+Return a JSON object with this exact format:
+{
+  "guideContent": "Step 1: Visit the official website...\nStep 2: Register online...\nStep 3: Fill the application form...\nStep 4: Upload required documents...\nStep 5: Pay application fee...\nStep 6: Submit application...",
+  "requiredDocs": ["10th mark sheet", "12th mark sheet", "Entrance exam scorecard", "Identity proof", "Passport size photos", "Category certificate (if applicable)"],
+  "feeInfo": {
+    "amount": 1000,
+    "currency": "INR",
+    "paymentMethods": ["Online", "Debit Card", "Credit Card", "Net Banking"],
+    "paymentLink": "https://example.com/payment"
+  },
+  "deadlines": {
+    "applicationStart": "2024-01-01",
+    "applicationEnd": "2024-03-31",
+    "documentSubmission": "2024-04-15",
+    "admitCard": "2024-05-01",
+    "examDate": "2024-05-15"
+  },
+  "tips": "1. Keep all documents ready before starting\n2. Double-check all information before submission\n3. Keep a copy of submitted application\n4. Note down application number for future reference",
+  "applicationUrl": "https://example.com/apply",
+  "contactInfo": {
+    "email": "admissions@example.com",
+    "phone": "+91-1234567890",
+    "address": "College Address"
+  }
+}
+
+Important:
+- Make the guide comprehensive and helpful
+- Include realistic deadlines (typically Jan-Mar for admissions)
+- Application fee should be realistic (₹500-₹2000 for most colleges)
+- Include all common required documents
+- Provide clear step-by-step instructions
+- Return ONLY the JSON object, no other text or markdown`
+
+  try {
+    const response = await ollama.chat([{
+      role: "user",
+      content: prompt
+    }])
+    
+    // Extract JSON object
+    let jsonStr = response.trim()
+    if (jsonStr.includes("```json")) {
+      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+    } else if (jsonStr.includes("```")) {
+      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    }
+    
+    const objectMatch = jsonStr.match(/\{[\s\S]*\}/)
+    if (objectMatch) {
+      jsonStr = objectMatch[0]
+    }
+    
+    const guideData = JSON.parse(jsonStr)
+    
+    if (!guideData.guideContent) {
+      console.log(`  ⚠️  No valid guide content found`)
+      return
+    }
+    
+    try {
+      await db.insert(applicationGuides).values({
+        collegeId: college.id,
+        guideContent: guideData.guideContent,
+        requiredDocs: guideData.requiredDocs || [],
+        feeInfo: guideData.feeInfo || {},
+        deadlines: guideData.deadlines || {},
+        tips: guideData.tips || null,
+        applicationUrl: guideData.applicationUrl || null,
+        contactInfo: guideData.contactInfo || {},
+      })
+      
+      console.log(`  ✅ Added application guide`)
+    } catch (error: any) {
+      if (error?.code !== "23505") { // Ignore duplicate errors
+        console.error(`  ❌ Error adding application guide:`, error.message)
+      }
+    }
+  } catch (error) {
+    console.error(`Error enriching application guide for ${college.name}:`, error)
   }
 }
 
@@ -1810,5 +2252,122 @@ Extract ALL universities from this ${stateName} section.`
   }
 }
 
-export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, correctCollegeName, correctAllCollegeNames, fetchUniversitiesFromLinkingsky }
+// Comprehensive discovery function that discovers colleges across all Indian states
+async function discoverCollegesComprehensive(): Promise<{ added: number; skipped: number; statesProcessed: number }> {
+  console.log("🚀 Starting comprehensive college discovery across all Indian states...\n")
+  console.log("📊 This will discover colleges from all 28 states and 8 union territories\n")
+  
+  // All Indian states and union territories
+  const indianStates = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+    "Uttar Pradesh", "Uttarakhand", "West Bengal",
+    // Union Territories
+    "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+  ]
+  
+  // Major cities for additional discovery
+  const majorCities = [
+    "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai",
+    "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Surat",
+    "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane",
+    "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad"
+  ]
+  
+  let totalAdded = 0
+  let totalSkipped = 0
+  let statesProcessed = 0
+  
+  // Refresh existing colleges list periodically
+  let existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
+  let existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
+  let existingSlugs = new Set(existingColleges.map(c => c.slug))
+  
+  console.log(`📊 Starting with ${existingColleges.length} existing colleges\n`)
+  
+  // Discover by state
+  for (let i = 0; i < indianStates.length; i++) {
+    const state = indianStates[i]
+    console.log(`\n${"=".repeat(60)}`)
+    console.log(`[${i + 1}/${indianStates.length}] Processing State: ${state}`)
+    console.log(`${"=".repeat(60)}`)
+    
+    try {
+      // Discover colleges in this state (request larger batches)
+      const result = await discoverAndAddMissingColleges(state, undefined, 100)
+      totalAdded += result.added
+      totalSkipped += result.skipped
+      statesProcessed++
+      
+      // Refresh existing colleges list every 5 states to catch new additions
+      if ((i + 1) % 5 === 0) {
+        existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
+        existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
+        existingSlugs = new Set(existingColleges.map(c => c.slug))
+        console.log(`\n🔄 Refreshed existing colleges list (now ${existingColleges.length} colleges)`)
+      }
+      
+      // Delay between states to avoid overwhelming Ollama
+      await new Promise(resolve => setTimeout(resolve, 3000))
+    } catch (error) {
+      console.error(`❌ Error processing state ${state}:`, error)
+      // Continue with next state
+    }
+  }
+  
+  // Also discover by major cities (to catch colleges that might be missed)
+  console.log(`\n${"=".repeat(60)}`)
+  console.log("Processing Major Cities for Additional Discovery")
+  console.log(`${"=".repeat(60)}`)
+  
+  for (let i = 0; i < majorCities.length; i++) {
+    const city = majorCities[i]
+    console.log(`\n[${i + 1}/${majorCities.length}] Processing City: ${city}`)
+    
+    try {
+      const result = await discoverAndAddMissingColleges(undefined, city, 50)
+      totalAdded += result.added
+      totalSkipped += result.skipped
+      
+      // Refresh existing colleges list every 5 cities
+      if ((i + 1) % 5 === 0) {
+        existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
+        existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
+        existingSlugs = new Set(existingColleges.map(c => c.slug))
+        console.log(`\n🔄 Refreshed existing colleges list (now ${existingColleges.length} colleges)`)
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error(`❌ Error processing city ${city}:`, error)
+      // Continue with next city
+    }
+  }
+  
+  // Final count
+  const finalColleges = await db.select().from(colleges)
+  
+  console.log(`\n${"=".repeat(60)}`)
+  console.log("✨ Comprehensive Discovery Completed!")
+  console.log(`${"=".repeat(60)}`)
+  console.log(`📊 Final Summary:`)
+  console.log(`   - States/UTs processed: ${statesProcessed}/${indianStates.length}`)
+  console.log(`   - Cities processed: ${majorCities.length}`)
+  console.log(`   - Total colleges added: ${totalAdded}`)
+  console.log(`   - Total colleges skipped: ${totalSkipped}`)
+  console.log(`   - Final college count: ${finalColleges.length}`)
+  console.log(`   - New colleges discovered: ${finalColleges.length - existingColleges.length}`)
+  
+  return {
+    added: totalAdded,
+    skipped: totalSkipped,
+    statesProcessed
+  }
+}
+
+export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, enrichCollegeCutoffs, enrichPlacementStats, enrichApplicationGuides, correctCollegeName, correctAllCollegeNames, fetchUniversitiesFromLinkingsky, discoverCollegesComprehensive }
 
