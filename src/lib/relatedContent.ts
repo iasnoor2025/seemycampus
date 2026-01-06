@@ -20,7 +20,7 @@ export async function getRelatedColleges(
     conditions.push(eq(colleges.location, location))
   }
 
-  // Get location-based colleges first, then similar ranked colleges
+  // Get location-based colleges first, then similar ranked colleges (only enabled ones)
   const locationColleges = await db
     .select({
       id: colleges.id,
@@ -31,7 +31,10 @@ export async function getRelatedColleges(
       ranking: colleges.ranking,
     })
     .from(colleges)
-    .where(and(...conditions))
+    .where(and(
+      eq(colleges.isEnabled, true),
+      ...conditions
+    ))
     .orderBy(sql`${colleges.ranking} ASC NULLS LAST`)
     .limit(limit)
   
@@ -53,6 +56,7 @@ export async function getRelatedColleges(
         .from(colleges)
         .where(
           and(
+            eq(colleges.isEnabled, true),
             ne(colleges.id, currentCollegeId),
             sql`${colleges.id} NOT IN (${sql.join(locationCollegeIds.map(id => sql`${id}`), sql`, `)})`
           )
@@ -62,7 +66,7 @@ export async function getRelatedColleges(
       
       return [...locationColleges, ...similarColleges].slice(0, limit)
     } else {
-      // If no location colleges, get similar ranked colleges
+      // If no location colleges, get similar ranked colleges (only enabled ones)
       const similarColleges = await db
         .select({
           id: colleges.id,
@@ -73,7 +77,12 @@ export async function getRelatedColleges(
           ranking: colleges.ranking,
         })
         .from(colleges)
-        .where(ne(colleges.id, currentCollegeId))
+        .where(
+          and(
+            eq(colleges.isEnabled, true),
+            ne(colleges.id, currentCollegeId)
+          )
+        )
         .orderBy(sql`${colleges.ranking} ASC NULLS LAST`)
         .limit(limit)
       

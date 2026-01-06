@@ -11,7 +11,27 @@ export async function GET(request: NextRequest) {
     const collegeId = searchParams.get("collegeId")
     const year = searchParams.get("year")
 
-    let query = db.select().from(placementStats)
+    // Build query with join to filter disabled colleges
+    let query = db
+      .select({
+        id: placementStats.id,
+        collegeId: placementStats.collegeId,
+        year: placementStats.year,
+        totalStudents: placementStats.totalStudents,
+        placedStudents: placementStats.placedStudents,
+        placementPercentage: placementStats.placementPercentage,
+        averagePackage: placementStats.averagePackage,
+        medianPackage: placementStats.medianPackage,
+        highestPackage: placementStats.highestPackage,
+        lowestPackage: placementStats.lowestPackage,
+        topRecruiters: placementStats.topRecruiters,
+        departmentWiseData: placementStats.departmentWiseData,
+        createdAt: placementStats.createdAt,
+        updatedAt: placementStats.updatedAt,
+      })
+      .from(placementStats)
+      .innerJoin(colleges, eq(placementStats.collegeId, colleges.id))
+      .where(eq(colleges.isEnabled, true))
 
     const conditions = []
     if (collegeId) {

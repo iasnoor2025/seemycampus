@@ -26,11 +26,14 @@ export async function GET(
 
     const { slug } = await params
 
-    // Get college by slug
+    // Get college by slug (only enabled colleges for public access)
     const [college] = await db
       .select()
       .from(colleges)
-      .where(eq(colleges.slug, slug))
+      .where(and(
+        eq(colleges.slug, slug),
+        eq(colleges.isEnabled, true)
+      ))
       .limit(1)
 
     if (!college) {

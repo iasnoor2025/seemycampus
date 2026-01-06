@@ -112,10 +112,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // College pages - High priority for SEO
+  // College pages - High priority for SEO (only enabled colleges)
   let collegePages: MetadataRoute.Sitemap = []
   try {
-    const colleges = await getAllColleges()
+    const colleges = await getAllColleges() // This already filters disabled colleges
     collegePages = colleges
       .map((college) => {
         const slug = getOrGenerateSlug(college, "college")

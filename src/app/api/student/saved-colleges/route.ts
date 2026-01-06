@@ -23,7 +23,12 @@ export async function GET(request: NextRequest) {
       })
       .from(savedColleges)
       .innerJoin(colleges, eq(savedColleges.collegeId, colleges.id))
-      .where(eq(savedColleges.userId, userId))
+      .where(
+        and(
+          eq(savedColleges.userId, userId),
+          eq(colleges.isEnabled, true)
+        )
+      )
       .orderBy(savedColleges.createdAt)
 
     return NextResponse.json({

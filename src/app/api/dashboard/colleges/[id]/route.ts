@@ -70,7 +70,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images, googlePlaceId, ranking, establishedYear, averagePackage, accreditation } = body
+    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, isEnabled, images, googlePlaceId, ranking, establishedYear, averagePackage, accreditation } = body
 
     const [updatedCollege] = await db
       .update(colleges)
@@ -86,6 +86,7 @@ export async function PUT(
         email,
         phone,
         isAcademicAlliance,
+        isEnabled: isEnabled !== undefined ? isEnabled : true,
         images: images || [],
         googlePlaceId: googlePlaceId || null,
         ranking: ranking !== undefined && ranking !== null && ranking !== "" ? parseInt(ranking) : null,
@@ -113,6 +114,59 @@ export async function PUT(
         { status: 400 }
       )
     }
+    return NextResponse.json(
+      { error: "Failed to update college" },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH - Partially update a college (for enable/disable)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { id } = await params
+    const collegeId = parseInt(id)
+
+    if (isNaN(collegeId)) {
+      return NextResponse.json(
+        { error: "Invalid college ID" },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const updateData: any = {
+      updatedAt: new Date(),
+    }
+
+    if (body.isEnabled !== undefined) {
+      updateData.isEnabled = body.isEnabled
+    }
+
+    const [updatedCollege] = await db
+      .update(colleges)
+      .set(updateData)
+      .where(eq(colleges.id, collegeId))
+      .returning()
+
+    if (!updatedCollege) {
+      return NextResponse.json(
+        { error: "College not found" },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(updatedCollege)
+  } catch (error) {
+    console.error("Error updating college:", error)
     return NextResponse.json(
       { error: "Failed to update college" },
       { status: 500 }

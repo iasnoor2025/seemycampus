@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Building2, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Building2, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight, Power, Ban, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import {
   Table,
@@ -12,6 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { CollegeForm } from "./CollegeForm"
 import {
   AlertDialog,
@@ -37,6 +46,7 @@ interface College {
   email: string | null
   phone: string | null
   isAcademicAlliance: boolean
+  isEnabled: boolean
   images: string[] | null
   googlePlaceId?: string | null
   ranking?: number | null
@@ -62,13 +72,20 @@ function getInitials(name: string): string {
 }
 
 export function CollegesList() {
+  const { toast } = useToast()
   const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCollege, setEditingCollege] = useState<College | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCity, setSelectedCity] = useState<string>("all")
+  const [selectedState, setSelectedState] = useState<string>("all")
   const [deleteCollegeId, setDeleteCollegeId] = useState<number | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showBulkDisableDialog, setShowBulkDisableDialog] = useState(false)
+  const [showBulkEnableDialog, setShowBulkEnableDialog] = useState(false)
+  const [bulkDisableState, setBulkDisableState] = useState<string | null>(null)
+  const [bulkEnableState, setBulkEnableState] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(20) // Items per page
@@ -108,12 +125,24 @@ export function CollegesList() {
         fetchColleges()
         setShowDeleteDialog(false)
         setDeleteCollegeId(null)
+        toast({
+          title: "Success",
+          description: "College deleted successfully",
+        })
       } else {
-        alert("Failed to delete college")
+        toast({
+          title: "Error",
+          description: "Failed to delete college",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error deleting college:", error)
-      alert("Failed to delete college")
+      toast({
+        title: "Error",
+        description: "Failed to delete college",
+        variant: "destructive",
+      })
     }
   }
 
@@ -149,17 +178,210 @@ export function CollegesList() {
     fetchColleges()
   }
 
+  const handleToggleEnabled = async (collegeId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/dashboard/colleges/${collegeId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isEnabled: !currentStatus }),
+      })
+
+      if (response.ok) {
+        fetchColleges()
+        toast({
+          title: "Success",
+          description: `College ${!currentStatus ? "enabled" : "disabled"} successfully`,
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update college status",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating college status:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update college status",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBulkDisableState = async () => {
+    if (!bulkDisableState) return
+
+    try {
+      const response = await fetch("/api/dashboard/colleges", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ state: bulkDisableState, isEnabled: false }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Success",
+          description: `Successfully disabled ${data.count} colleges in ${bulkDisableState}`,
+        })
+        fetchColleges()
+        setShowBulkDisableDialog(false)
+        setBulkDisableState(null)
+        setSelectedState("all")
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Error",
+          description: error.error || "Failed to disable colleges",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error bulk disabling colleges:", error)
+      toast({
+        title: "Error",
+        description: "Failed to disable colleges",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBulkEnableState = async () => {
+    if (!bulkEnableState) return
+
+    try {
+      const response = await fetch("/api/dashboard/colleges", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ state: bulkEnableState, isEnabled: true }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Success",
+          description: `Successfully enabled ${data.count} colleges in ${bulkEnableState}`,
+        })
+        fetchColleges()
+        setShowBulkEnableDialog(false)
+        setBulkEnableState(null)
+        setSelectedState("all")
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Error",
+          description: error.error || "Failed to enable colleges",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error bulk enabling colleges:", error)
+      toast({
+        title: "Error",
+        description: "Failed to enable colleges",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBulkDisableClick = () => {
+    if (selectedState === "all") {
+      toast({
+        title: "Please select a state",
+        description: "You need to select a state first to disable all colleges in that state",
+        variant: "destructive",
+      })
+      return
+    }
+    setBulkDisableState(selectedState)
+    setShowBulkDisableDialog(true)
+  }
+
+  const handleBulkEnableClick = () => {
+    if (selectedState === "all") {
+      toast({
+        title: "Please select a state",
+        description: "You need to select a state first to enable all colleges in that state",
+        variant: "destructive",
+      })
+      return
+    }
+    setBulkEnableState(selectedState)
+    setShowBulkEnableDialog(true)
+  }
+
+  // Check if selected state has any disabled colleges
+  const hasDisabledColleges = useMemo(() => {
+    if (selectedState === "all") return false
+    return colleges.some(college => college.state === selectedState && !college.isEnabled)
+  }, [colleges, selectedState])
+
+  // Check if selected state has any enabled colleges
+  const hasEnabledColleges = useMemo(() => {
+    if (selectedState === "all") return false
+    return colleges.some(college => college.state === selectedState && college.isEnabled)
+  }, [colleges, selectedState])
+
+  const uniqueStates = useMemo(() => {
+    const states = new Set<string>()
+    colleges.forEach((college) => {
+      // Include all states (for dashboard management, we need to see all states to disable them)
+      if (college.state) {
+        states.add(college.state)
+      }
+    })
+    return Array.from(states).sort()
+  }, [colleges])
+
+  // Extract unique cities based on selected state (show all cities in dashboard for management)
+  const uniqueCities = useMemo(() => {
+    const cities = new Set<string>()
+    colleges.forEach((college) => {
+      // In dashboard, show all cities (enabled and disabled) for management purposes
+      // If a state is selected, only include cities from that state
+      if (selectedState !== "all") {
+        if (college.city && college.state === selectedState) {
+          cities.add(college.city)
+        }
+      } else {
+        // If no state is selected, show all cities
+        if (college.city) {
+          cities.add(college.city)
+        }
+      }
+    })
+    return Array.from(cities).sort()
+  }, [colleges, selectedState])
+
   // Filter and sort colleges
   const filteredAndSortedColleges = useMemo(() => {
-    const filtered = colleges.filter((college) =>
-      college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      college.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      college.city?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    let filtered = colleges.filter((college) => {
+      // Search filter
+      const matchesSearch = 
+        college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        college.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        college.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        college.state?.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      // City filter
+      const matchesCity = selectedCity === "all" || college.city === selectedCity
+      
+      // State filter
+      const matchesState = selectedState === "all" || college.state === selectedState
+      
+      return matchesSearch && matchesCity && matchesState
+    })
     
     // Sort by name alphabetically
     return filtered.sort((a, b) => a.name.localeCompare(b.name))
-  }, [colleges, searchTerm])
+  }, [colleges, searchTerm, selectedCity, selectedState])
 
   // Paginate filtered results
   const paginatedColleges = useMemo(() => {
@@ -170,10 +392,20 @@ export function CollegesList() {
 
   const totalFilteredPages = Math.ceil(filteredAndSortedColleges.length / pageSize)
 
-  // Reset to page 1 when search term changes
+  // Reset city filter when state changes if current city is not in the filtered list
+  useEffect(() => {
+    if (selectedState !== "all" && selectedCity !== "all") {
+      const citiesInState = uniqueCities
+      if (!citiesInState.includes(selectedCity)) {
+        setSelectedCity("all")
+      }
+    }
+  }, [selectedState, uniqueCities, selectedCity])
+
+  // Reset to page 1 when search term or filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm])
+  }, [searchTerm, selectedCity, selectedState])
 
   if (loading) {
     return (
@@ -186,9 +418,9 @@ export function CollegesList() {
   return (
     <>
       <div className="space-y-6">
-        {/* Header with Add Button */}
-        <div className="flex items-center justify-between">
-          <div className="relative flex-1 max-w-md">
+        {/* Header with Search, Filters, and Add Button */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="Search colleges..."
@@ -198,7 +430,77 @@ export function CollegesList() {
             />
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button className="flex items-center gap-2" onClick={handleAdd}>
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <Select
+              value={selectedState}
+              onValueChange={(value) => {
+                setSelectedState(value)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="w-auto min-w-[12rem] max-w-[20rem] [&>span]:whitespace-nowrap [&>span]:block">
+                <SelectValue placeholder="All States" />
+              </SelectTrigger>
+              <SelectContent className="max-w-[20rem]">
+                <SelectItem value="all">All States</SelectItem>
+                {uniqueStates.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedState !== "all" && (
+              <>
+                {hasEnabledColleges && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkDisableClick}
+                    className="flex items-center gap-2 text-destructive hover:text-destructive"
+                    title={`Disable all colleges in ${selectedState}`}
+                  >
+                    <Ban className="h-4 w-4" />
+                    Disable State
+                  </Button>
+                )}
+                {hasDisabledColleges && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkEnableClick}
+                    className="flex items-center gap-2 text-green-600 hover:text-green-700"
+                    title={`Enable all colleges in ${selectedState}`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Enable State
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+          <div className="flex-shrink-0">
+            <Select
+              value={selectedCity}
+              onValueChange={(value) => {
+                setSelectedCity(value)
+                setCurrentPage(1)
+              }}
+            >
+              <SelectTrigger className="w-auto min-w-[12rem] max-w-[20rem] [&>span]:whitespace-nowrap [&>span]:block">
+                <SelectValue placeholder={selectedState !== "all" ? `Cities in ${selectedState}` : "All Cities"} />
+              </SelectTrigger>
+              <SelectContent className="max-w-[20rem]">
+                <SelectItem value="all">{selectedState !== "all" ? `All Cities in ${selectedState}` : "All Cities"}</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button className="flex items-center gap-2 ml-auto" onClick={handleAdd}>
             <Plus className="h-4 w-4" />
             Add College
           </Button>
@@ -225,6 +527,7 @@ export function CollegesList() {
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Academic Alliance</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -283,6 +586,18 @@ export function CollegesList() {
                       ) : (
                         <span className="text-muted-foreground">No</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={college.isEnabled}
+                          onCheckedChange={() => handleToggleEnabled(college.id, college.isEnabled)}
+                          title={college.isEnabled ? "Disable college" : "Enable college"}
+                        />
+                        <span className={`text-sm ${college.isEnabled ? "text-green-600" : "text-muted-foreground"}`}>
+                          {college.isEnabled ? "Enabled" : "Disabled"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -405,6 +720,50 @@ export function CollegesList() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Disable State Dialog */}
+      <AlertDialog open={showBulkDisableDialog} onOpenChange={setShowBulkDisableDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable All Colleges in {bulkDisableState}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to disable all colleges in <strong>{bulkDisableState}</strong>? 
+              This will hide all colleges from this state on the public site. You can re-enable them individually or in bulk later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowBulkDisableDialog(false)
+              setBulkDisableState(null)
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDisableState} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Disable All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Enable State Dialog */}
+      <AlertDialog open={showBulkEnableDialog} onOpenChange={setShowBulkEnableDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enable All Colleges in {bulkEnableState}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to enable all colleges in <strong>{bulkEnableState}</strong>? 
+              This will make all colleges from this state visible on the public site again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowBulkEnableDialog(false)
+              setBulkEnableState(null)
+            }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkEnableState} className="bg-green-600 text-white hover:bg-green-700">
+              Enable All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

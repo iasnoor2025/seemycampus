@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
-import { ilike, or, eq } from "drizzle-orm"
+import { ilike, or, eq, and } from "drizzle-orm"
 
 export interface AutocompleteSuggestion {
   id: string
@@ -26,7 +26,7 @@ export async function getAutocompleteSuggestions(
   const suggestions: AutocompleteSuggestion[] = []
 
   try {
-    // Search colleges
+    // Search colleges (only enabled ones)
     const collegeResults = await db
       .select({
         id: colleges.id,
@@ -38,11 +38,14 @@ export async function getAutocompleteSuggestions(
       })
       .from(colleges)
       .where(
-        or(
-          ilike(colleges.name, searchTerm),
-          ilike(colleges.location, searchTerm),
-          ilike(colleges.city, searchTerm)
-        )!
+        and(
+          eq(colleges.isEnabled, true),
+          or(
+            ilike(colleges.name, searchTerm),
+            ilike(colleges.location, searchTerm),
+            ilike(colleges.city, searchTerm)
+          )!
+        )
       )
       .limit(limit) // Show all matching colleges up to limit
 
@@ -58,7 +61,7 @@ export async function getAutocompleteSuggestions(
       })
     })
 
-    // Search courses (only if we have space after colleges)
+    // Search courses (only if we have space after colleges) - only from enabled colleges
     const remainingLimit = limit - suggestions.length
     const courseResults = remainingLimit > 0 ? await db
       .select({
@@ -68,7 +71,13 @@ export async function getAutocompleteSuggestions(
         collegeId: courses.collegeId,
       })
       .from(courses)
-      .where(ilike(courses.name, searchTerm))
+      .innerJoin(colleges, eq(courses.collegeId, colleges.id))
+      .where(
+        and(
+          eq(colleges.isEnabled, true),
+          ilike(courses.name, searchTerm)
+        )
+      )
       .limit(Math.min(remainingLimit, Math.ceil(limit * 0.3))) // 30% from courses if space available
       : []
 
@@ -84,7 +93,7 @@ export async function getAutocompleteSuggestions(
       })
     })
 
-    // Search unique locations (cities and states) - only if we have space
+    // Search unique locations (cities and states) - only if we have space (only from enabled colleges)
     const remainingLimitAfterCourses = limit - suggestions.length
     const locationResults = remainingLimitAfterCourses > 0 ? await db
       .selectDistinct({
@@ -94,11 +103,14 @@ export async function getAutocompleteSuggestions(
       })
       .from(colleges)
       .where(
-        or(
-          ilike(colleges.city, searchTerm),
-          ilike(colleges.state, searchTerm),
-          ilike(colleges.location, searchTerm)
-        )!
+        and(
+          eq(colleges.isEnabled, true),
+          or(
+            ilike(colleges.city, searchTerm),
+            ilike(colleges.state, searchTerm),
+            ilike(colleges.location, searchTerm)
+          )!
+        )
       )
       .limit(Math.min(remainingLimitAfterCourses, Math.ceil(limit * 0.2))) // 20% from locations if space available
       : []
@@ -139,7 +151,7 @@ export async function getAutocompleteSuggestions(
  */
 export async function getPopularSuggestions(limit: number = 5): Promise<AutocompleteSuggestion[]> {
   try {
-    // Get popular colleges (can be enhanced with analytics data later)
+    // Get popular colleges (can be enhanced with analytics data later) - only enabled ones
     const popularColleges = await db
       .select({
         id: colleges.id,
@@ -147,7 +159,12 @@ export async function getPopularSuggestions(limit: number = 5): Promise<Autocomp
         slug: colleges.slug,
       })
       .from(colleges)
-      .where(eq(colleges.isAcademicAlliance, true)) // Use academic alliance as proxy for popularity
+      .where(
+        and(
+          eq(colleges.isEnabled, true),
+          eq(colleges.isAcademicAlliance, true)
+        )
+      ) // Use academic alliance as proxy for popularity
       .limit(limit)
 
     return popularColleges.map((college) => ({

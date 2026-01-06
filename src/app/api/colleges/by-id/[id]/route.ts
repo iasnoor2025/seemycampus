@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { colleges } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 
 // Public GET endpoint to fetch college by ID
 export async function GET(
@@ -22,7 +22,10 @@ export async function GET(
     const [college] = await db
       .select()
       .from(colleges)
-      .where(eq(colleges.id, collegeId))
+      .where(and(
+        eq(colleges.id, collegeId),
+        eq(colleges.isEnabled, true)
+      ))
       .limit(1)
 
     if (!college) {

@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { colleges, courses, studentAnswers } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { calculateCollegeScore, type ScoredCollege } from "./scoring"
 
 export async function getRecommendations(quizId: number): Promise<ScoredCollege[]> {
@@ -15,8 +15,11 @@ export async function getRecommendations(quizId: number): Promise<ScoredCollege[
     throw new Error("Quiz not found")
   }
 
-  // Get all colleges with their courses
-  const allColleges = await db.select().from(colleges)
+  // Get all enabled colleges with their courses
+  const allColleges = await db
+    .select()
+    .from(colleges)
+    .where(eq(colleges.isEnabled, true))
   const allCourses = await db.select().from(courses)
 
   // Group courses by college

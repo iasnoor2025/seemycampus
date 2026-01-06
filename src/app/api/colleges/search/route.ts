@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
     // Build conditions array
     const conditions = []
 
+    // Always filter out disabled colleges for public-facing API
+    conditions.push(eq(colleges.isEnabled, true))
+
     // Search filter (name, location, city)
     if (search) {
       conditions.push(

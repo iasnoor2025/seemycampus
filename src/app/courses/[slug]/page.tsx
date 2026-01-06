@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { db } from "@/db"
 import { courses, colleges, menuCourses } from "@/db/schema"
-import { eq, ilike } from "drizzle-orm"
+import { eq, ilike, and } from "drizzle-orm"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -86,7 +86,12 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     })
     .from(courses)
     .leftJoin(colleges, eq(courses.collegeId, colleges.id))
-    .where(eq(courses.slug, slug))
+    .where(
+      and(
+        eq(courses.slug, slug),
+        eq(colleges.isEnabled, true)
+      )
+    )
     .limit(1)
 
   if (course.length === 0) {
@@ -112,7 +117,12 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
     })
     .from(courses)
     .leftJoin(colleges, eq(courses.collegeId, colleges.id))
-    .where(eq(courses.slug, slug))
+    .where(
+      and(
+        eq(courses.slug, slug),
+        eq(colleges.isEnabled, true)
+      )
+    )
     .limit(1)
 
   if (result.length === 0) {
@@ -132,7 +142,12 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
         })
         .from(courses)
         .leftJoin(colleges, eq(courses.collegeId, colleges.id))
-        .where(ilike(courses.name, `%${menuCourse[0].name}%`))
+        .where(
+          and(
+            eq(colleges.isEnabled, true),
+            ilike(courses.name, `%${menuCourse[0].name}%`)
+          )
+        )
         .limit(20)
 
       // If no courses found, find colleges that offer courses matching this menu course name
@@ -145,7 +160,12 @@ export default async function CoursePage({ params, searchParams }: CoursePagePro
           })
           .from(courses)
           .innerJoin(colleges, eq(courses.collegeId, colleges.id))
-          .where(ilike(courses.name, `%${menuCourse[0].name}%`))
+          .where(
+            and(
+              eq(colleges.isEnabled, true),
+              ilike(courses.name, `%${menuCourse[0].name}%`)
+            )
+          )
 
         // Get unique colleges (using a Map to deduplicate by college ID)
         const uniqueCollegesMap = new Map<number, typeof colleges.$inferSelect>()

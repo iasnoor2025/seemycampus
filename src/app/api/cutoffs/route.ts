@@ -13,7 +13,27 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year")
     const category = searchParams.get("category")
 
-    let query = db.select().from(cutoffs)
+    // Build query with join to filter disabled colleges
+    let query = db
+      .select({
+        id: cutoffs.id,
+        collegeId: cutoffs.collegeId,
+        examName: cutoffs.examName,
+        courseName: cutoffs.courseName,
+        year: cutoffs.year,
+        category: cutoffs.category,
+        openingRank: cutoffs.openingRank,
+        closingRank: cutoffs.closingRank,
+        openingScore: cutoffs.openingScore,
+        closingScore: cutoffs.closingScore,
+        round: cutoffs.round,
+        quota: cutoffs.quota,
+        createdAt: cutoffs.createdAt,
+        updatedAt: cutoffs.updatedAt,
+      })
+      .from(cutoffs)
+      .innerJoin(colleges, eq(cutoffs.collegeId, colleges.id))
+      .where(eq(colleges.isEnabled, true))
 
     const conditions = []
     if (collegeId) {

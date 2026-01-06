@@ -2,15 +2,22 @@ import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
 import { eq, and, or, ilike, sql } from "drizzle-orm"
 
-export async function getAllColleges() {
-  return await db.select().from(colleges)
+export async function getAllColleges(includeDisabled: boolean = false) {
+  if (includeDisabled) {
+    return await db.select().from(colleges)
+  }
+  return await db.select().from(colleges).where(eq(colleges.isEnabled, true))
 }
 
-export async function getCollegeBySlug(slug: string) {
+export async function getCollegeBySlug(slug: string, includeDisabled: boolean = false) {
+  const conditions = includeDisabled 
+    ? [eq(colleges.slug, slug)]
+    : [eq(colleges.slug, slug), eq(colleges.isEnabled, true)]
+  
   const [college] = await db
     .select()
     .from(colleges)
-    .where(eq(colleges.slug, slug))
+    .where(and(...conditions))
     .limit(1)
 
   return college || null
@@ -42,6 +49,7 @@ export async function getCollegesByCity(city: string, page: number = 1, limit: n
   const offset = (page - 1) * limit
   
   const conditions = [
+    eq(colleges.isEnabled, true),
     or(
       ilike(colleges.city, `%${city}%`),
       ilike(colleges.location, `%${city}%`)
@@ -78,7 +86,10 @@ export async function getAllCities(): Promise<string[]> {
   const cities = await db
     .selectDistinct({ city: colleges.city })
     .from(colleges)
-    .where(sql`${colleges.city} IS NOT NULL AND ${colleges.city} != ''`)
+    .where(and(
+      eq(colleges.isEnabled, true),
+      sql`${colleges.city} IS NOT NULL AND ${colleges.city} != ''`
+    ))
   
   return cities.map(c => c.city).filter(Boolean) as string[]
 }
@@ -88,10 +99,13 @@ export async function getCityStats(city: string) {
     .select()
     .from(colleges)
     .where(
-      or(
-        ilike(colleges.city, `%${city}%`),
-        ilike(colleges.location, `%${city}%`)
-      )!
+      and(
+        eq(colleges.isEnabled, true),
+        or(
+          ilike(colleges.city, `%${city}%`),
+          ilike(colleges.location, `%${city}%`)
+        )!
+      )
     )
   
   const stats = {
@@ -112,22 +126,23 @@ export async function getCityStats(city: string) {
 }
 
 export async function getCollegesByCategory(category: string) {
-  // For now, return all colleges. In the future, add category field to schema
+  // For now, return all enabled colleges. In the future, add category field to schema
   // This is a placeholder that can be enhanced when category field is added
-  return await db.select().from(colleges)
+  return await db.select().from(colleges).where(eq(colleges.isEnabled, true))
 }
 
 export async function getCollegesByCategoryPaginated(category: string, page: number = 1, limit: number = 10) {
   const offset = (page - 1) * limit
   
-  // For now, return all colleges with pagination. In the future, filter by category
+  // For now, return all enabled colleges with pagination. In the future, filter by category
   const collegesList = await db
     .select()
     .from(colleges)
+    .where(eq(colleges.isEnabled, true))
     .limit(limit)
     .offset(offset)
   
-  const totalCount = await db.select().from(colleges)
+  const totalCount = await db.select().from(colleges).where(eq(colleges.isEnabled, true))
   const totalPages = Math.ceil(totalCount.length / limit)
   
   return {
@@ -142,8 +157,8 @@ export async function getCollegesByCategoryPaginated(category: string, page: num
 }
 
 export async function getCategoryStats(categoryName: string) {
-  // Get all colleges (for now - will filter by category when category field is added)
-  const allColleges = await db.select().from(colleges)
+  // Get all enabled colleges (for now - will filter by category when category field is added)
+  const allColleges = await db.select().from(colleges).where(eq(colleges.isEnabled, true))
   
   // Calculate statistics
   const stats = {
@@ -170,9 +185,9 @@ export async function getCategoryStats(categoryName: string) {
 }
 
 export async function getCollegesByCategoryAndSubcategory(category: string, subcategory: string) {
-  // For now, return all colleges. In the future, add category/subcategory fields to schema
+  // For now, return all enabled colleges. In the future, add category/subcategory fields to schema
   // This is a placeholder that can be enhanced when category/subcategory fields are added
-  return await db.select().from(colleges)
+  return await db.select().from(colleges).where(eq(colleges.isEnabled, true))
 }
 
 export async function getCollegesByCategoryAndSubcategoryPaginated(
@@ -183,14 +198,15 @@ export async function getCollegesByCategoryAndSubcategoryPaginated(
 ) {
   const offset = (page - 1) * limit
   
-  // For now, return all colleges with pagination. In the future, filter by category/subcategory
+  // For now, return all enabled colleges with pagination. In the future, filter by category/subcategory
   const collegesList = await db
     .select()
     .from(colleges)
+    .where(eq(colleges.isEnabled, true))
     .limit(limit)
     .offset(offset)
   
-  const totalCount = await db.select().from(colleges)
+  const totalCount = await db.select().from(colleges).where(eq(colleges.isEnabled, true))
   const totalPages = Math.ceil(totalCount.length / limit)
   
   return {
@@ -207,21 +223,24 @@ export async function getCollegesByCategoryAndSubcategoryPaginated(
 export async function getCollegesPaginated(page: number = 1, limit: number = 10, academicAllianceOnly: boolean = false) {
   const offset = (page - 1) * limit
   
-  // Build query with optional Academic Alliance filter
-  let query = db.select().from(colleges)
-  
+  // Build query with enabled filter and optional Academic Alliance filter
+  const conditions = [eq(colleges.isEnabled, true)]
   if (academicAllianceOnly) {
-    query = query.where(eq(colleges.isAcademicAlliance, true)) as typeof query
+    conditions.push(eq(colleges.isAcademicAlliance, true))
   }
   
-  const collegesList = await query.limit(limit).offset(offset)
+  const collegesList = await db
+    .select()
+    .from(colleges)
+    .where(and(...conditions))
+    .limit(limit)
+    .offset(offset)
   
   // Get total count with same filter
-  let countQuery = db.select().from(colleges)
-  if (academicAllianceOnly) {
-    countQuery = countQuery.where(eq(colleges.isAcademicAlliance, true)) as typeof countQuery
-  }
-  const totalCount = await countQuery
+  const totalCount = await db
+    .select()
+    .from(colleges)
+    .where(and(...conditions))
   const totalPages = Math.ceil(totalCount.length / limit)
   
   return {
@@ -239,6 +258,9 @@ export async function getAcademicAllianceColleges() {
   return await db
     .select()
     .from(colleges)
-    .where(eq(colleges.isAcademicAlliance, true))
+    .where(and(
+      eq(colleges.isEnabled, true),
+      eq(colleges.isAcademicAlliance, true)
+    ))
 }
 

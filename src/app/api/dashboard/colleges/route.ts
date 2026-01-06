@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/db"
 import { colleges } from "@/db/schema"
-import { desc, sql } from "drizzle-orm"
+import { desc, sql, eq, and } from "drizzle-orm"
 
 // GET - Fetch all colleges
 export async function GET(request: NextRequest) {
@@ -104,6 +104,49 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: "Failed to create college" },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH - Bulk update colleges by state (enable/disable)
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { state, isEnabled } = body
+
+    if (!state || typeof isEnabled !== "boolean") {
+      return NextResponse.json(
+        { error: "State and isEnabled (boolean) are required" },
+        { status: 400 }
+      )
+    }
+
+    // Update all colleges in the specified state
+    const updatedColleges = await db
+      .update(colleges)
+      .set({
+        isEnabled,
+        updatedAt: new Date(),
+      })
+      .where(eq(colleges.state, state))
+      .returning()
+
+    return NextResponse.json({
+      message: `Successfully ${isEnabled ? "enabled" : "disabled"} ${updatedColleges.length} colleges in ${state}`,
+      count: updatedColleges.length,
+      state,
+      isEnabled,
+    })
+  } catch (error) {
+    console.error("Error bulk updating colleges:", error)
+    return NextResponse.json(
+      { error: "Failed to update colleges" },
       { status: 500 }
     )
   }

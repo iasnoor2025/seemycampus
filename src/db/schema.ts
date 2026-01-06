@@ -17,6 +17,7 @@ export const colleges = pgTable("colleges", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   isAcademicAlliance: boolean("is_academic_alliance").default(false),
+  isEnabled: boolean("is_enabled").default(true), // Enable/disable college visibility on site
   // Additional fields for comprehensive college data
   ranking: integer("ranking"), // College ranking
   establishedYear: integer("established_year"), // Year college was established

@@ -7,7 +7,7 @@ import type { AIProvider } from "./providers/base"
 import { getAllColleges } from "@/lib/colleges"
 import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
-import { ilike, or } from "drizzle-orm"
+import { ilike, or, eq, and } from "drizzle-orm"
 
 export interface ChatMessage {
   role: "user" | "assistant"
@@ -87,14 +87,14 @@ export class Chatbot {
       }
 
       // Build search conditions - match any keyword in any field
-      const conditions = keywords.flatMap(keyword => [
+      const searchConditions = keywords.flatMap(keyword => [
         ilike(colleges.name, `%${keyword}%`),
         ilike(colleges.location, `%${keyword}%`),
         ilike(colleges.city, `%${keyword}%`),
         ilike(colleges.description, `%${keyword}%`)
       ])
 
-      // Search colleges by name, location, city, or description
+      // Search colleges by name, location, city, or description (only enabled ones)
       const results = await db
         .select({
           id: colleges.id,
@@ -106,7 +106,12 @@ export class Chatbot {
           ranking: colleges.ranking,
         })
         .from(colleges)
-        .where(or(...conditions))
+        .where(
+          and(
+            eq(colleges.isEnabled, true),
+            or(...searchConditions)
+          )
+        )
         .limit(5)
 
       return results
