@@ -36,60 +36,151 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
   const location = college.location || college.city || ""
   const locationText = location ? ` in ${location}` : ""
   
-  // Build keyword-rich description
+  // Extract common abbreviations/alternative names for ALL colleges
+  const alternativeNames: string[] = []
+  const nameWords = collegeName.split(" ").filter(w => w.length > 0)
+  
+  // Strategy 1: Generate abbreviation from first letters (e.g., "JMI" from "Jamia Millia Islamia")
+  if (nameWords.length >= 2) {
+    // For 2+ word names, create abbreviation
+    const abbreviation = nameWords.map(w => {
+      // Skip common words like "of", "and", "the", "in", "at"
+      const skipWords = ["of", "and", "the", "in", "at", "for", "to", "a", "an"]
+      if (skipWords.includes(w.toLowerCase())) {
+        return ""
+      }
+      return w[0].toUpperCase()
+    }).join("")
+    
+    if (abbreviation.length >= 2 && abbreviation.length <= 6) {
+      alternativeNames.push(abbreviation)
+    }
+  }
+  
+  // Strategy 2: Extract known abbreviations from name (e.g., "IIT" from "Indian Institute of Technology")
+  const knownPatterns = [
+    { pattern: /Indian Institute of Technology/i, abbrev: "IIT" },
+    { pattern: /Indian Institute of Management/i, abbrev: "IIM" },
+    { pattern: /All India Institute of Medical Sciences/i, abbrev: "AIIMS" },
+    { pattern: /National Institute of Technology/i, abbrev: "NIT" },
+    { pattern: /National Institute of Fashion Technology/i, abbrev: "NIFT" },
+    { pattern: /National Institute of Design/i, abbrev: "NID" },
+    { pattern: /Jamia Millia Islamia/i, abbrev: "JMI" },
+    { pattern: /Delhi University/i, abbrev: "DU" },
+    { pattern: /Jawaharlal Nehru University/i, abbrev: "JNU" },
+    { pattern: /Banaras Hindu University/i, abbrev: "BHU" },
+    { pattern: /Aligarh Muslim University/i, abbrev: "AMU" },
+    { pattern: /University of Delhi/i, abbrev: "DU" },
+    { pattern: /Birla Institute of Technology/i, abbrev: "BITS" },
+    { pattern: /Vellore Institute of Technology/i, abbrev: "VIT" },
+    { pattern: /Manipal Institute of Technology/i, abbrev: "MIT" },
+    { pattern: /SRM Institute/i, abbrev: "SRM" },
+    { pattern: /Amity University/i, abbrev: "Amity" },
+    { pattern: /Lovely Professional University/i, abbrev: "LPU" },
+    { pattern: /Symbiosis International/i, abbrev: "SIU" },
+    { pattern: /Christ University/i, abbrev: "Christ" },
+  ]
+  
+  for (const { pattern, abbrev } of knownPatterns) {
+    if (pattern.test(collegeName) && !alternativeNames.includes(abbrev)) {
+      alternativeNames.push(abbrev)
+    }
+  }
+  
+  // Strategy 3: Extract acronyms already in the name (e.g., if name contains "IIT Delhi", extract "IIT")
+  const acronymMatch = collegeName.match(/\b[A-Z]{2,6}\b/g)
+  if (acronymMatch) {
+    acronymMatch.forEach(acronym => {
+      // Only add if it's 2-6 letters and not already added
+      if (acronym.length >= 2 && acronym.length <= 6 && !alternativeNames.includes(acronym)) {
+        alternativeNames.push(acronym)
+      }
+    })
+  }
+  
+  // Strategy 4: For single-word or short names, use first few letters if meaningful
+  if (nameWords.length === 1 && collegeName.length > 4) {
+    const shortName = collegeName.substring(0, 3).toUpperCase()
+    if (!alternativeNames.includes(shortName)) {
+      alternativeNames.push(shortName)
+    }
+  }
+  
+  // Build keyword-rich description with full college name emphasized
   let description = college.description || ""
   
   // If no description or short description, create a comprehensive one
   if (!description || description.length < 100) {
     const parts: string[] = []
-    parts.push(`${collegeName}${locationText}`)
+    // Start with full college name for better SEO
+    parts.push(`${collegeName}${locationText} is a prestigious institution`)
     
     if (college.ranking) {
-      parts.push(`Ranked ${college.ranking}`)
+      parts.push(`ranked ${college.ranking} by NIRF`)
     }
     
     if (college.establishedYear) {
-      parts.push(`Established in ${college.establishedYear}`)
+      parts.push(`established in ${college.establishedYear}`)
     }
     
     if (college.accreditation) {
       parts.push(`${college.accreditation} accredited`)
     }
     
-    parts.push("Get complete information about admission process, courses, fees, placements, cutoffs, and reviews")
+    parts.push(`${collegeName} offers comprehensive information about admission process, courses, fees, placements, cutoffs, and reviews`)
     
     if (college.courses && college.courses.length > 0) {
       const courseNames = college.courses.slice(0, 3).map(c => c.name).join(", ")
-      parts.push(`Offers ${courseNames}${college.courses.length > 3 ? ` and ${college.courses.length - 3} more courses` : ""}`)
+      parts.push(`${collegeName} offers ${courseNames}${college.courses.length > 3 ? ` and ${college.courses.length - 3} more courses` : ""}`)
     }
     
-    description = parts.join(". ") + "."
+    description = parts.join(", ") + "."
   } else {
-    // Enhance existing description with keywords
+    // Enhance existing description - ensure full name appears early
+    if (!description.toLowerCase().includes(collegeName.toLowerCase())) {
+      description = `${collegeName}${locationText}. ${description}`
+    }
+    // Enhance with keywords
     if (!description.toLowerCase().includes("admission")) {
-      description += " Get admission details, application process, and eligibility criteria."
+      description += ` Get ${collegeName} admission details, application process, and eligibility criteria.`
     }
     if (!description.toLowerCase().includes("course")) {
-      description += " Explore courses, fees, and program details."
+      description += ` Explore ${collegeName} courses, fees, and program details.`
     }
   }
   
   // Ensure description is between 120-160 characters for optimal SEO
+  // But prioritize including full college name
   if (description.length > 160) {
-    description = description.substring(0, 157) + "..."
+    // Try to keep full name in first 160 chars
+    const nameIndex = description.toLowerCase().indexOf(collegeName.toLowerCase())
+    if (nameIndex > 0 && nameIndex < 50) {
+      // Name appears early, truncate from end
+      description = description.substring(0, 157) + "..."
+    } else {
+      // Name appears late, truncate but keep name
+      const beforeName = description.substring(0, nameIndex)
+      const nameAndAfter = description.substring(nameIndex)
+      if (beforeName.length + nameAndAfter.length > 160) {
+        description = beforeName.substring(0, Math.max(0, 160 - nameAndAfter.length - 3)) + "..." + nameAndAfter.substring(0, Math.min(nameAndAfter.length, 160 - beforeName.length))
+      }
+    }
   } else if (description.length < 120) {
     description += ` Find complete information about ${collegeName}${locationText} including admission, courses, fees, placements, and reviews.`
   }
   
-  // Enhanced title with more keywords for better rankings
+  // Enhanced title with full college name first for better rankings
+  // Put full name at the start for exact match searches
   const title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission 2025, Courses, Fees, Placements, Rankings, Cutoffs | SeeMyCampus`
   const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
     ? college.images[0] 
     : (typeof college.images === 'string' ? college.images : undefined)
 
   // Build comprehensive keywords array with more variations for better rankings
+  // Include full name, abbreviations, and common search variations
   const keywords: string[] = [
-    collegeName,
+    collegeName, // Full name first for exact match
+    ...alternativeNames, // Add abbreviations (e.g., "JMI")
     `${collegeName} admission`,
     `${collegeName} admission 2025`,
     `${collegeName} courses`,
@@ -100,6 +191,27 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
     `${collegeName} reviews`,
     `${collegeName} NIRF ranking`,
   ]
+  
+  // Add alternative name variations for ALL colleges (e.g., "JMI admission", "IIT courses")
+  alternativeNames.forEach(altName => {
+    keywords.push(
+      `${altName} admission`,
+      `${altName} admission 2025`,
+      `${altName} courses`,
+      `${altName} fees`,
+      `${altName} ranking`,
+      `${altName} cutoffs`,
+      `${altName} placement`,
+    )
+    
+    // Add location-specific variations if location exists
+    if (location) {
+      keywords.push(
+        `${altName} ${location}`,
+        `${altName} ${college.city || location}`,
+      )
+    }
+  })
   
   if (location) {
     keywords.push(
@@ -227,11 +339,64 @@ interface CollegeWithDetails extends College {
 }
 
 export function generateStructuredDataCollege(college: CollegeWithDetails) {
+  // Extract alternative names for structured data (same logic as generateCollegeMeta)
+  const alternativeNames: string[] = []
+  const nameWords = college.name.split(" ").filter(w => w.length > 0)
+  
+  // Generate abbreviation from first letters
+  if (nameWords.length >= 2) {
+    const skipWords = ["of", "and", "the", "in", "at", "for", "to", "a", "an"]
+    const abbreviation = nameWords.map(w => {
+      if (skipWords.includes(w.toLowerCase())) return ""
+      return w[0].toUpperCase()
+    }).join("")
+    
+    if (abbreviation.length >= 2 && abbreviation.length <= 6) {
+      alternativeNames.push(abbreviation)
+    }
+  }
+  
+  // Known patterns
+  const knownPatterns = [
+    { pattern: /Indian Institute of Technology/i, abbrev: "IIT" },
+    { pattern: /Indian Institute of Management/i, abbrev: "IIM" },
+    { pattern: /All India Institute of Medical Sciences/i, abbrev: "AIIMS" },
+    { pattern: /National Institute of Technology/i, abbrev: "NIT" },
+    { pattern: /Jamia Millia Islamia/i, abbrev: "JMI" },
+    { pattern: /Delhi University/i, abbrev: "DU" },
+    { pattern: /Jawaharlal Nehru University/i, abbrev: "JNU" },
+    { pattern: /Banaras Hindu University/i, abbrev: "BHU" },
+    { pattern: /Aligarh Muslim University/i, abbrev: "AMU" },
+    { pattern: /Birla Institute of Technology/i, abbrev: "BITS" },
+    { pattern: /Vellore Institute of Technology/i, abbrev: "VIT" },
+  ]
+  
+  for (const { pattern, abbrev } of knownPatterns) {
+    if (pattern.test(college.name) && !alternativeNames.includes(abbrev)) {
+      alternativeNames.push(abbrev)
+    }
+  }
+  
+  // Extract acronyms from name
+  const acronymMatch = college.name.match(/\b[A-Z]{2,6}\b/g)
+  if (acronymMatch) {
+    acronymMatch.forEach(acronym => {
+      if (acronym.length >= 2 && acronym.length <= 6 && !alternativeNames.includes(acronym)) {
+        alternativeNames.push(acronym)
+      }
+    })
+  }
+  
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "CollegeOrUniversity",
     name: college.name,
     url: `${baseUrl}/colleges/${college.slug}`,
+  }
+  
+  // Add alternative names if available
+  if (alternativeNames.length > 0) {
+    structuredData.alternateName = alternativeNames
   }
 
   if (college.description) {
