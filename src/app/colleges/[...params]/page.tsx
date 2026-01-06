@@ -187,8 +187,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const collegeData = await getCollegeWithCourses(slug)
   
   if (!collegeData) {
+    // Return proper 404 metadata to prevent indexing of 404 pages
     return {
       title: "College Not Found | SeeMyCampus",
+      description: "The college page you are looking for could not be found.",
+      robots: {
+        index: false,
+        follow: false,
+      },
     }
   }
 

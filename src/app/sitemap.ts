@@ -278,7 +278,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn("Failed to fetch cities for location pages in sitemap:", error)
   }
 
-  return [
+  // Combine all pages and ensure no duplicates
+  const allPages = [
     ...staticPages,
     ...collegePages,
     ...categoryPages,
@@ -289,5 +290,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...locationPages,
     ...blogPages,
   ]
+  
+  // Remove duplicates based on URL
+  const uniquePages = Array.from(
+    new Map(allPages.map(page => [page.url, page])).values()
+  )
+  
+  // Sort by priority (highest first) for better crawling
+  uniquePages.sort((a, b) => (b.priority || 0) - (a.priority || 0))
+  
+  return uniquePages
 }
 

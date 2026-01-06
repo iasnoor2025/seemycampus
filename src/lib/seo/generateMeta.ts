@@ -81,20 +81,24 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
     description += ` Find complete information about ${collegeName}${locationText} including admission, courses, fees, placements, and reviews.`
   }
   
-  const title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission, Courses, Fees, Placements | SeeMyCampus`
+  // Enhanced title with more keywords for better rankings
+  const title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission 2025, Courses, Fees, Placements, Rankings, Cutoffs | SeeMyCampus`
   const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
     ? college.images[0] 
     : (typeof college.images === 'string' ? college.images : undefined)
 
-  // Build comprehensive keywords array
+  // Build comprehensive keywords array with more variations for better rankings
   const keywords: string[] = [
     collegeName,
     `${collegeName} admission`,
+    `${collegeName} admission 2025`,
     `${collegeName} courses`,
     `${collegeName} fees`,
     `${collegeName} placement`,
     `${collegeName} ranking`,
     `${collegeName} cutoffs`,
+    `${collegeName} reviews`,
+    `${collegeName} NIRF ranking`,
   ]
   
   if (location) {
