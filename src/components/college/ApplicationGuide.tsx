@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, FileText, Calendar, DollarSign, ExternalLink, Lightbulb, Phone, Mail, Loader2 } from "lucide-react"
+import { CheckCircle2, FileText, Calendar, Coins, ExternalLink, Lightbulb, Phone, Mail, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface ApplicationGuide {
@@ -148,7 +148,7 @@ export function ApplicationGuide({ collegeSlug, courseId }: ApplicationGuideProp
         {guide.feeInfo && (
           <div className="border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
-              <DollarSign className="h-5 w-5 text-primary" />
+              <Coins className="h-5 w-5 text-primary" />
               <h3 className="font-semibold text-lg">Application Fee</h3>
             </div>
             {guide.feeInfo.amount && (

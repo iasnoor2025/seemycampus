@@ -24,6 +24,90 @@ import { removeDuplicates } from "./remove-duplicates"
 
 const ollama = new OllamaProvider({})
 
+// Helper function to parse JSON from Ollama response with error handling
+function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' = 'array'): any {
+  try {
+    let jsonStr = response.trim()
+    
+    // Remove markdown code blocks
+    if (jsonStr.includes("```json")) {
+      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
+    } else if (jsonStr.includes("```")) {
+      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    }
+    
+    // Try to extract JSON array or object
+    if (expectedType === 'array') {
+      const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
+      if (arrayMatch) {
+        jsonStr = arrayMatch[0]
+      }
+    } else {
+      const objectMatch = jsonStr.match(/\{[\s\S]*\}/)
+      if (objectMatch) {
+        jsonStr = objectMatch[0]
+      }
+    }
+    
+    // Try to fix common JSON issues
+    // Remove trailing commas before closing brackets/braces
+    jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1')
+    
+    // Remove any text after the JSON structure
+    if (expectedType === 'array') {
+      const lastBracket = jsonStr.lastIndexOf(']')
+      if (lastBracket > 0) {
+        jsonStr = jsonStr.substring(0, lastBracket + 1)
+      }
+    } else {
+      const lastBrace = jsonStr.lastIndexOf('}')
+      if (lastBrace > 0) {
+        jsonStr = jsonStr.substring(0, lastBrace + 1)
+      }
+    }
+    
+    // Try to parse
+    return JSON.parse(jsonStr)
+  } catch (error: any) {
+    // Log the problematic response for debugging
+    console.error(`⚠️  JSON parsing error. Response preview: ${response.substring(0, 500)}...`)
+    console.error(`⚠️  Error details: ${error.message}`)
+    
+    // Try one more time with aggressive cleanup
+    try {
+      let cleaned = response.trim()
+      
+      // Extract just the JSON part more aggressively
+      if (expectedType === 'array') {
+        const startIdx = cleaned.indexOf('[')
+        const endIdx = cleaned.lastIndexOf(']')
+        if (startIdx >= 0 && endIdx > startIdx) {
+          cleaned = cleaned.substring(startIdx, endIdx + 1)
+          // Remove trailing commas
+          cleaned = cleaned.replace(/,(\s*\])/g, '$1')
+          return JSON.parse(cleaned)
+        }
+      } else {
+        const startIdx = cleaned.indexOf('{')
+        const endIdx = cleaned.lastIndexOf('}')
+        if (startIdx >= 0 && endIdx > startIdx) {
+          cleaned = cleaned.substring(startIdx, endIdx + 1)
+          // Remove trailing commas
+          cleaned = cleaned.replace(/,(\s*\})/g, '$1')
+          return JSON.parse(cleaned)
+        }
+      }
+    } catch (retryError) {
+      // If all else fails, return empty array/object
+      console.error(`❌ Failed to parse JSON after retry. Returning empty ${expectedType}.`)
+      return expectedType === 'array' ? [] : {}
+    }
+    
+    // Return empty array/object as fallback
+    return expectedType === 'array' ? [] : {}
+  }
+}
+
 // Function to check if college name needs correction
 function needsNameCorrection(name: string): boolean {
   if (!name) return false
@@ -298,13 +382,14 @@ CRITICAL REQUIREMENTS:
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
     
-    // Remove any leading/trailing non-JSON text
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
+    // Parse JSON with error handling
+    const enrichedData = parseJsonFromOllama(response, 'object')
     
-    const enrichedData = JSON.parse(jsonStr)
+    // Validate that we got an object
+    if (typeof enrichedData !== 'object' || Array.isArray(enrichedData)) {
+      console.error(`⚠️  Expected object but got ${typeof enrichedData}. Returning empty object.`)
+      return {}
+    }
     
     // Validate and clean the data
     const cleaned: any = {}
@@ -440,13 +525,14 @@ Important:
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
     
-    // Remove any leading/trailing non-JSON text
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
+    // Parse JSON with error handling
+    const imageData = parseJsonFromOllama(response, 'object')
     
-    const imageData = JSON.parse(jsonStr)
+    // Validate that we got an object
+    if (typeof imageData !== 'object' || Array.isArray(imageData)) {
+      console.error(`⚠️  Expected object but got ${typeof imageData}. Returning empty object.`)
+      return { campusImages: [] }
+    }
     
     // Validate URLs
     const validLogo = imageData.logoUrl && 
@@ -761,13 +847,14 @@ Important:
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
     
-    // Remove any leading/trailing non-JSON text
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
-    }
+    // Parse JSON with error handling
+    const coursesData = parseJsonFromOllama(response, 'array')
     
-    const coursesData = JSON.parse(jsonStr)
+    // Validate that we got an array
+    if (!Array.isArray(coursesData)) {
+      console.error(`⚠️  Expected array but got ${typeof coursesData}. Returning empty array.`)
+      return
+    }
     
     let coursesAdded = 0
     let coursesSkipped = 0
@@ -1210,21 +1297,20 @@ Important:
       content: prompt
     }])
     
-    // Extract JSON array
-    let jsonStr = response.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
+    // Parse JSON with error handling
+    const collegesData = parseJsonFromOllama(response, 'array')
+    
+    // Validate that we got an array
+    if (!Array.isArray(collegesData)) {
+      console.error(`⚠️  Expected array but got ${typeof collegesData}. Returning empty array.`)
+      return { added: 0, skipped: 0 }
     }
     
-    // Remove any leading/trailing non-JSON text
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
+    // Check if we got any data
+    if (collegesData.length === 0) {
+      console.log(`\n⚠️  No colleges found in response. Ollama may have returned empty or invalid data.`)
+      return { added: 0, skipped: 0 }
     }
-    
-    const collegesData = JSON.parse(jsonStr)
     
     let added = 0
     let skipped = 0
@@ -1364,21 +1450,14 @@ Important:
       content: prompt
     }])
     
-    // Extract JSON array
-    let jsonStr = response.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
-    }
+    // Parse JSON with error handling
+    const reviewsData = parseJsonFromOllama(response, 'array')
     
-    // Remove any leading/trailing non-JSON text
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
+    // Validate that we got an array
+    if (!Array.isArray(reviewsData)) {
+      console.error(`⚠️  Expected array but got ${typeof reviewsData}. Returning empty array.`)
+      return
     }
-    
-    const reviewsData = JSON.parse(jsonStr)
     
     let reviewsAdded = 0
     
@@ -1602,20 +1681,14 @@ Important:
       content: prompt
     }])
     
-    // Extract JSON array
-    let jsonStr = response.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
-    }
+    // Parse JSON with error handling
+    const cutoffsData = parseJsonFromOllama(response, 'array')
     
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
+    // Validate that we got an array
+    if (!Array.isArray(cutoffsData)) {
+      console.error(`⚠️  Expected array but got ${typeof cutoffsData}. Returning empty array.`)
+      return
     }
-    
-    const cutoffsData = JSON.parse(jsonStr)
     
     let cutoffsAdded = 0
     
@@ -1731,20 +1804,14 @@ Important:
       content: prompt
     }])
     
-    // Extract JSON array
-    let jsonStr = response.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
-    }
+    // Parse JSON with error handling
+    const placementsData = parseJsonFromOllama(response, 'array')
     
-    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (arrayMatch) {
-      jsonStr = arrayMatch[0]
+    // Validate that we got an array
+    if (!Array.isArray(placementsData)) {
+      console.error(`⚠️  Expected array but got ${typeof placementsData}. Returning empty array.`)
+      return
     }
-    
-    const placementsData = JSON.parse(jsonStr)
     
     let placementsAdded = 0
     
@@ -1868,20 +1935,14 @@ Important:
       content: prompt
     }])
     
-    // Extract JSON object
-    let jsonStr = response.trim()
-    if (jsonStr.includes("```json")) {
-      jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
-    } else if (jsonStr.includes("```")) {
-      jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
-    }
+    // Parse JSON with error handling
+    const guideData = parseJsonFromOllama(response, 'object')
     
-    const objectMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (objectMatch) {
-      jsonStr = objectMatch[0]
+    // Validate that we got an object
+    if (typeof guideData !== 'object' || Array.isArray(guideData)) {
+      console.error(`⚠️  Expected object but got ${typeof guideData}. Skipping guide creation.`)
+      return
     }
-    
-    const guideData = JSON.parse(jsonStr)
     
     if (!guideData.guideContent) {
       console.log(`  ⚠️  No valid guide content found`)
@@ -2124,13 +2185,14 @@ Extract ALL universities from this ${stateName} section.`
           jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
         }
         
-        // Remove any leading/trailing non-JSON text
-        const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
-        if (arrayMatch) {
-          jsonStr = arrayMatch[0]
-        }
+        // Parse JSON with error handling
+        const stateUniversities = parseJsonFromOllama(ollamaResponse, 'array')
         
-        const stateUniversities = JSON.parse(jsonStr)
+        // Validate that we got an array
+        if (!Array.isArray(stateUniversities)) {
+          console.error(`⚠️  Expected array but got ${typeof stateUniversities}. Skipping ${stateName}.`)
+          continue
+        }
         universitiesData = universitiesData.concat(stateUniversities)
         
         console.log(`    ✅ Extracted ${stateUniversities.length} universities from ${stateName}`)

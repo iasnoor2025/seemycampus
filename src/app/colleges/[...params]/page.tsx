@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Building, Award, TrendingUp, Users, DollarSign, MapPin } from "lucide-react"
+import { Building, Award, TrendingUp, Users, Coins, MapPin } from "lucide-react"
 import { CollegeLogo } from "@/components/college/CollegeLogo"
 import { getCollegeBySlug, getCollegeWithCourses, getCollegesByCategoryPaginated, getCollegesByCategoryAndSubcategoryPaginated, getCategoryStats } from "@/lib/colleges"
 import { CollegeHero } from "@/components/college/CollegeHero"
@@ -346,7 +346,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                   {categoryStats.averagePackage && (
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-blue-600" />
+                        <Coins className="w-6 h-6 text-blue-600" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Average Package</p>
@@ -727,7 +727,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
           {college.averagePackage && (
             <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5 text-yellow-600" />
+                <Coins className="w-5 h-5 text-yellow-600" />
                 <span className="text-sm font-medium text-gray-700">Avg Package</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">₹{college.averagePackage.toLocaleString()} LPA</p>
