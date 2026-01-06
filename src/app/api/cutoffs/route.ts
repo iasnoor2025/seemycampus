@@ -14,7 +14,22 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category")
 
     // Build query with join to filter disabled colleges
-    let query = db
+    const conditions = [eq(colleges.isEnabled, true)]
+    
+    if (collegeId) {
+      conditions.push(eq(cutoffs.collegeId, parseInt(collegeId)))
+    }
+    if (examName) {
+      conditions.push(eq(cutoffs.examName, examName))
+    }
+    if (year) {
+      conditions.push(eq(cutoffs.year, parseInt(year)))
+    }
+    if (category) {
+      conditions.push(eq(cutoffs.category, category))
+    }
+
+    const query = db
       .select({
         id: cutoffs.id,
         collegeId: cutoffs.collegeId,
@@ -33,25 +48,7 @@ export async function GET(request: NextRequest) {
       })
       .from(cutoffs)
       .innerJoin(colleges, eq(cutoffs.collegeId, colleges.id))
-      .where(eq(colleges.isEnabled, true))
-
-    const conditions = []
-    if (collegeId) {
-      conditions.push(eq(cutoffs.collegeId, parseInt(collegeId)))
-    }
-    if (examName) {
-      conditions.push(eq(cutoffs.examName, examName))
-    }
-    if (year) {
-      conditions.push(eq(cutoffs.year, parseInt(year)))
-    }
-    if (category) {
-      conditions.push(eq(cutoffs.category, category))
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query
-    }
+      .where(and(...conditions))
 
     const cutoffList = await query.orderBy(desc(cutoffs.year), desc(cutoffs.round))
 

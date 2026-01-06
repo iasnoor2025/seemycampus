@@ -13,7 +13,19 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year")
 
     // Build query with join to filter disabled colleges
-    let query = db
+    const conditions = [eq(colleges.isEnabled, true)]
+    
+    if (collegeId) {
+      conditions.push(eq(collegeRankings.collegeId, parseInt(collegeId)))
+    }
+    if (rankingSource) {
+      conditions.push(eq(collegeRankings.rankingSource, rankingSource))
+    }
+    if (year) {
+      conditions.push(eq(collegeRankings.year, parseInt(year)))
+    }
+
+    const rankingList = await db
       .select({
         id: collegeRankings.id,
         collegeId: collegeRankings.collegeId,
@@ -28,24 +40,8 @@ export async function GET(request: NextRequest) {
       })
       .from(collegeRankings)
       .innerJoin(colleges, eq(collegeRankings.collegeId, colleges.id))
-      .where(eq(colleges.isEnabled, true))
-
-    const conditions = []
-    if (collegeId) {
-      conditions.push(eq(collegeRankings.collegeId, parseInt(collegeId)))
-    }
-    if (rankingSource) {
-      conditions.push(eq(collegeRankings.rankingSource, rankingSource))
-    }
-    if (year) {
-      conditions.push(eq(collegeRankings.year, parseInt(year)))
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query
-    }
-
-    const rankingList = await query.orderBy(desc(collegeRankings.year), desc(collegeRankings.rank))
+      .where(and(...conditions))
+      .orderBy(desc(collegeRankings.year), desc(collegeRankings.rank))
 
     return NextResponse.json({ rankings: rankingList })
   } catch (error) {

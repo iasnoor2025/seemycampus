@@ -18,8 +18,6 @@ export async function GET(request: NextRequest) {
     const verified = searchParams.get("verified")
     const limit = parseInt(searchParams.get("limit") || "100")
 
-    let query = db.select().from(phoneVerifications)
-
     const conditions = []
     
     if (phone) {
@@ -32,6 +30,8 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(phoneVerifications.verified, false))
     }
 
+    let query = db.select().from(phoneVerifications)
+    
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as typeof query
     }

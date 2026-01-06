@@ -12,7 +12,16 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year")
 
     // Build query with join to filter disabled colleges
-    let query = db
+    const conditions = [eq(colleges.isEnabled, true)]
+    
+    if (collegeId) {
+      conditions.push(eq(placementStats.collegeId, parseInt(collegeId)))
+    }
+    if (year) {
+      conditions.push(eq(placementStats.year, parseInt(year)))
+    }
+
+    const placementList = await db
       .select({
         id: placementStats.id,
         collegeId: placementStats.collegeId,
@@ -31,21 +40,8 @@ export async function GET(request: NextRequest) {
       })
       .from(placementStats)
       .innerJoin(colleges, eq(placementStats.collegeId, colleges.id))
-      .where(eq(colleges.isEnabled, true))
-
-    const conditions = []
-    if (collegeId) {
-      conditions.push(eq(placementStats.collegeId, parseInt(collegeId)))
-    }
-    if (year) {
-      conditions.push(eq(placementStats.year, parseInt(year)))
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query
-    }
-
-    const placementList = await query.orderBy(desc(placementStats.year))
+      .where(and(...conditions))
+      .orderBy(desc(placementStats.year))
 
     return NextResponse.json({ placements: placementList })
   } catch (error) {
