@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Phone, Search, Menu, X, ChevronRight, ChevronDown } from "lucide-react"
+import { Phone, Search, Menu, X, ChevronRight, ChevronDown, MoreVertical } from "lucide-react"
 import { Logo } from "./Logo"
 import {
   NavigationMenu,
@@ -12,6 +12,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { isPathEnabledClient } from "@/lib/client-feature-flags"
 
@@ -33,6 +39,12 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [collegesExpanded, setCollegesExpanded] = useState(false)
   const [expandedCategoryId, setExpandedCategoryId] = useState<number | null>(null)
+  const [visibleLinksCount, setVisibleLinksCount] = useState<number>(100) // Start with high number, will be adjusted
+  const [textSize, setTextSize] = useState<string>("text-xs") // Dynamic text size based on space - start with standard size
+  const navRef = useRef<HTMLElement>(null)
+  const navItemsRef = useRef<HTMLDivElement>(null)
+  const isCalculatingRef = useRef<boolean>(false)
+  const lastCalculationRef = useRef<{ count: number; size: string }>({ count: 100, size: "text-xs" })
   const pathname = usePathname()
 
   // Close mobile menu when route changes
@@ -98,7 +110,7 @@ export function Header() {
   // Close mobile menu on route change or resize
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      if (window.innerWidth >= 640) {
         setMobileMenuOpen(false)
       }
     }
@@ -211,23 +223,244 @@ export function Header() {
 
   // Filter nav links based on feature flags
   const navLinks = allNavLinks.filter(link => enabledLinks.has(link.href))
+  
+  // Get all links that should be in navigation (excluding HOME, ABOUT, COLLEGES, CONTACT which are handled separately)
+  const allNavItems = navLinks.filter(link => 
+    link.href !== "/" && 
+    link.href !== "/about" && 
+    link.href !== "/contact" &&
+    link.href !== "/colleges"
+  )
+  
+  // Dynamically split links based on available space
+  const visibleLinks = allNavItems.slice(0, visibleLinksCount)
+  const dropdownLinks = allNavItems.slice(visibleLinksCount)
+  
+  // Function to check overflow and adjust visible links count
+  const checkOverflow = useCallback(() => {
+    // Prevent concurrent calculations
+    if (isCalculatingRef.current) {
+      return
+    }
+    
+    if (!navRef.current || !navItemsRef.current || typeof window === 'undefined') {
+      return
+    }
+    
+    // Don't run on mobile
+    if (window.innerWidth < 640) {
+      return
+    }
+    
+    isCalculatingRef.current = true
+    
+    const nav = navRef.current
+    const navContainer = nav.parentElement
+    if (!navContainer) {
+      isCalculatingRef.current = false
+      return
+    }
+    
+    const rightSide = navContainer.querySelector('[data-right-side]') as HTMLElement
+    const logo = navContainer.querySelector('[data-logo]') as HTMLElement
+    
+    if (!rightSide || !logo) {
+      isCalculatingRef.current = false
+      // Retry after a short delay if elements aren't ready (only once)
+      if (!navItemsRef.current.querySelector('[data-retry-attempted]')) {
+        navItemsRef.current.setAttribute('data-retry-attempted', 'true')
+        setTimeout(() => {
+          navItemsRef.current?.removeAttribute('data-retry-attempted')
+          checkOverflow()
+        }, 200)
+      }
+      return
+    }
+    
+    const containerWidth = navContainer.getBoundingClientRect().width
+    const logoWidth = logo.getBoundingClientRect().width
+    const rightSideWidth = rightSide.getBoundingClientRect().width
+    const navLeftMargin = 80 // Increased margin to prevent overlap with logo (ml-4 sm:ml-6 md:ml-8 lg:ml-10 = ~64-80px)
+    const padding = 48 // Total horizontal padding
+    const availableWidth = containerWidth - logoWidth - rightSideWidth - padding - navLeftMargin
+    
+    // Measure all navigation items
+    const items = Array.from(navItemsRef.current.children) as HTMLElement[]
+    if (items.length === 0) return
+    
+    let totalWidth = 0
+    let visibleCount = 0
+    const threeDotsWidth = 35 // Estimated width for three dots button
+    
+    // Start with always visible items (HOME, ABOUT, COLLEGES) - first 3 items
+    for (let i = 0; i < Math.min(3, items.length); i++) {
+      const width = items[i].getBoundingClientRect().width || 0
+      totalWidth += width
+      visibleCount++
+    }
+    
+    // Try to fit additional items
+    for (let i = 3; i < items.length; i++) {
+      const itemWidth = items[i].getBoundingClientRect().width || 0
+      if (itemWidth === 0) continue // Skip if item not rendered yet
+      
+      const remainingItems = allNavItems.length - (visibleCount - 3)
+      const needsDropdown = remainingItems > 1
+      const estimatedWidth = totalWidth + itemWidth + (needsDropdown ? threeDotsWidth : 0)
+      
+      if (estimatedWidth <= availableWidth) {
+        totalWidth += itemWidth
+        visibleCount++
+      } else {
+        break
+      }
+    }
+    
+    // visibleCount includes HOME, ABOUT, COLLEGES (3 items), so subtract those to get nav items count
+    const navItemsCount = Math.max(0, visibleCount - 3)
+    const newVisibleCount = Math.min(Math.max(0, navItemsCount), allNavItems.length)
+    
+    // Calculate optimal text size based on available space - using standard sizes
+    const calculateTextSize = () => {
+      const spaceRatio = availableWidth / (containerWidth * 0.6) // Normalize to container width
+      if (spaceRatio > 0.8 && newVisibleCount >= allNavItems.length) {
+        return "text-sm" // Standard small size when all items fit
+      } else if (spaceRatio > 0.6) {
+        return "text-xs" // Extra small
+      } else if (spaceRatio > 0.5) {
+        return "text-[13px]" // Slightly larger than xs
+      } else if (spaceRatio > 0.4) {
+        return "text-[12px]" // Standard readable size
+      } else if (spaceRatio > 0.3) {
+        return "text-[11px]"
+      }
+      return "text-[10px]" // Minimum readable size
+    }
+    
+    const newTextSize = calculateTextSize()
+    
+    // Only update if values actually changed to prevent infinite loops
+    if (
+      lastCalculationRef.current.count !== newVisibleCount ||
+      lastCalculationRef.current.size !== newTextSize
+    ) {
+      lastCalculationRef.current = { count: newVisibleCount, size: newTextSize }
+      
+      setVisibleLinksCount(newVisibleCount)
+      setTextSize(newTextSize)
+    }
+    
+    isCalculatingRef.current = false
+  }, [allNavItems.length])
+  
+  // Check overflow on mount and resize
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    // Only run on desktop (sm and above)
+    const checkIfDesktop = () => window.innerWidth >= 640
+    
+    if (!checkIfDesktop()) {
+      // On mobile, show all items in dropdown
+      setVisibleLinksCount(0)
+      setTextSize("text-xs")
+      return
+    }
+    
+    // Initial check after delays to ensure DOM is ready
+    const timeoutId1 = setTimeout(() => {
+      if (checkIfDesktop()) checkOverflow()
+    }, 100)
+    
+    const timeoutId2 = setTimeout(() => {
+      if (checkIfDesktop()) checkOverflow()
+    }, 500)
+    
+    // Check on resize with debounce
+    let resizeTimeout: NodeJS.Timeout
+    let lastWidth = window.innerWidth
+    const handleResize = () => {
+      const currentWidth = window.innerWidth
+      // Only recalculate if width changed significantly (more than 50px) to prevent loops
+      if (Math.abs(currentWidth - lastWidth) < 50) {
+        return
+      }
+      lastWidth = currentWidth
+      
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        if (checkIfDesktop()) {
+          checkOverflow()
+        } else {
+          if (lastCalculationRef.current.count !== 0 || lastCalculationRef.current.size !== "text-xs") {
+            lastCalculationRef.current = { count: 0, size: "text-xs" }
+            setVisibleLinksCount(0)
+            setTextSize("text-xs")
+          }
+        }
+      }, 200) // Increased debounce time
+    }
+    
+    // Check on resize with throttling
+    let lastObservedWidth = 0
+    const resizeObserver = new ResizeObserver(() => {
+      const currentWidth = window.innerWidth
+      // Only trigger if width changed significantly
+      if (Math.abs(currentWidth - lastObservedWidth) < 50) {
+        return
+      }
+      lastObservedWidth = currentWidth
+      
+      if (checkIfDesktop()) {
+        handleResize()
+      }
+    })
+    
+    if (navRef.current) {
+      resizeObserver.observe(navRef.current)
+    }
+    
+    if (navRef.current?.parentElement) {
+      resizeObserver.observe(navRef.current.parentElement)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      clearTimeout(timeoutId1)
+      clearTimeout(timeoutId2)
+      clearTimeout(resizeTimeout)
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [checkOverflow, enabledLinks, navLinks.length])
+  
+  // Re-check when enabled links change
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth < 640) return
+    
+    const timeoutId = setTimeout(() => {
+      checkOverflow()
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [enabledLinks, checkOverflow])
 
   return (
     <>
       <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white sticky top-0 z-50 shadow-xl border-b border-white/10 w-full backdrop-blur-sm bg-opacity-95">
         <div className="w-full px-3 lg:px-4 xl:px-6">
-          <div className="flex items-center justify-between h-16 lg:h-18 max-w-[1920px] mx-auto gap-2">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18 max-w-[1920px] mx-auto">
             {/* Logo */}
-            <div className="flex-shrink-0">
+            <div data-logo className="flex-shrink-0 z-10 w-[80px] sm:w-[90px] md:w-[100px] lg:w-[110px] xl:w-[130px] overflow-hidden mr-2 sm:mr-4">
               <Link 
                 href="/" 
                 onClick={(e) => {
                   // Ensure navigation works
                   e.stopPropagation()
                 }}
-                className="flex items-center group"
+                className="flex items-center group w-full"
               >
-                <div className="relative">
+                <div className="relative w-full">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-lg blur-sm group-hover:blur-md transition-all"></div>
                   <div className="relative bg-white/10 backdrop-blur-sm rounded-lg p-1.5 group-hover:bg-white/20 transition-all">
                     <Logo size="small" />
@@ -236,8 +469,9 @@ export function Header() {
               </Link>
             </div>
 
-            {/* Desktop Navigation - Scrollable */}
-            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 text-white flex-1 min-w-0 overflow-x-auto scrollbar-hide px-2 justify-center">
+            {/* Navigation - Hidden on mobile, show on sm and above */}
+            <nav ref={navRef} className="hidden sm:flex items-center gap-0.5 text-white flex-1 min-w-0 overflow-x-auto scrollbar-hide ml-4 sm:ml-6 md:ml-8 lg:ml-10 pr-2 sm:pr-3 md:pr-4 justify-center relative z-10 overflow-visible">
+              <div ref={navItemsRef} className="flex items-center gap-0.5 justify-center">
               {/* Always show HOME */}
               <Link 
                 href="/" 
@@ -245,8 +479,8 @@ export function Header() {
                   // Ensure navigation works
                   e.stopPropagation()
                 }}
-                className={cn(
-                  "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                  className={cn(
+                  `relative font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 rounded transition-all flex-shrink-0`,
                   pathname === "/" 
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
                     : "hover:bg-white/10 text-white/90 hover:text-white"
@@ -264,7 +498,7 @@ export function Header() {
                     e.stopPropagation()
                   }}
                   className={cn(
-                    "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                    `relative font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 rounded transition-all flex-shrink-0`,
                     pathname === "/about" 
                       ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
                       : "hover:bg-white/10 text-white/90 hover:text-white"
@@ -280,7 +514,7 @@ export function Header() {
                   <NavigationMenuItem>
                     <NavigationMenuTrigger 
                       className={cn(
-                        "font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap bg-transparent text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/10 data-[state=open]:text-white h-auto py-1.5 xl:py-2 px-2 xl:px-2.5 rounded-lg transition-all flex-shrink-0"
+                        `font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap bg-transparent text-white/90 hover:bg-white/10 hover:text-white data-[state=open]:bg-white/10 data-[state=open]:text-white h-auto py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 rounded transition-all flex-shrink-0`
                       )}
                     >
                       COLLEGES
@@ -353,37 +587,57 @@ export function Header() {
                 </NavigationMenuList>
               </NavigationMenu>
               
-              {/* Render remaining enabled links (excluding HOME, ABOUT, CONTACT, and COLLEGES which are handled separately) */}
-              {allNavLinks
-                .filter(link => {
-                  // Exclude links that are handled separately
-                  if (link.href === "/" || 
-                      link.href === "/about" || 
-                      link.href === "/contact" ||
-                      link.href === "/colleges") {
-                    return false
-                  }
-                  // Only show if explicitly enabled in enabledLinks set
-                  return enabledLinks.has(link.href)
-                })
-                .map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={(e) => {
-                      // Ensure navigation works
-                      e.stopPropagation()
-                    }}
+              {/* Render visible links dynamically based on available space */}
+              {visibleLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => {
+                    // Ensure navigation works
+                    e.stopPropagation()
+                  }}
                     className={cn(
-                      "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                      `relative font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 rounded transition-all flex-shrink-0`,
                       pathname === link.href 
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
                         : "hover:bg-white/10 text-white/90 hover:text-white"
                     )}
-                  >
-                    {link.label === "ABOUT US" ? "ABOUT" : link.label}
-                  </Link>
-                ))}
+                >
+                  {link.label === "ABOUT US" ? "ABOUT" : link.label}
+                </Link>
+              ))}
+              
+              {/* Three Dots Menu for overflow links */}
+              {dropdownLinks.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                      className={cn(
+                        `relative font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 rounded transition-all flex-shrink-0 flex items-center justify-center hover:bg-white/10 text-white/90 hover:text-white bg-transparent border-none cursor-pointer`
+                      )}
+                      aria-label="More menu"
+                    >
+                      <MoreVertical className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={8} className="min-w-[180px] bg-slate-800 border-slate-700 z-[100] mt-2">
+                    {dropdownLinks.map((link) => (
+                      <DropdownMenuItem key={link.href} asChild>
+                        <Link
+                          href={link.href}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                          }}
+                          className={cn(
+                            "cursor-pointer text-white/90 hover:text-white hover:bg-white/10",
+                            pathname === link.href && "bg-white/10 text-white"
+                          )}
+                        >
+                          {link.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               
               {/* Always show CONTACT */}
               <Link 
@@ -393,7 +647,7 @@ export function Header() {
                   e.stopPropagation()
                 }}
                 className={cn(
-                  "relative font-medium text-[10px] xl:text-xs uppercase tracking-wide whitespace-nowrap px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-lg transition-all flex-shrink-0",
+                  `relative font-medium ${textSize} uppercase tracking-tighter whitespace-nowrap px-0.5 sm:px-1 md:px-1.5 lg:px-2 xl:px-2.5 py-0.5 sm:py-1 md:py-1.5 lg:py-2 xl:py-2 rounded transition-all flex-shrink-0`,
                   pathname === "/contact" 
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
                     : "hover:bg-white/10 text-white/90 hover:text-white"
@@ -401,10 +655,11 @@ export function Header() {
               >
                 CONTACT
               </Link>
+              </div>
             </nav>
 
             {/* Right Side - Desktop */}
-            <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+            <div data-right-side className="hidden sm:flex items-center gap-2 flex-shrink-0 ml-auto">
               <Link
                 href="/colleges"
                 className="w-9 h-9 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-white/20 hover:border-white/30 transition-all group"
@@ -429,8 +684,8 @@ export function Header() {
               </a>
             </div>
 
-            {/* Mobile Right Side */}
-            <div className="flex lg:hidden items-center gap-2">
+            {/* Mobile Right Side - Only hamburger on very small screens */}
+            <div className="flex sm:hidden items-center gap-2">
               {/* Call Button - Mobile */}
               <a 
                 href="tel:+918960147776" 
@@ -464,18 +719,18 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Only on very small screens */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 sm:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
-      {/* Mobile Menu Slide-out */}
+      {/* Mobile Menu Slide-out - Only on very small screens */}
       <div 
         className={cn(
-          "fixed top-16 right-0 w-[300px] h-[calc(100vh-64px)] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white z-50 lg:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl border-l border-white/10",
+          "fixed top-16 right-0 w-[300px] h-[calc(100vh-64px)] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white z-50 sm:hidden transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl border-l border-white/10",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
