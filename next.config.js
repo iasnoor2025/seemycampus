@@ -6,6 +6,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**',
       },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
     ],
     // Use modern formats (AVIF/WebP) for better compression while maintaining quality
     formats: ['image/avif', 'image/webp'],

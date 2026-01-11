@@ -25,7 +25,17 @@ export function ContactSettings() {
   const fetchContactInfo = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/settings/contact")
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timeout")), 10000)
+      )
+      
+      const response = await Promise.race([
+        fetch("/api/settings/contact"),
+        timeoutPromise
+      ]) as Response
+      
       if (response.ok) {
         const data = await response.json()
         setEmail(data.email || "")
@@ -35,6 +45,11 @@ export function ContactSettings() {
       }
     } catch (error) {
       console.error("Error fetching contact info:", error)
+      // Set defaults on error
+      setEmail("info@seemycampus.com")
+      setPhone("+91-XXX-XXX-XXXX")
+      setAddress("New Delhi, India")
+      setPopupEnabled(true)
     } finally {
       setLoading(false)
     }

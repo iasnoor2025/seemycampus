@@ -30,12 +30,24 @@ export function AISettings() {
     try {
       setLoading(true)
       
-      // Check if AI is enabled
-      const enabledResponse = await fetch("/api/feature-flags/ai_enabled")
-      const enabledData = await enabledResponse.json()
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timeout")), 10000)
+      )
       
-      // Check AI provider configuration
-      const configResponse = await fetch("/api/ai/status")
+      // Make API calls in parallel with timeout
+      const [enabledResponse, configResponse] = await Promise.all([
+        Promise.race([
+          fetch("/api/feature-flags/ai_enabled"),
+          timeoutPromise
+        ]) as Promise<Response>,
+        Promise.race([
+          fetch("/api/ai/status"),
+          timeoutPromise
+        ]) as Promise<Response>
+      ])
+      
+      const enabledData = await enabledResponse.json()
       let provider = null
       let configured = false
       

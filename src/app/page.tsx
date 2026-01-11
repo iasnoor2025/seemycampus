@@ -79,9 +79,28 @@ export const metadata: Metadata = {
   },
 }
 
-export default function Home() {
-  // FAQ structured data for SEO
-  const faqData = [
+export default async function Home() {
+  // Fetch FAQs from database
+  let faqData: Array<{ question: string; answer: string }> = []
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const response = await fetch(`${baseUrl}/api/faqs?limit=6`, {
+      cache: "no-store", // Always fetch fresh data
+    })
+    if (response.ok) {
+      const data = await response.json()
+      faqData = data.faqs?.map((faq: any) => ({
+        question: faq.question,
+        answer: faq.answer,
+      })) || []
+    }
+  } catch (error) {
+    console.error("Error fetching FAQs:", error)
+  }
+
+  // Fallback to default FAQs if database is empty
+  if (faqData.length === 0) {
+    faqData = [
     {
       question: "How do I secure MBA admission?",
       answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus."
@@ -107,6 +126,7 @@ export default function Home() {
       answer: "Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance."
     }
   ]
+  }
 
   const faqStructuredData = generateFAQStructuredData(faqData)
 
@@ -186,51 +206,23 @@ export default function Home() {
 
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* FAQ Items */}
-            {[
-              {
-                num: 1,
-                question: "How do I secure MBA admission?",
-                answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus.",
-                gradient: "from-blue-500 to-cyan-600"
-              },
-              {
-                num: 2,
-                question: "What criteria for MBA admission?",
-                answer: "Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews.",
-                gradient: "from-indigo-500 to-purple-600"
-              },
-              {
-                num: 3,
-                question: "Steps for MBA admission?",
-                answer: "Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus.",
-                gradient: "from-violet-500 to-purple-600"
-              },
-              {
-                num: 4,
-                question: "BBA program admission process?",
-                answer: "12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews.",
-                gradient: "from-teal-500 to-emerald-600"
-              },
-              {
-                num: 5,
-                question: "How to secure BBA admission?",
-                answer: "Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions.",
-                gradient: "from-sky-500 to-blue-600"
-              },
-              {
-                num: 6,
-                question: "Top BBA colleges for 93%?",
-                answer: "Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance.",
-                gradient: "from-purple-500 to-pink-600"
-              }
-            ].map((faq, index) => (
+            {faqData.map((faq, index) => {
+              const gradients = [
+                "from-blue-500 to-cyan-600",
+                "from-indigo-500 to-purple-600",
+                "from-violet-500 to-purple-600",
+                "from-teal-500 to-emerald-600",
+                "from-sky-500 to-blue-600",
+                "from-purple-500 to-pink-600"
+              ]
+              return (
               <div
-                key={faq.num}
+                key={index}
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 group"
               >
                 {/* Number Badge */}
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${faq.gradient} text-white font-bold text-lg mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                  {faq.num}
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${gradients[index % gradients.length]} text-white font-bold text-lg mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                  {index + 1}
                 </div>
                 
                 {/* Question */}
@@ -243,7 +235,8 @@ export default function Home() {
                   {faq.answer}
                 </p>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>

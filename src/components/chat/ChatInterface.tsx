@@ -10,41 +10,8 @@ import { Trash2, Bot } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 
-// Enhanced welcome messages - split into multiple for better UX
-const getWelcomeMessages = (pathname: string | null): string[] => {
-  if (pathname?.startsWith("/colleges/")) {
-    return [
-      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
-      "I can help you learn more about this college, compare it with others, or answer questions about admissions, courses, and fees.",
-      "How can I help you today?"
-    ]
-  }
-  if (pathname?.startsWith("/colleges")) {
-    return [
-      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
-      "I'm here to help you find the perfect college. I can help you search for colleges, compare options, understand admission requirements, or answer any questions about courses and programs.",
-      "How can I help you today?"
-    ]
-  }
-  if (pathname?.startsWith("/courses")) {
-    return [
-      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
-      "I can help you explore courses, understand requirements, find colleges offering specific programs, or answer questions about career paths.",
-      "How can I help you today?"
-    ]
-  }
-  if (pathname?.startsWith("/scholarships")) {
-    return [
-      "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
-      "I can help you find scholarship opportunities, understand eligibility criteria, or answer questions about financial aid.",
-      "How can I help you today?"
-    ]
-  }
-  return [
-    "Hello, Welcome to SeeMyCampus. I am your smart admission assistant.",
-    "I can help you with finding the right colleges and courses, understanding admission requirements, exploring scholarship opportunities, career counseling guidance, and fee calculations.",
-    "How can I help you today?"
-  ]
+const getWelcomeMessage = (pathname: string | null): string => {
+  return "Hi! How can I help you today?"
 }
 
 export interface Message {
@@ -67,32 +34,76 @@ export interface CollegeSuggestion {
 
 export function ChatInterface() {
   const pathname = usePathname()
-  const welcomeMessages = getWelcomeMessages(pathname)
-  const [messages, setMessages] = useState<Message[]>(
-    welcomeMessages.map((msg, index) => ({
+  const welcomeMessage = getWelcomeMessage(pathname)
+  const [messages, setMessages] = useState<Message[]>([
+    {
       role: "assistant" as const,
-      content: msg,
+      content: welcomeMessage,
       timestamp: new Date(),
-      showQuickReplies: index === welcomeMessages.length - 1, // Show quick replies only on last message
-    }))
-  )
+      showQuickReplies: false,
+    }
+  ])
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      })
+    } else if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
+    }
   }
 
-  // Only auto-scroll if user is already near the bottom (within 150px)
-  useEffect(() => {
-    if (scrollContainerRef.current && messagesEndRef.current) {
-      const scrollContainer = scrollContainerRef.current
-      const distanceFromBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight
-      // Only scroll if user is within 150px of bottom
-      if (distanceFromBottom < 150) {
-        setTimeout(() => scrollToBottom(), 100)
+  // Scroll to show the start of the latest message (user or assistant)
+  const scrollToLatestMessage = () => {
+    if (scrollContainerRef.current && messages.length > 0) {
+      // Get the last message (could be user or assistant)
+      const lastMessageIndex = messages.length - 1
+      const lastMessage = messages[lastMessageIndex]
+      
+      if (lastMessage) {
+        // Get all message elements
+        const messageElements = scrollContainerRef.current.querySelectorAll('[data-message-index]')
+        if (messageElements[lastMessageIndex]) {
+          // Scroll to show the start of the latest message
+          messageElements[lastMessageIndex].scrollIntoView({ 
+            behavior: "smooth", 
+            block: "start",
+            inline: "nearest"
+          })
+        } else {
+          // Fallback: scroll to bottom if element not found
+          scrollToBottom()
+        }
       }
+    }
+  }
+
+  // Scroll to top when page loads (show first message)
+  useEffect(() => {
+    if (messages.length > 0 && scrollContainerRef.current) {
+      // Scroll to top to show the first message
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "auto"
+      })
+    }
+  }, []) // Only run once on mount
+
+  // Auto-scroll to show the start of latest message (user or assistant)
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Scroll to show latest message (whether user or assistant)
+      // Small delay to ensure DOM is updated with new message
+      const timeoutId = setTimeout(() => {
+        scrollToLatestMessage()
+      }, 200)
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [messages])
 
@@ -139,10 +150,10 @@ export function ChatInterface() {
       if (data.success || data.response) {
         const assistantMessage: Message = {
           role: "assistant",
-          content: data.response || data.fallback || "I'm here to help! How can I assist you today?",
+          content: data.response || data.fallback || "How can I help you?",
           timestamp: new Date(),
           suggestions: data.suggestions || [],
-          showQuickReplies: messages.length >= 2 && messages.length % 3 === 0,
+          showQuickReplies: false,
         }
         setMessages((prev) => [...prev, assistantMessage])
       } else {
@@ -162,7 +173,7 @@ export function ChatInterface() {
         role: "assistant",
         content: errorMessage,
         timestamp: new Date(),
-        showQuickReplies: true,
+        showQuickReplies: false,
       }
       setMessages((prev) => [...prev, errorMsg])
     } finally {
@@ -171,43 +182,31 @@ export function ChatInterface() {
   }
 
   const handleClearChat = () => {
-    const welcomeMessages = getWelcomeMessages(pathname)
-    const initialMessages = welcomeMessages.map((msg, index) => ({
+    const welcomeMessage = getWelcomeMessage(pathname)
+    setMessages([{
       role: "assistant" as const,
-      content: msg,
+      content: welcomeMessage,
       timestamp: new Date(),
-      showQuickReplies: index === welcomeMessages.length - 1,
-    }))
-    setMessages(initialMessages)
+      showQuickReplies: false,
+    }])
   }
 
   return (
-    <Card className="flex flex-col h-[700px] max-w-4xl mx-auto shadow-2xl border-2 border-gray-300 backdrop-blur-sm">
-      <CardHeader className="flex flex-row items-center justify-between border-b bg-gradient-to-r from-[#18254a] via-[#1a2d5a] to-[#18254a] text-white p-4 relative overflow-hidden">
+    <Card className="flex flex-col h-[700px] max-w-4xl mx-auto shadow-2xl border border-gray-200/60 rounded-2xl backdrop-blur-sm">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200/60 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white p-4 relative overflow-hidden">
         {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
-        
-        {/* Futuristic tech grid pattern */}
-        <div className="absolute inset-0 opacity-[0.04]">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: '30px 30px'
-          }} />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
         
         <CardTitle className="text-lg font-semibold relative z-10 flex items-center gap-3">
           {/* Avatar with bot icon */}
           <div className="relative flex items-center justify-center">
-            <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center overflow-hidden shadow-lg">
+            <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-lg">
               <Bot className="h-6 w-6 text-white" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-[#18254a] animate-pulse shadow-lg shadow-green-400/50" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
           </div>
-          <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent font-bold">
-            SeeMyCampus
+          <span className="text-white font-bold">
+            SeeMyCampus Assistant
           </span>
         </CardTitle>
         <div className="flex items-center gap-2 relative z-10">
@@ -222,38 +221,31 @@ export function ChatInterface() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-white relative">
-        {/* Futuristic gradient mesh background */}
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-blue-50/20 relative">
+        {/* Modern subtle background pattern */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Subtle gradient mesh */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: `
-              radial-gradient(circle at 20% 30%, rgba(24, 37, 74, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 70%, rgba(26, 45, 90, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)
-            `,
-          }} />
-          {/* Subtle grid lines - futuristic tech grid */}
+          {/* Soft gradient overlay */}
           <div className="absolute inset-0 opacity-[0.02]" style={{
             backgroundImage: `
-              linear-gradient(rgba(24, 37, 74, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(24, 37, 74, 0.1) 1px, transparent 1px)
+              radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%)
             `,
-            backgroundSize: '40px 40px'
           }} />
         </div>
         
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 relative z-10">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative z-10">
           <MessageList 
             messages={messages} 
             onQuickReply={handleSendMessage}
             disabled={loading}
           />
           {loading && (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm mt-4">
-              <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce" />
-              <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.2s]" />
-              <div className="h-2 w-2 bg-[#18254a] rounded-full animate-bounce [animation-delay:0.4s]" />
+            <div className="flex items-center gap-2 text-gray-600 text-sm mt-4 ml-11">
+              <div className="flex gap-1.5">
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" />
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </div>
               <span className="ml-2 font-medium">Thinking...</span>
             </div>
           )}
@@ -261,17 +253,17 @@ export function ChatInterface() {
         </div>
         
         {/* Footer with branding */}
-        <div className="border-t-2 border-gray-300 bg-white p-5 space-y-3 relative z-10">
+        <div className="border-t border-gray-200/60 bg-white/80 backdrop-blur-sm p-5 space-y-3 relative z-10">
           <ChatInput onSend={handleSendMessage} disabled={loading} />
           {/* Footer branding */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-            <div className="flex items-center gap-1.5">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#18254a] to-[#1a2d5a] flex items-center justify-center shadow-sm">
-                <Bot className="h-3.5 w-3.5 text-white" />
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                <Bot className="h-3 w-3 text-white" />
               </div>
               <span className="text-xs font-semibold text-gray-700">SeeMyCampus</span>
             </div>
-            <span className="text-xs text-gray-600 font-medium">Powered by AI</span>
+            <span className="text-xs text-gray-500 font-medium">Powered by AI</span>
           </div>
         </div>
       </CardContent>

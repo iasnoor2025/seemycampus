@@ -1,4 +1,5 @@
-import { SYSTEM_PROMPT, checkSafety } from "./prompts"
+import { SYSTEM_PROMPT, BASE_SYSTEM_PROMPT, checkSafety } from "./prompts"
+import { generateEnhancedSystemPrompt } from "./training"
 import { CustomAIProvider } from "./providers/custom"
 import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
@@ -8,7 +9,9 @@ import { getAIConfig } from "./config"
 import { getAllColleges } from "@/lib/colleges"
 import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
-import { ilike, or, eq, and } from "drizzle-orm"
+import { ilike, or, eq, and, asc, desc } from "drizzle-orm"
+import { searchWeb, searchCollegeInfo, extractCollegeDataFromWeb } from "@/lib/web/search"
+import { saveAndEnrichCollegeFromWeb } from "./enrichCollege"
 
 export interface ChatMessage {
   role: "user" | "assistant"
@@ -140,8 +143,69 @@ export class Chatbot {
   }
 
   /**
-   * Search for colleges based on user query
+   * Detect college name from user query (e.g., "JMI", "Jamia Millia Islamia")
    */
+  async detectCollegeFromQuery(query: string): Promise<CollegeSuggestion | null> {
+    try {
+      // Common college abbreviations and their full names
+      const collegeAbbreviations: Record<string, string> = {
+        "jmi": "Jamia Millia Islamia",
+        "du": "Delhi University",
+        "jnu": "Jawaharlal Nehru University",
+        "iit": "Indian Institute of Technology",
+        "nit": "National Institute of Technology",
+        "iim": "Indian Institute of Management",
+        "aiims": "All India Institute of Medical Sciences",
+      }
+
+      const lowerQuery = query.toLowerCase().trim()
+      
+      // Check for abbreviations first
+      for (const [abbr, fullName] of Object.entries(collegeAbbreviations)) {
+        if (lowerQuery.includes(abbr) && abbr.length >= 3) {
+          const result = await this.searchColleges(fullName)
+          if (result.length > 0) {
+            return result[0] // Return first match
+          }
+        }
+      }
+
+      // Try to extract college name from query (look for patterns like "tell me about X", "what is X", etc.)
+      const patterns = [
+        /(?:tell me about|what is|about|information about|details about)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:University|College|Institute|School|Academy))/i,
+        /(?:tell me about|what is|about|information about|details about)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i,
+        /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:University|College|Institute|School|Academy))\b/i,
+      ]
+
+      for (const pattern of patterns) {
+        const match = query.match(pattern)
+        if (match && match[1]) {
+          const collegeName = match[1].trim()
+          const result = await this.searchColleges(collegeName)
+          if (result.length > 0) {
+            // Check if the found college name closely matches
+            const foundName = result[0].name.toLowerCase()
+            const searchName = collegeName.toLowerCase()
+            if (foundName.includes(searchName) || searchName.includes(foundName.split(' ')[0])) {
+              return result[0]
+            }
+          }
+        }
+      }
+
+      // Direct search with the query
+      const directSearch = await this.searchColleges(query)
+      if (directSearch.length > 0) {
+        return directSearch[0]
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error detecting college from query:", error)
+      return null
+    }
+  }
+
   async searchColleges(query: string): Promise<CollegeSuggestion[]> {
     try {
       // Extract keywords from query
@@ -160,6 +224,7 @@ export class Chatbot {
       ])
 
       // Search colleges by name, location, city, or description (only enabled ones)
+      // Order by ranking (best first), then by name
       const results = await db
         .select({
           id: colleges.id,
@@ -177,14 +242,51 @@ export class Chatbot {
             or(...searchConditions)
           )
         )
-        .limit(5)
+        .orderBy(asc(colleges.ranking), asc(colleges.name))
+        .limit(10) // Get more results to filter duplicates
 
-      return results
+      // Remove duplicates based on normalized name (case-insensitive, remove extra spaces)
+      const seen = new Set<string>()
+      const uniqueResults: CollegeSuggestion[] = []
+      
+      for (const college of results) {
+        // Normalize name: lowercase, trim, remove extra spaces
+        const normalizedName = college.name.toLowerCase().trim().replace(/\s+/g, ' ')
+        
+        // Check if we've seen a similar name (exact match or very similar)
+        let isDuplicate = false
+        for (const seenName of seen) {
+          // Check if names are very similar (one contains the other or vice versa)
+          if (normalizedName === seenName || 
+              normalizedName.includes(seenName) || 
+              seenName.includes(normalizedName)) {
+            // If one is significantly shorter, it's likely a duplicate
+            const nameDiff = Math.abs(normalizedName.length - seenName.length)
+            if (nameDiff < 10) { // If difference is small, likely duplicate
+              isDuplicate = true
+              break
+            }
+          }
+        }
+        
+        if (!isDuplicate) {
+          seen.add(normalizedName)
+          uniqueResults.push(college)
+          
+          // Limit to 5 best results
+          if (uniqueResults.length >= 5) {
+            break
+          }
+        }
+      }
+
+      return uniqueResults
     } catch (error) {
       console.error("College search error:", error)
       return []
     }
   }
+
 
   async sendMessage(
     userMessage: string,
@@ -203,6 +305,17 @@ export class Chatbot {
       }
     }
 
+    // Check if user is asking about SeeMyCampus platform (not a college)
+    const lowerMessage = actualMessage.toLowerCase()
+    const isAboutPlatform = /\b(seemycampus|see my campus|about seemycampus|what is seemycampus|tell me about seemycampus)\b/i.test(actualMessage)
+    
+    if (isAboutPlatform) {
+      return {
+        response: "SeeMyCampus is an AI-powered admissions counseling platform helping Indian students find colleges. We've counseled over 50,000 students and provide information on 60,000+ institutions and 375,000+ courses. I'm here to help you find the right college!",
+        suggestions: []
+      }
+    }
+
     // Safety check on actual message
     if (!checkSafety(actualMessage)) {
       return {
@@ -217,16 +330,103 @@ export class Chatbot {
     }
 
     // Search for relevant colleges if enabled
+    // DO NOT search if user is asking for colleges - wait for follow-up questions to be answered
+    // DO NOT search if user is asking about SeeMyCampus platform
     let collegeSuggestions: CollegeSuggestion[] = []
     let collegeContext = ""
     
-    if (includeColleges) {
+    // Check if this is an initial college search query (user asking for colleges for the first time)
+    // Exclude "seemycampus" queries as they're about the platform, not colleges
+    const isInitialCollegeQuery = !isAboutPlatform &&
+                                  /\b(college|colleges|university|universities|institute|institutes)\b/i.test(lowerMessage) &&
+                                  /\b(best|top|show|find|search|list|recommend|suggest|tell me about)\b/i.test(lowerMessage)
+    
+    // Check conversation history to see if AI has already asked follow-up questions
+    const recentAssistantMessages = this.conversationHistory
+      .filter(msg => msg.role === "assistant")
+      .slice(-3)
+      .map(msg => msg.content.toLowerCase())
+      .join(" ")
+    
+    const aiAskedCategory = /\b(category|which category|what category)\b/i.test(recentAssistantMessages)
+    const aiAskedArea = /\b(area|location|which area|which location|which region)\b/i.test(recentAssistantMessages)
+    
+    // Check if user has answered follow-up questions (category and area)
+    const recentUserMessages = this.conversationHistory
+      .filter(msg => msg.role === "user")
+      .slice(-5) // Check last 5 user messages
+      .map(msg => msg.content.toLowerCase())
+      .join(" ")
+    
+    const hasCategoryInfo = /\b(engineering|medical|arts|commerce|law|mba|science|management|bba|btech|mbbs|ba|bcom|business|computer|it)\b/i.test(recentUserMessages)
+    const hasAreaInfo = /\b(area|location|region|zone|south|north|east|west|central|specific|particular)\b/i.test(recentUserMessages)
+    
+    // Only search for colleges if:
+    // 1. It's NOT an initial college query (user hasn't asked for colleges yet), OR
+    // 2. AI has asked follow-up questions AND user has provided BOTH category AND area information
+    const shouldSearchColleges = includeColleges && (
+      !isInitialCollegeQuery || 
+      (aiAskedCategory && aiAskedArea && hasCategoryInfo && hasAreaInfo)
+    )
+    
+    if (shouldSearchColleges) {
       collegeSuggestions = await this.searchColleges(actualMessage)
       
       if (collegeSuggestions.length > 0) {
         collegeContext = `\n\nRelevant colleges in our database:\n${collegeSuggestions.map((college, idx) => 
           `${idx + 1}. ${college.name}${college.city ? ` (${college.city})` : ""}${college.ranking ? ` - Rank: ${college.ranking}` : ""}${college.description ? ` - ${college.description.substring(0, 100)}...` : ""}`
         ).join("\n")}\n\nWhen mentioning these colleges, encourage students to visit /colleges/${collegeSuggestions[0].slug} for more details.`
+      }
+    }
+
+    // Detect if user is asking about a specific college (e.g., "tell me about JMI", "what is Jamia Millia Islamia")
+    let detectedCollege: CollegeSuggestion | null = null
+    if (collegeSuggestions.length === 0 && 
+        (lowerMessage.includes("tell me about") || lowerMessage.includes("what is") || lowerMessage.includes("about") ||
+         lowerMessage.match(/\b(jmi|du|jnu|iit|nit|iim|aiims)\b/i))) {
+      try {
+        detectedCollege = await this.detectCollegeFromQuery(actualMessage)
+        if (detectedCollege) {
+          // Add detected college to suggestions
+          collegeSuggestions = [detectedCollege]
+          collegeContext = `\n\nRelevant college in our database:\n${detectedCollege.name}${detectedCollege.city ? ` (${detectedCollege.city})` : ""}${detectedCollege.ranking ? ` - Rank: ${detectedCollege.ranking}` : ""}${detectedCollege.description ? ` - ${detectedCollege.description.substring(0, 100)}...` : ""}\n\nWhen mentioning this college, encourage students to visit /colleges/${detectedCollege.slug} for more details.`
+        }
+      } catch (error) {
+        console.error("Error detecting college:", error)
+      }
+    }
+
+    // If no colleges found in database and user is asking about a specific college, search the web
+    let webSearchResults: any[] = []
+    let webSearchContext = ""
+    if (collegeSuggestions.length === 0 && !detectedCollege &&
+        (lowerMessage.includes("college") || lowerMessage.includes("university") || lowerMessage.includes("institute")) &&
+        !lowerMessage.includes("show me") && !lowerMessage.includes("find") && !lowerMessage.includes("list")) {
+      try {
+        // Extract potential college name from query
+        const collegeNameMatch = actualMessage.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:University|College|Institute|School|Academy)\b/i)
+        if (collegeNameMatch) {
+          const collegeName = collegeNameMatch[0]
+          webSearchResults = await searchCollegeInfo(collegeName)
+          
+          if (webSearchResults.length > 0) {
+            webSearchContext = `\n\nI found some information about ${collegeName} from web search:\n${webSearchResults.slice(0, 3).map((result, idx) => 
+              `${idx + 1}. ${result.title}: ${result.snippet.substring(0, 150)}...`
+            ).join("\n")}\n\nUse this information to provide a helpful answer. If the college is not in our database, suggest that the user can find more information on the college's official website.`
+            
+            // Try to extract and save college data with AI enrichment
+            const extractedData = extractCollegeDataFromWeb(webSearchResults)
+            if (extractedData.name || extractedData.website || webSearchResults.length > 0) {
+              // Save to database with AI enrichment asynchronously (don't wait)
+              saveAndEnrichCollegeFromWeb(collegeName, webSearchResults, extractedData).catch(err => 
+                console.error("Error saving and enriching college from web search:", err)
+              )
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Web search error:", error)
+        // Continue without web search results
       }
     }
 
@@ -329,8 +529,21 @@ export class Chatbot {
     }
 
     try {
-      // Build enhanced system prompt with college context and page context
-      const enhancedSystemPrompt = SYSTEM_PROMPT + contextPrompt + collegeContext
+      // Build enhanced system prompt with training data, college context, web search context, and page context
+      // Use enhanced prompt if available, otherwise use base prompt
+      let systemPrompt = SYSTEM_PROMPT
+      try {
+        // Try to get enhanced prompt (with training data) - cache this for performance
+        const enhancedPrompt = await generateEnhancedSystemPrompt()
+        if (enhancedPrompt && enhancedPrompt.length > SYSTEM_PROMPT.length) {
+          systemPrompt = enhancedPrompt
+        }
+      } catch (error) {
+        // Fallback to base prompt if enhanced prompt fails
+        console.log("Using base system prompt (enhanced prompt unavailable)")
+      }
+      
+      const enhancedSystemPrompt = systemPrompt + contextPrompt + collegeContext + webSearchContext
 
       // Build messages array with system prompt
       const messages = [

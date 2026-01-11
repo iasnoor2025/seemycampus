@@ -50,7 +50,17 @@ export function OTPSettings() {
   const fetchConfig = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/sms/config")
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timeout")), 10000)
+      )
+      
+      const response = await Promise.race([
+        fetch("/api/sms/config"),
+        timeoutPromise
+      ]) as Response
+      
       if (!response.ok) {
         throw new Error("Failed to fetch SMS config")
       }

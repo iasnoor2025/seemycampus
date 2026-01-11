@@ -64,7 +64,17 @@ export function AIProviderConfig() {
   const fetchConfig = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/ai/config")
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timeout")), 10000)
+      )
+      
+      const response = await Promise.race([
+        fetch("/api/ai/config"),
+        timeoutPromise
+      ]) as Response
+      
       if (!response.ok) {
         throw new Error("Failed to fetch AI config")
       }

@@ -4,8 +4,9 @@ import type { ChatMessage } from "@/lib/ai/chatbot"
 import { checkRateLimit, getClientIP, RATE_LIMITS } from "@/lib/rate-limit"
 import { createLead } from "@/lib/leads/capture"
 import { db } from "@/db"
-import { leads } from "@/db/schema"
+import { leads, faqs } from "@/db/schema"
 import { eq, or } from "drizzle-orm"
+import { updateAIFromConversations } from "@/lib/ai/training"
 
 export async function POST(request: NextRequest) {
   let message: string = ""
@@ -78,61 +79,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Handle user info collection (name and phone)
+    // Handle user info collection (name and phone) - only save lead when BOTH are provided
     let userName: string | null = null
     let userPhone: string | null = null
     let hasQuizData = false
     
-    if (userInfo && (userInfo.name || userInfo.phone || userInfo.email)) {
+    // Only create/update lead when BOTH name and phone are provided
+    if (userInfo && userInfo.name && userInfo.phone) {
       try {
-        // Check if user info already exists in database by phone or email
-        if (userInfo.phone || userInfo.email) {
+        // Check if lead already exists by phone
           const existingLeads = await db
             .select()
             .from(leads)
-            .where(
-              userInfo.phone && userInfo.email
-                ? or(eq(leads.phone, userInfo.phone), eq(leads.email, userInfo.email))
-                : userInfo.phone
-                ? eq(leads.phone, userInfo.phone)
-                : eq(leads.email, userInfo.email)
-            )
+          .where(eq(leads.phone, userInfo.phone))
             .limit(1)
 
           if (existingLeads.length > 0) {
+          // Update existing lead with name if it was anonymous
             const existingLead = existingLeads[0]
-            userName = existingLead.name !== "Anonymous" ? existingLead.name : (userInfo.name || null)
-            userPhone = existingLead.phone || userInfo.phone || null
+          if (existingLead.name === "Anonymous" || !existingLead.name) {
+            await db
+              .update(leads)
+              .set({
+                name: userInfo.name,
+                updatedAt: new Date(),
+              })
+              .where(eq(leads.id, existingLead.id))
+          }
+          userName = existingLead.name !== "Anonymous" ? existingLead.name : userInfo.name
+          userPhone = existingLead.phone || userInfo.phone
             hasQuizData = !!existingLead.quizData || !!existingLead.studentAnswerId
           } else {
-            // Create new lead with chat as source
-            const newLead = await createLead({
-              name: userInfo.name || "Anonymous",
-              email: userInfo.email || `chat_${Date.now()}@seemycampus.com`,
-              phone: userInfo.phone || undefined,
-              source: "chat",
-              phoneVerified: false,
-            })
-            userName = newLead.name !== "Anonymous" ? newLead.name : null
-            userPhone = newLead.phone || null
-            hasQuizData = !!newLead.quizData || !!newLead.studentAnswerId
-          }
-        } else if (userInfo.name) {
-          // Only name provided, create lead without phone
+          // Create new lead with chat as source - both name and phone are required
           const newLead = await createLead({
             name: userInfo.name,
-            email: `chat_${Date.now()}@seemycampus.com`,
-            phone: undefined,
+            email: userInfo.email || `chat_${Date.now()}@seemycampus.com`,
+            phone: userInfo.phone,
             source: "chat",
             phoneVerified: false,
           })
-          userName = newLead.name !== "Anonymous" ? newLead.name : null
+          userName = newLead.name
+          userPhone = newLead.phone
           hasQuizData = !!newLead.quizData || !!newLead.studentAnswerId
+          console.log(`Lead created from chat: ${newLead.id} - ${newLead.name} - ${newLead.phone}`)
         }
       } catch (error) {
-        console.error("Error handling user info from chat:", error)
+        console.error("Error creating/updating lead from chat:", error)
         // Continue without failing - user info is optional
       }
+    } else if (userInfo && userInfo.name) {
+      // Only name provided - don't create lead yet, wait for phone
+      userName = userInfo.name
+    } else if (userInfo && userInfo.phone) {
+      // Only phone provided - don't create lead yet, wait for name
+      userPhone = userInfo.phone
     }
 
     // Create a new chatbot instance for each request using database config
@@ -201,6 +201,69 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Save FAQ to database (only for meaningful Q&A, not greetings or user info collection)
+      if (finalResponse && 
+          !lowerMessage.match(/^(hi|hello|hey|good morning|good afternoon|good evening|greetings)/) &&
+          !lowerMessage.includes("my name is") &&
+          !lowerMessage.match(/^\d{10}$/) && // Not just a phone number
+          !lowerMessage.includes("user info provided") && // Not system messages
+          finalResponse.length > 20) { // Meaningful answer
+        try {
+          // Determine category based on question
+          let category = "general"
+          if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance")) {
+            category = "admission"
+          } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
+            category = "fees"
+          } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
+            category = "courses"
+          } else if (lowerMessage.includes("college") || lowerMessage.includes("university") || lowerMessage.includes("institute")) {
+            category = "colleges"
+          } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial")) {
+            category = "scholarships"
+          }
+
+          // Check if FAQ with similar question already exists
+          const normalizedQuestion = message.toLowerCase().trim()
+          const existingFaqs = await db
+            .select()
+            .from(faqs)
+            .where(eq(faqs.isActive, true))
+            .limit(100)
+
+          const existingFaq = existingFaqs.find(faq => 
+            faq.question.toLowerCase().trim() === normalizedQuestion
+          )
+
+          if (existingFaq) {
+            // Update existing FAQ - increment view count
+            await db
+              .update(faqs)
+              .set({
+                viewCount: (existingFaq.viewCount || 0) + 1,
+                updatedAt: new Date(),
+              })
+              .where(eq(faqs.id, existingFaq.id))
+          } else {
+            // Create new FAQ
+            await db
+              .insert(faqs)
+              .values({
+                question: message.trim(),
+                answer: finalResponse.trim(),
+                category: category,
+                source: "chat",
+                viewCount: 1,
+                isActive: true,
+                displayOrder: 0,
+              })
+          }
+        } catch (error) {
+          // Silent fail - FAQ saving is not critical
+          console.error("Error saving FAQ:", error)
+        }
+      }
+
       return NextResponse.json({
         response: finalResponse,
         suggestions: result.suggestions || [],
@@ -230,17 +293,17 @@ export async function POST(request: NextRequest) {
         const lowerMessage = message.toLowerCase().trim()
         
         if (lowerMessage.includes("college") || lowerMessage.includes("colleges") || lowerMessage.includes("university")) {
-          errorResponse = "I can help you find colleges! You can browse our college listings to explore options, compare colleges, and view detailed information about programs, fees, and admission requirements."
+          errorResponse = "I can help you find colleges. Browse our college listings for options and details."
         } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
-          errorResponse = "I can help you explore courses! Visit our courses page to find programs that match your interests, check requirements, and see which colleges offer your preferred courses."
+          errorResponse = "I can help with courses. Visit our courses page to find programs."
         } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
-          errorResponse = "I can help with scholarships! Check out our scholarships page for financial aid opportunities. You can filter by category, level, and eligibility requirements."
+          errorResponse = "I can help with scholarships. Check our scholarships page."
         } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
-          errorResponse = "I can help with fees! Use our fee calculator to estimate costs, or visit college pages for detailed fee breakdowns including tuition, hostel, and other expenses."
+          errorResponse = "I can help with fees. Use our fee calculator or visit college pages."
         } else if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance exam")) {
-          errorResponse = "I can help with admissions! Visit our colleges page to see admission requirements, or check our entrance exams page for important dates and exam information."
+          errorResponse = "I can help with admissions. Visit our colleges or entrance exams pages."
         } else {
-          errorResponse = "I'm here to help! You can browse our college listings, explore courses, check out scholarships, use our fee calculator, or contact our support team for assistance."
+          errorResponse = "How can I help you?"
         }
         
         // Try to get college suggestions even on error
@@ -307,17 +370,17 @@ export async function POST(request: NextRequest) {
     const lowerMessage = (message || "").toLowerCase().trim()
     
     if (lowerMessage.includes("college") || lowerMessage.includes("colleges") || lowerMessage.includes("university")) {
-      helpfulResponse += "You can browse our college listings to explore options, compare colleges, and view detailed information about programs, fees, and admission requirements."
+      helpfulResponse += "Browse our college listings for options and details."
     } else if (lowerMessage.includes("course") || lowerMessage.includes("program") || lowerMessage.includes("degree")) {
-      helpfulResponse += "Visit our courses page to find programs that match your interests, check requirements, and see which colleges offer your preferred courses."
+      helpfulResponse += "Visit our courses page to find programs."
     } else if (lowerMessage.includes("scholarship") || lowerMessage.includes("financial aid")) {
-      helpfulResponse += "Check out our scholarships page for financial aid opportunities. You can filter by category, level, and eligibility requirements."
+      helpfulResponse += "Check our scholarships page."
     } else if (lowerMessage.includes("fee") || lowerMessage.includes("cost") || lowerMessage.includes("tuition")) {
-      helpfulResponse += "Use our fee calculator to estimate costs, or visit college pages for detailed fee breakdowns including tuition, hostel, and other expenses."
+      helpfulResponse += "Use our fee calculator or visit college pages."
     } else if (lowerMessage.includes("admission") || lowerMessage.includes("apply") || lowerMessage.includes("entrance exam")) {
-      helpfulResponse += "Visit our colleges page to see admission requirements, or check our entrance exams page for important dates and exam information."
+      helpfulResponse += "Visit our colleges or entrance exams pages."
     } else {
-      helpfulResponse += "You can:\n• Browse our college listings to find options\n• Explore courses and programs\n• Check out scholarship opportunities\n• Use our fee calculator\n• Contact our support team\n\nOr try asking me a more specific question about colleges, courses, or admissions!"
+      helpfulResponse += "How can I help you?"
     }
     
     try {

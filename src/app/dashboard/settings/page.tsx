@@ -1,12 +1,15 @@
 import { Metadata } from "next"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Settings as SettingsIcon } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { FeatureFlagsManager } from "@/components/dashboard/FeatureFlagsManager"
 import { OTPSettings } from "@/components/dashboard/OTPSettings"
 import { ContactSettings } from "@/components/dashboard/ContactSettings"
 import { AISettings, AIProviderConfig } from "@/components/dashboard/AISettings"
+import { AITraining } from "@/components/dashboard/AITraining"
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",
@@ -111,23 +114,84 @@ export default async function SettingsPage() {
 
       {/* AI Settings Section */}
       <div className="mt-8 space-y-6">
-        <AISettings />
-        <AIProviderConfig />
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <AISettings />
+        </Suspense>
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <AIProviderConfig />
+        </Suspense>
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <AITraining />
+        </Suspense>
       </div>
 
       {/* Feature Flags Section */}
       <div className="mt-8">
-        <FeatureFlagsManager />
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <FeatureFlagsManager />
+        </Suspense>
       </div>
 
       {/* Contact Settings Section */}
       <div className="mt-8">
-        <ContactSettings />
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <ContactSettings />
+        </Suspense>
       </div>
 
       {/* OTP Settings Section */}
       <div className="mt-8">
-        <OTPSettings />
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <OTPSettings />
+        </Suspense>
       </div>
     </div>
   )

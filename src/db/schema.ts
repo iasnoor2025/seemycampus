@@ -729,6 +729,20 @@ export const siteSettings = pgTable("site_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Frequently Asked Questions (FAQ) table
+export const faqs = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  category: varchar("category", { length: 100 }), // e.g., "admission", "fees", "courses", "general"
+  source: varchar("source", { length: 50 }).default("chat"), // chat, manual, admin
+  viewCount: integer("view_count").default(0), // Track how many times this FAQ is viewed
+  isActive: boolean("is_active").default(true), // Enable/disable FAQ visibility
+  displayOrder: integer("display_order").default(0), // Order for display on home page
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // College News table - News & Updates
 export const collegeNews = pgTable("college_news", {
   id: serial("id").primaryKey(),
