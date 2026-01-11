@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getAllFeatureFlags, updateFeatureFlag, initializeDefaultFeatureFlags } from "@/lib/featureFlags"
+import { clearAICache } from "@/lib/ai/aiEnabled"
 
 export async function GET() {
   try {
@@ -42,6 +43,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const updated = await updateFeatureFlag(key, isEnabled)
+    
+    // Clear AI cache if AI feature flag was updated
+    if (key === "ai_enabled") {
+      clearAICache()
+    }
+    
     return NextResponse.json({ flag: updated })
   } catch (error: any) {
     console.error("Error updating feature flag:", error)

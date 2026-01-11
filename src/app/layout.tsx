@@ -260,9 +260,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* Preload critical resources */}
-        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" fetchPriority="high" />
-        <link rel="preload" href={`${baseUrl}/main-logo-xxxx.png`} as="image" fetchPriority="high" />
         {/* Prefetch API routes that will be needed */}
         <link rel="dns-prefetch" href="/api/hero-slides" />
         <link rel="dns-prefetch" href="/api/hero-rotating-texts" />

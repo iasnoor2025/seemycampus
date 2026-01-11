@@ -135,11 +135,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create a new chatbot instance for each request
-    const chatbot = new Chatbot()
+    // Create a new chatbot instance for each request using database config
+    let chatbot: Chatbot
+    try {
+      chatbot = await Chatbot.create()
+    } catch (error) {
+      console.warn("Failed to create chatbot with database config, falling back to env vars:", error)
+      chatbot = new Chatbot() // Fallback to legacy constructor
+    }
 
     // Check if AI is configured (will use fallback if not)
-    const isConfigured = chatbot.isConfigured()
+    const isConfigured = await chatbot.isConfigured()
     if (!isConfigured) {
       console.warn("AI provider not configured. Chatbot will use fallback responses.")
     }
@@ -239,7 +245,12 @@ export async function POST(request: NextRequest) {
         
         // Try to get college suggestions even on error
         try {
-          const chatbot = new Chatbot()
+          let chatbot: Chatbot
+          try {
+            chatbot = await Chatbot.create()
+          } catch (error) {
+            chatbot = new Chatbot() // Fallback to legacy constructor
+          }
           const searchResult = await chatbot.searchColleges(message || "")
           errorSuggestions = searchResult || []
           if (errorSuggestions.length > 0) {
@@ -310,7 +321,12 @@ export async function POST(request: NextRequest) {
     }
     
     try {
-      const chatbot = new Chatbot()
+      let chatbot: Chatbot
+      try {
+        chatbot = await Chatbot.create()
+      } catch (error) {
+        chatbot = new Chatbot() // Fallback to legacy constructor
+      }
       const searchResult = await chatbot.searchColleges(message || "")
       suggestions = searchResult || []
       if (suggestions.length > 0) {

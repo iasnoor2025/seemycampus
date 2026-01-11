@@ -3,7 +3,7 @@
  * Functions to help optimize blog content for SEO
  */
 
-import { baseUrl } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 
 /**
  * Extract keywords from text

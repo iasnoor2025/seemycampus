@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import {
   simulateCareerPath,
   type CareerInterest,
@@ -8,12 +7,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Career Path Simulator is a public feature - no authentication required
     const body = await request.json()
     const { interests, currentSkills, academicLevel } = body
 

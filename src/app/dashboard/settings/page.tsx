@@ -6,6 +6,7 @@ import { Settings as SettingsIcon } from "lucide-react"
 import { FeatureFlagsManager } from "@/components/dashboard/FeatureFlagsManager"
 import { OTPSettings } from "@/components/dashboard/OTPSettings"
 import { ContactSettings } from "@/components/dashboard/ContactSettings"
+import { AISettings, AIProviderConfig } from "@/components/dashboard/AISettings"
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",
@@ -106,6 +107,12 @@ export default async function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* AI Settings Section */}
+      <div className="mt-8 space-y-6">
+        <AISettings />
+        <AIProviderConfig />
       </div>
 
       {/* Feature Flags Section */}

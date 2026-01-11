@@ -6,7 +6,8 @@ import { Building, MapPin, TrendingUp, Award, Users } from "lucide-react"
 import { CollegeLogo } from "@/components/college/CollegeLogo"
 import { getCollegesByCity, getCityStats, getAllCities } from "@/lib/colleges"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
-import { generateBreadcrumbList, baseUrl } from "@/lib/seo/generateMeta"
+import { generateBreadcrumbList } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface PageProps {

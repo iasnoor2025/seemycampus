@@ -229,7 +229,7 @@ export function CareerPathSimulator() {
                 }}
                 placeholder="e.g., Python, JavaScript, Communication..."
               />
-              <Button type="button" onClick={addSkill} variant="outline">
+              <Button type="button" onClick={addSkill}>
                 Add
               </Button>
             </div>
@@ -264,7 +264,7 @@ export function CareerPathSimulator() {
             </Select>
           </div>
 
-          <Button onClick={handleSimulate} disabled={loading} className="w-full">
+          <Button onClick={handleSimulate} disabled={loading} className="w-full" size="lg">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

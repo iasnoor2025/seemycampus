@@ -9,6 +9,7 @@ import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
 import { CustomAIProvider } from "./providers/custom"
 import type { AIProvider } from "./providers/base"
+import { getAIConfig } from "./config"
 
 export interface EssayRequest {
   type: "essay" | "sop" | "personal_statement" | "cover_letter"
@@ -34,32 +35,42 @@ export interface EssayResponse {
 }
 
 /**
- * Get AI provider instance (exactly like Chatbot class)
- * Supports: ollama, openrouter, openai, or custom providers via env vars
+ * Get AI provider instance using database config
+ * Supports: ollama, openrouter, openai, or custom providers
  */
-function getAIProvider(): AIProvider {
-  const providerType = process.env.AI_PROVIDER || "custom"
+async function getAIProvider(): Promise<AIProvider> {
+  const config = await getAIConfig()
+  const providerType = config.providerType
 
   if (providerType === "ollama") {
     return new OllamaProvider({
-      apiUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
-      model: process.env.OLLAMA_MODEL || "llama3.2:latest",
+      apiUrl: config.ollamaApiUrl || "http://localhost:11434",
+      model: config.ollamaModel || "llama3.2:latest",
     })
   } else if (providerType === "openrouter") {
+    if (!config.openrouterApiKey) {
+      throw new Error("OpenRouter API key is not configured")
+    }
     return new OpenRouterProvider({
-      apiKey: process.env.OPENROUTER_API_KEY,
-      model: process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo",
+      apiKey: config.openrouterApiKey,
+      model: config.openrouterModel || "openai/gpt-3.5-turbo",
     })
   } else if (providerType === "openai") {
+    if (!config.openaiApiKey) {
+      throw new Error("OpenAI API key is not configured")
+    }
     return new OpenAIProvider({
-      apiKey: process.env.OPENAI_API_KEY,
-      model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+      apiKey: config.openaiApiKey,
+      model: config.openaiModel || "gpt-3.5-turbo",
     })
   } else {
+    if (!config.customApiKey || !config.customApiUrl) {
+      throw new Error("Custom AI API key and URL are required")
+    }
     return new CustomAIProvider({
-      apiKey: process.env.AI_API_KEY,
-      apiUrl: process.env.AI_API_URL,
-      model: process.env.AI_MODEL || "default",
+      apiKey: config.customApiKey,
+      apiUrl: config.customApiUrl,
+      model: config.customModel || "default",
     })
   }
 }
@@ -68,7 +79,7 @@ function getAIProvider(): AIProvider {
  * Generate essay/SOP content using AI (Ollama or other providers)
  */
 export async function generateEssay(request: EssayRequest): Promise<EssayResponse> {
-  const provider = getAIProvider()
+  const provider = await getAIProvider()
 
   // Build the prompt for essay generation
   const essayTypeNames: Record<string, string> = {
@@ -210,7 +221,7 @@ export async function analyzeEssay(content: string): Promise<{
   wordCount: number
   readabilityScore: number
 }> {
-  const provider = getAIProvider()
+  const provider = await getAIProvider()
 
   const analysisPrompt = `Analyze the following essay for grammar, style, and readability. Provide a comprehensive analysis in the following JSON format:
 

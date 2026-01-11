@@ -1,6 +1,7 @@
 import { db } from "@/db"
 import { phoneVerifications } from "@/db/schema"
 import { eq, and, gt, gte } from "drizzle-orm"
+import { getSMSConfig } from "./config"
 
 /**
  * Generate a 6-digit OTP
@@ -11,52 +12,125 @@ export function generateOTP(): string {
 
 /**
  * Send OTP via SMS
- * In production, integrate with SMS service like Twilio, MSG91, or TextLocal
+ * Uses database configuration first, then falls back to environment variables
  */
 export async function sendOTP(phone: string, otp: string): Promise<boolean> {
   try {
-    // TODO: Integrate with actual SMS service
-    // For now, we'll log it and return true (demo mode)
-    // In production, use a service like:
-    // - Twilio: https://www.twilio.com/
-    // - MSG91: https://msg91.com/ (Popular in India)
-    // - TextLocal: https://www.textlocal.in/ (Popular in India)
-    
-    console.log(`[SMS] Sending OTP ${otp} to ${phone}`)
-    
-    // Example with Twilio (uncomment when configured):
-    /*
-    const accountSid = process.env.TWILIO_ACCOUNT_SID
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER
-    
-    if (!accountSid || !authToken || !fromNumber) {
-      throw new Error("Twilio credentials not configured")
+    const config = await getSMSConfig()
+    const providerType = config.providerType
+
+    // Demo mode - just log
+    if (providerType === "demo") {
+      console.log(`[SMS Demo] Sending OTP ${otp} to ${phone}`)
+      return true
     }
-    
-    const client = require('twilio')(accountSid, authToken)
-    
-    await client.messages.create({
-      body: `Your SeeMyCampus verification code is: ${otp}. Valid for 10 minutes.`,
-      from: fromNumber,
-      to: phone
-    })
-    */
-    
-    // Example with MSG91 (uncomment when configured):
-    /*
-    const authKey = process.env.MSG91_AUTH_KEY
-    const senderId = process.env.MSG91_SENDER_ID
-    
-    if (!authKey || !senderId) {
-      throw new Error("MSG91 credentials not configured")
+
+    // Twilio
+    if (providerType === "twilio") {
+      const accountSid = config.twilioAccountSid
+      const authToken = config.twilioAuthToken
+      const fromNumber = config.twilioPhoneNumber
+
+      if (!accountSid || !authToken || !fromNumber) {
+        console.error("Twilio credentials not configured")
+        return false
+      }
+
+      try {
+        // Dynamic import to avoid bundling Twilio in client code
+        const twilio = await import("twilio")
+        const client = twilio.default(accountSid, authToken)
+
+        await client.messages.create({
+          body: `Your SeeMyCampus verification code is: ${otp}. Valid for 10 minutes.`,
+          from: fromNumber,
+          to: phone,
+        })
+
+        console.log(`[SMS Twilio] OTP sent to ${phone}`)
+        return true
+      } catch (error: any) {
+        console.error("Twilio SMS error:", error)
+        return false
+      }
     }
-    
-    const response = await fetch(`https://api.msg91.com/api/v5/otp?template_id=YOUR_TEMPLATE_ID&mobile=${phone}&authkey=${authKey}&otp=${otp}`)
-    */
-    
-    // For demo/development: Always return true
-    // In production, check the SMS service response
+
+    // MSG91
+    if (providerType === "msg91") {
+      const authKey = config.msg91AuthKey
+      const senderId = config.msg91SenderId
+
+      if (!authKey || !senderId) {
+        console.error("MSG91 credentials not configured")
+        return false
+      }
+
+      try {
+        // MSG91 OTP API
+        const response = await fetch(
+          `https://api.msg91.com/api/v5/otp?template_id=YOUR_TEMPLATE_ID&mobile=${phone}&authkey=${authKey}&otp=${otp}`,
+          {
+            method: "GET",
+          }
+        )
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("MSG91 SMS error:", errorText)
+          return false
+        }
+
+        console.log(`[SMS MSG91] OTP sent to ${phone}`)
+        return true
+      } catch (error: any) {
+        console.error("MSG91 SMS error:", error)
+        return false
+      }
+    }
+
+    // TextLocal
+    if (providerType === "textlocal") {
+      const apiKey = config.textlocalApiKey
+      const senderId = config.textlocalSenderId
+
+      if (!apiKey || !senderId) {
+        console.error("TextLocal credentials not configured")
+        return false
+      }
+
+      try {
+        // TextLocal SMS API
+        const response = await fetch("https://api.textlocal.in/send/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apikey: apiKey,
+            numbers: phone,
+            message: `Your SeeMyCampus verification code is: ${otp}. Valid for 10 minutes.`,
+            sender: senderId,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.status !== "success") {
+          console.error("TextLocal SMS error:", data)
+          return false
+        }
+
+        console.log(`[SMS TextLocal] OTP sent to ${phone}`)
+        return true
+      } catch (error: any) {
+        console.error("TextLocal SMS error:", error)
+        return false
+      }
+    }
+
+    // Unknown provider
+    console.warn(`Unknown SMS provider: ${providerType}, using demo mode`)
+    console.log(`[SMS Demo] Sending OTP ${otp} to ${phone}`)
     return true
   } catch (error) {
     console.error("Error sending OTP:", error)

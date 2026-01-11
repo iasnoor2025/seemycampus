@@ -100,7 +100,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     }
   }
 
-  return generateCourseMeta(course[0].course, course[0].college)
+  return await generateCourseMeta(course[0].course, course[0].college)
 }
 
 export default async function CoursePage({ params, searchParams }: CoursePageProps) {

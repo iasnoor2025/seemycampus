@@ -1,6 +1,317 @@
 import { Metadata } from "next"
+import { OllamaProvider } from "@/lib/ai/providers/ollama"
+import { OpenAIProvider } from "@/lib/ai/providers/openai"
+import { OpenRouterProvider } from "@/lib/ai/providers/openrouter"
+import { CustomAIProvider } from "@/lib/ai/providers/custom"
+import type { AIProvider } from "@/lib/ai/providers/base"
+import { isAIEnabled } from "@/lib/ai/aiEnabled"
+import { getAIConfig } from "@/lib/ai/config"
+import { baseUrl } from "@/lib/constants"
 
-export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
+/**
+ * Get AI provider instance for SEO enhancements
+ * Uses database config first, then falls back to environment variables
+ */
+async function getAIProvider(): Promise<AIProvider | null> {
+  try {
+    const config = await getAIConfig()
+    const providerType = config.providerType
+
+    if (providerType === "ollama") {
+      return new OllamaProvider({
+        apiUrl: config.ollamaApiUrl || "http://localhost:11434",
+        model: config.ollamaModel || "llama3.2:latest",
+      })
+    } else if (providerType === "openrouter") {
+      const apiKey = config.openrouterApiKey
+      if (!apiKey) return null
+      return new OpenRouterProvider({
+        apiKey,
+        model: config.openrouterModel || "openai/gpt-3.5-turbo",
+      })
+    } else if (providerType === "openai") {
+      const apiKey = config.openaiApiKey
+      if (!apiKey) return null
+      return new OpenAIProvider({
+        apiKey,
+        model: config.openaiModel || "gpt-3.5-turbo",
+      })
+    } else {
+      const apiKey = config.customApiKey
+      const apiUrl = config.customApiUrl
+      if (!apiKey || !apiUrl) return null
+      return new CustomAIProvider({
+        apiKey,
+        apiUrl,
+        model: config.customModel || "default",
+      })
+    }
+  } catch (error) {
+    console.error("Failed to initialize AI provider for SEO:", error)
+    return null
+  }
+}
+
+/**
+ * AI-powered description enhancement
+ * Generates SEO-optimized, engaging descriptions
+ */
+async function enhanceDescriptionWithAI(
+  baseDescription: string,
+  context: {
+    name: string
+    location?: string | null
+    type?: string
+    additionalInfo?: string
+  }
+): Promise<string | null> {
+  const provider = await getAIProvider()
+  if (!provider) return null
+
+  try {
+    const prompt = `You are an SEO expert. Generate a compelling, SEO-optimized meta description (120-160 characters) for a college/university page.
+
+College Name: ${context.name}
+Location: ${context.location || "Not specified"}
+Type: ${context.type || "Educational Institution"}
+Current Description: ${baseDescription}
+${context.additionalInfo ? `Additional Info: ${context.additionalInfo}` : ""}
+
+Requirements:
+- Must be 120-160 characters exactly
+- Include the full college name early in the description
+- Include location if available
+- Be engaging and informative
+- Include relevant keywords naturally
+- Focus on what students search for (admission, courses, fees, placements)
+- Return ONLY the description text, no quotes or explanations
+
+Generate the optimized description:`
+
+    const response = await provider.chat([
+      {
+        role: "system",
+        content: "You are an expert SEO copywriter specializing in educational content. Generate concise, keyword-rich meta descriptions.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ])
+
+    // Clean up the response
+    let cleaned = response.trim()
+    // Remove quotes if present
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+      cleaned = cleaned.slice(1, -1)
+    }
+
+    // Validate length
+    if (cleaned.length >= 100 && cleaned.length <= 170) {
+      return cleaned
+    }
+
+    return null
+  } catch (error) {
+    console.error("AI description enhancement failed:", error)
+    return null
+  }
+}
+
+/**
+ * AI-powered title optimization
+ * Generates SEO-optimized titles with better keyword placement
+ */
+async function enhanceTitleWithAI(
+  baseTitle: string,
+  context: {
+    name: string
+    location?: string | null
+    type?: string
+  }
+): Promise<string | null> {
+  const provider = await getAIProvider()
+  if (!provider) return null
+
+  try {
+    const prompt = `You are an SEO expert. Optimize this page title for better search rankings.
+
+Current Title: ${baseTitle}
+College Name: ${context.name}
+Location: ${context.location || "Not specified"}
+Type: ${context.type || "Educational Institution"}
+
+Requirements:
+- Keep it under 60 characters
+- Put the college name first for exact match searches
+- Include location if relevant
+- Include key search terms (admission, courses, fees, placements)
+- Use pipe (|) separator before brand name
+- Return ONLY the title text, no quotes or explanations
+
+Generate the optimized title:`
+
+    const response = await provider.chat([
+      {
+        role: "system",
+        content: "You are an expert SEO specialist. Generate optimized page titles for educational websites.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ])
+
+    let cleaned = response.trim()
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+      cleaned = cleaned.slice(1, -1)
+    }
+
+    if (cleaned.length > 0 && cleaned.length <= 70) {
+      return cleaned
+    }
+
+    return null
+  } catch (error) {
+    console.error("AI title enhancement failed:", error)
+    return null
+  }
+}
+
+/**
+ * AI-powered keyword generation
+ * Generates relevant, long-tail keywords for better SEO
+ */
+async function generateKeywordsWithAI(
+  baseKeywords: string[],
+  context: {
+    name: string
+    location?: string | null
+    courses?: Array<{ name: string }> | null
+    ranking?: number | null
+    accreditation?: string | null
+  }
+): Promise<string[] | null> {
+  const provider = await getAIProvider()
+  if (!provider) return null
+
+  try {
+    const courseNames = context.courses?.slice(0, 5).map((c) => c.name).join(", ") || "Not specified"
+    const prompt = `You are an SEO expert. Generate 15-20 relevant, long-tail keywords for a college page.
+
+College Name: ${context.name}
+Location: ${context.location || "Not specified"}
+Courses: ${courseNames}
+Ranking: ${context.ranking || "Not specified"}
+Accreditation: ${context.accreditation || "Not specified"}
+Existing Keywords: ${baseKeywords.slice(0, 10).join(", ")}
+
+Requirements:
+- Generate 15-20 keywords
+- Include long-tail keywords (e.g., "admission process", "fee structure", "placement record")
+- Include location-based keywords if location is available
+- Include course-specific keywords
+- Include question-based keywords (e.g., "how to get admission", "is it good college")
+- Return ONLY a comma-separated list of keywords, no explanations
+- Each keyword should be 2-5 words
+
+Generate the keywords:`
+
+    const response = await provider.chat([
+      {
+        role: "system",
+        content: "You are an expert SEO keyword researcher. Generate relevant, searchable keywords for educational content.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ])
+
+    let cleaned = response.trim()
+    // Remove quotes if present
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+      cleaned = cleaned.slice(1, -1)
+    }
+
+    // Parse comma-separated keywords
+    const keywords = cleaned
+      .split(",")
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0 && k.length <= 50)
+
+    if (keywords.length >= 5) {
+      return keywords
+    }
+
+    return null
+  } catch (error) {
+    console.error("AI keyword generation failed:", error)
+    return null
+  }
+}
+
+/**
+ * AI-powered FAQ answer enhancement
+ * Makes FAQ answers more natural and comprehensive
+ */
+async function enhanceFAQAnswerWithAI(
+  question: string,
+  baseAnswer: string,
+  context: {
+    collegeName: string
+    location?: string | null
+    additionalContext?: string
+  }
+): Promise<string | null> {
+  const provider = await getAIProvider()
+  if (!provider) return null
+
+  try {
+    const prompt = `You are an educational content expert. Enhance this FAQ answer to be more natural, comprehensive, and helpful.
+
+Question: ${question}
+Current Answer: ${baseAnswer}
+College Name: ${context.collegeName}
+Location: ${context.location || "Not specified"}
+${context.additionalContext ? `Additional Context: ${context.additionalContext}` : ""}
+
+Requirements:
+- Keep the answer accurate and factual
+- Make it more natural and conversational
+- Add helpful details without being verbose
+- Keep it between 100-200 words
+- Maintain all important information from the original answer
+- Return ONLY the enhanced answer text, no quotes or explanations
+
+Generate the enhanced answer:`
+
+    const response = await provider.chat([
+      {
+        role: "system",
+        content: "You are an expert educational content writer. Create clear, helpful, and natural FAQ answers.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ])
+
+    let cleaned = response.trim()
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+      cleaned = cleaned.slice(1, -1)
+    }
+
+    if (cleaned.length >= 50 && cleaned.length <= 300) {
+      return cleaned
+    }
+
+    return null
+  } catch (error) {
+    console.error("AI FAQ enhancement failed:", error)
+    return null
+  }
+}
 
 interface College {
   id: number
@@ -31,7 +342,7 @@ interface CollegeForMeta extends College {
   courses?: Array<{ name: string }> | null
 }
 
-export function generateCollegeMeta(college: CollegeForMeta): Metadata {
+export async function generateCollegeMeta(college: CollegeForMeta, useAI: boolean = true): Promise<Metadata> {
   const collegeName = college.name
   const location = college.location || college.city || ""
   const locationText = location ? ` in ${location}` : ""
@@ -149,6 +460,20 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
     }
   }
   
+  // AI-powered description enhancement (optional, with fallback)
+  const aiEnabled = await isAIEnabled()
+  if (useAI && aiEnabled) {
+    const aiDescription = await enhanceDescriptionWithAI(description, {
+      name: collegeName,
+      location: location,
+      type: "College/University",
+      additionalInfo: `Ranking: ${college.ranking || "N/A"}, Established: ${college.establishedYear || "N/A"}, Accreditation: ${college.accreditation || "N/A"}`,
+    })
+    if (aiDescription) {
+      description = aiDescription
+    }
+  }
+  
   // Ensure description is between 120-160 characters for optimal SEO
   // But prioritize including full college name
   if (description.length > 160) {
@@ -171,7 +496,19 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
   
   // Enhanced title with full college name first for better rankings
   // Put full name at the start for exact match searches
-  const title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission 2025, Courses, Fees, Placements, Rankings, Cutoffs | SeeMyCampus`
+  let title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission 2025, Courses, Fees, Placements, Rankings, Cutoffs | SeeMyCampus`
+  
+  // AI-powered title optimization (optional, with fallback)
+  if (useAI && aiEnabled) {
+    const aiTitle = await enhanceTitleWithAI(title, {
+      name: collegeName,
+      location: location,
+      type: "College/University",
+    })
+    if (aiTitle) {
+      title = aiTitle
+    }
+  }
   const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
     ? college.images[0] 
     : (typeof college.images === 'string' ? college.images : undefined)
@@ -248,6 +585,25 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
     })
   }
 
+  // AI-powered keyword generation (optional, with fallback)
+  if (useAI && aiEnabled) {
+    const aiKeywords = await generateKeywordsWithAI(keywords, {
+      name: collegeName,
+      location: location,
+      courses: college.courses || null,
+      ranking: college.ranking || null,
+      accreditation: college.accreditation || null,
+    })
+    if (aiKeywords && aiKeywords.length > 0) {
+      // Merge AI keywords with existing ones, avoiding duplicates
+      aiKeywords.forEach((kw) => {
+        if (!keywords.includes(kw)) {
+          keywords.push(kw)
+        }
+      })
+    }
+  }
+
   return {
     title,
     description,
@@ -273,11 +629,34 @@ export function generateCollegeMeta(college: CollegeForMeta): Metadata {
   }
 }
 
-export function generateCourseMeta(course: Course, college?: { name: string; slug: string } | null): Metadata {
-  const title = `${course.name}${college ? ` at ${college.name}` : ""} | SeeMyCampus`
-  const description =
+export async function generateCourseMeta(course: Course, college?: { name: string; slug: string } | null, useAI: boolean = true): Promise<Metadata> {
+  let title = `${course.name}${college ? ` at ${college.name}` : ""} | SeeMyCampus`
+  let description =
     course.description ||
     `Learn about ${course.name}${college ? ` at ${college.name}` : ""}. ${course.duration ? `Duration: ${course.duration}.` : ""} ${course.fees ? `Fees: ₹${course.fees.toLocaleString()}.` : ""} Find admission details and more.`
+
+  // AI-powered enhancements for course meta
+  const aiEnabled = await isAIEnabled()
+  if (useAI && aiEnabled) {
+    const aiDescription = await enhanceDescriptionWithAI(description, {
+      name: course.name,
+      location: college?.name || null,
+      type: "Course/Program",
+      additionalInfo: `Duration: ${course.duration || "N/A"}, Fees: ${course.fees ? `₹${course.fees.toLocaleString()}` : "N/A"}, Level: ${course.level || "N/A"}`,
+    })
+    if (aiDescription) {
+      description = aiDescription
+    }
+
+    const aiTitle = await enhanceTitleWithAI(title, {
+      name: course.name,
+      location: college?.name || null,
+      type: "Course",
+    })
+    if (aiTitle) {
+      title = aiTitle
+    }
+  }
 
   return {
     title,
@@ -515,19 +894,56 @@ export function generateStructuredDataCollege(college: CollegeWithDetails) {
 }
 
 // Generate FAQ structured data for colleges
-export function generateCollegeFAQStructuredData(college: CollegeWithDetails) {
+export async function generateCollegeFAQStructuredData(college: CollegeWithDetails, useAI: boolean = true) {
   const faqs: Array<{ question: string; answer: string }> = []
   
   // Admission FAQ
+  const admissionAnswer = `The admission process for ${college.name}${college.location ? ` in ${college.location}` : ""} typically involves${college.entranceExams && college.entranceExams.length > 0 ? ` entrance exams like ${college.entranceExams.slice(0, 3).join(", ")}` : " application submission"}. Visit the official website or contact the college directly for detailed admission requirements and deadlines.`
+  
+  let enhancedAdmissionAnswer = admissionAnswer
+  const aiEnabled = await isAIEnabled()
+  if (useAI && aiEnabled) {
+    const aiAnswer = await enhanceFAQAnswerWithAI(
+      `What is the admission process for ${college.name}?`,
+      admissionAnswer,
+      {
+        collegeName: college.name,
+        location: college.location || null,
+        additionalContext: `Entrance Exams: ${college.entranceExams?.join(", ") || "Not specified"}`,
+      }
+    )
+    if (aiAnswer) {
+      enhancedAdmissionAnswer = aiAnswer
+    }
+  }
+  
   faqs.push({
     question: `What is the admission process for ${college.name}?`,
-    answer: `The admission process for ${college.name}${college.location ? ` in ${college.location}` : ""} typically involves${college.entranceExams && college.entranceExams.length > 0 ? ` entrance exams like ${college.entranceExams.slice(0, 3).join(", ")}` : " application submission"}. Visit the official website or contact the college directly for detailed admission requirements and deadlines.`
+    answer: enhancedAdmissionAnswer,
   })
   
   // Fees FAQ
+  const feesAnswer = `The fees for ${college.name}${college.location ? ` in ${college.location}` : ""} vary by course and program. ${college.courses && college.courses.length > 0 ? `The college offers ${college.courses.length} courses. ` : ""}For detailed fee structure, please visit the college website or contact the admissions office directly.`
+  
+  let enhancedFeesAnswer = feesAnswer
+  if (useAI && aiEnabled) {
+    const aiAnswer = await enhanceFAQAnswerWithAI(
+      `What are the fees for ${college.name}?`,
+      feesAnswer,
+      {
+        collegeName: college.name,
+        location: college.location || null,
+        additionalContext: `Courses: ${college.courses?.length || 0} courses available`,
+      }
+    )
+    if (aiAnswer) {
+      enhancedFeesAnswer = aiAnswer
+    }
+  }
+  
   faqs.push({
     question: `What are the fees for ${college.name}?`,
-    answer: `The fees for ${college.name}${college.location ? ` in ${college.location}` : ""} vary by course and program. ${college.courses && college.courses.length > 0 ? `The college offers ${college.courses.length} courses. ` : ""}For detailed fee structure, please visit the college website or contact the admissions office directly.`
+    answer: enhancedFeesAnswer,
   })
   
   // Courses FAQ

@@ -4,6 +4,7 @@ import { OpenAIProvider } from "./providers/openai"
 import { OpenRouterProvider } from "./providers/openrouter"
 import { OllamaProvider } from "./providers/ollama"
 import type { AIProvider } from "./providers/base"
+import { getAIConfig } from "./config"
 import { getAllColleges } from "@/lib/colleges"
 import { db } from "@/db"
 import { colleges, courses } from "@/db/schema"
@@ -28,49 +29,113 @@ export class Chatbot {
   private provider: AIProvider
   private conversationHistory: ChatMessage[] = []
 
-  constructor() {
-    const providerType = process.env.AI_PROVIDER || "custom"
+  constructor(provider?: AIProvider) {
+    // If provider is passed, use it (for async initialization)
+    // Otherwise, use legacy env var initialization (for backward compatibility)
+    if (provider) {
+      this.provider = provider
+    } else {
+      // Legacy initialization from environment variables
+      const providerType = process.env.AI_PROVIDER || "custom"
 
-    if (providerType === "ollama") {
-      this.provider = new OllamaProvider({
-        apiUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
-        model: process.env.OLLAMA_MODEL || "llama3.2:latest",
+      if (providerType === "ollama") {
+        this.provider = new OllamaProvider({
+          apiUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
+          model: process.env.OLLAMA_MODEL || "llama3.2:latest",
+        })
+      } else if (providerType === "openrouter") {
+        this.provider = new OpenRouterProvider({
+          apiKey: process.env.OPENROUTER_API_KEY,
+          model: process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo",
+        })
+      } else if (providerType === "openai") {
+        this.provider = new OpenAIProvider({
+          apiKey: process.env.OPENAI_API_KEY,
+          model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+        })
+      } else {
+        this.provider = new CustomAIProvider({
+          apiKey: process.env.AI_API_KEY,
+          apiUrl: process.env.AI_API_URL,
+          model: process.env.AI_MODEL || "default",
+        })
+      }
+    }
+  }
+
+  /**
+   * Create a Chatbot instance with database config
+   * This is the preferred method as it uses database settings
+   */
+  static async create(): Promise<Chatbot> {
+    const config = await getAIConfig()
+    let provider: AIProvider
+
+    if (config.providerType === "ollama") {
+      provider = new OllamaProvider({
+        apiUrl: config.ollamaApiUrl || "http://localhost:11434",
+        model: config.ollamaModel || "llama3.2:latest",
       })
-    } else if (providerType === "openrouter") {
-      this.provider = new OpenRouterProvider({
-        apiKey: process.env.OPENROUTER_API_KEY,
-        model: process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo",
+    } else if (config.providerType === "openrouter") {
+      if (!config.openrouterApiKey) {
+        throw new Error("OpenRouter API key is not configured")
+      }
+      provider = new OpenRouterProvider({
+        apiKey: config.openrouterApiKey,
+        model: config.openrouterModel || "openai/gpt-3.5-turbo",
       })
-    } else if (providerType === "openai") {
-      this.provider = new OpenAIProvider({
-        apiKey: process.env.OPENAI_API_KEY,
-        model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+    } else if (config.providerType === "openai") {
+      if (!config.openaiApiKey) {
+        throw new Error("OpenAI API key is not configured")
+      }
+      provider = new OpenAIProvider({
+        apiKey: config.openaiApiKey,
+        model: config.openaiModel || "gpt-3.5-turbo",
       })
     } else {
-      this.provider = new CustomAIProvider({
-        apiKey: process.env.AI_API_KEY,
-        apiUrl: process.env.AI_API_URL,
-        model: process.env.AI_MODEL || "default",
+      if (!config.customApiKey || !config.customApiUrl) {
+        throw new Error("Custom AI API key and URL are required")
+      }
+      provider = new CustomAIProvider({
+        apiKey: config.customApiKey,
+        apiUrl: config.customApiUrl,
+        model: config.customModel || "default",
       })
     }
+
+    return new Chatbot(provider)
   }
 
   /**
    * Check if AI provider is properly configured
    */
-  isConfigured(): boolean {
-    const providerType = process.env.AI_PROVIDER || "custom"
-    
-    if (providerType === "ollama") {
-      // Ollama is configured if the URL is accessible (we'll assume it's configured)
-      // The actual connection will be tested when making requests
-      return true
-    } else if (providerType === "openrouter") {
-      return !!process.env.OPENROUTER_API_KEY
-    } else if (providerType === "openai") {
-      return !!process.env.OPENAI_API_KEY
-    } else {
-      return !!(process.env.AI_API_URL && process.env.AI_API_KEY)
+  async isConfigured(): Promise<boolean> {
+    try {
+      const config = await getAIConfig()
+      const providerType = config.providerType
+      
+      if (providerType === "ollama") {
+        return true // Ollama is configured if URL is set
+      } else if (providerType === "openrouter") {
+        return !!config.openrouterApiKey
+      } else if (providerType === "openai") {
+        return !!config.openaiApiKey
+      } else {
+        return !!(config.customApiUrl && config.customApiKey)
+      }
+    } catch (error) {
+      // Fallback to environment variables
+      const providerType = process.env.AI_PROVIDER || "custom"
+      
+      if (providerType === "ollama") {
+        return true
+      } else if (providerType === "openrouter") {
+        return !!process.env.OPENROUTER_API_KEY
+      } else if (providerType === "openai") {
+        return !!process.env.OPENAI_API_KEY
+      } else {
+        return !!(process.env.AI_API_URL && process.env.AI_API_KEY)
+      }
     }
   }
 

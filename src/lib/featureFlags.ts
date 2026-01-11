@@ -147,6 +147,7 @@ export async function initializeDefaultFeatureFlags() {
     { key: "feature_reviews", name: "College Reviews", category: "feature" as FeatureFlagCategory, description: "College review system" },
     { key: "feature_student_dashboard", name: "Student Dashboard", category: "feature" as FeatureFlagCategory, description: "Student dashboard feature" },
     { key: "feature_otp", name: "OTP Verification", category: "feature" as FeatureFlagCategory, description: "Phone OTP verification system" },
+    { key: "ai_enabled", name: "AI Features", category: "feature" as FeatureFlagCategory, description: "Enable/disable all AI-powered features (SEO, recommendations, reviews, blog, search, content generation)" },
   ]
 
   for (const flag of defaultFlags) {

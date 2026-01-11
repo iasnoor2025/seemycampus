@@ -6,6 +6,7 @@
 import { db } from "@/db"
 import { cutoffs, colleges } from "@/db/schema"
 import { eq, and, gte, lte, sql, desc, isNotNull } from "drizzle-orm"
+import { generateAIReasoning, type AdmissionReasoningContext } from "@/lib/ai/admissionReasoning"
 
 export interface PredictionInput {
   examName: string
@@ -108,6 +109,26 @@ export async function predictAdmission(
       )
 
       if (prediction.probability > 0) {
+        // Generate AI-powered reasoning (with fallback to base reasoning)
+        const aiReasoningContext: AdmissionReasoningContext = {
+          examName: input.examName,
+          score: input.score,
+          rank: input.rank,
+          category: input.category,
+          collegeName: college.name,
+          courseName: latestCutoff.courseName,
+          probability: prediction.probability,
+          confidence: prediction.confidence,
+          latestCutoff: {
+            rank: latestCutoff.closingRank,
+            score: latestCutoff.closingScore,
+          },
+          historicalData,
+          baseReasoning: prediction.reasoning,
+        }
+
+        const enhancedReasoning = await generateAIReasoning(aiReasoningContext, true)
+
         results.push({
           collegeId: college.id,
           collegeName: college.name,
@@ -117,7 +138,7 @@ export async function predictAdmission(
           confidence: prediction.confidence,
           predictedCutoff: prediction.predictedCutoff,
           historicalData,
-          reasoning: prediction.reasoning,
+          reasoning: enhancedReasoning,
         })
       }
     }

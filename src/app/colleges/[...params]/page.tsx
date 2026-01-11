@@ -17,7 +17,8 @@ import { ApplicationGuide } from "@/components/college/ApplicationGuide"
 import { InquiryForm } from "@/components/college/InquiryForm"
 import { CollegeNews } from "@/components/college/CollegeNews"
 import { RelatedContent } from "@/components/seo/RelatedContent"
-import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList, generateCollegeFAQStructuredData, generateSingleReviewStructuredData, baseUrl } from "@/lib/seo/generateMeta"
+import { generateCollegeMeta, generateStructuredDataCollege, generateBreadcrumbList, generateCollegeFAQStructuredData, generateSingleReviewStructuredData } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 import { getRelatedColleges, getRelatedScholarships, getRelatedExams } from "@/lib/relatedContent"
 import { db } from "@/db"
 import { categories, studyGoals, collegeReviews } from "@/db/schema"
@@ -199,7 +200,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Pass courses to meta generation for better SEO
-  return generateCollegeMeta({
+  return await generateCollegeMeta({
     ...collegeData,
     courses: collegeData.courses || null,
   })
@@ -655,7 +656,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   })
 
   // Generate FAQ structured data
-  const faqStructuredData = generateCollegeFAQStructuredData({
+  const faqStructuredData = await generateCollegeFAQStructuredData({
     ...college,
     courses: courses || null,
   })

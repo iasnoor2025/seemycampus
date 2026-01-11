@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { ScholarshipsListClient } from "@/components/scholarships/ScholarshipsListClient"
-import { baseUrl } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 import { isFeatureEnabled } from "@/lib/featureFlags"
 
 export const metadata: Metadata = {

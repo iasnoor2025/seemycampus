@@ -186,26 +186,27 @@ export function AdmissionPredictorClient() {
   return (
     <div className="space-y-8">
       {/* Input Form */}
-      <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-          <CardTitle className="text-white text-2xl">Enter Your Details</CardTitle>
-          <CardDescription className="text-white/90">
-            Provide your exam information to get admission probability predictions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="examName" className="text-base font-semibold text-gray-900">
-                Exam Name <span className="text-red-500">*</span>
-              </Label>
-              {mounted ? (
+      <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600">
+        <div className="p-8 md:p-10">
+          <div className="mb-8">
+            <h2 className="text-white text-2xl md:text-3xl font-bold mb-2">Enter Your Details</h2>
+            <p className="text-white/90 text-sm md:text-base">
+              Provide your exam information to get admission probability predictions
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="examName" className="text-white text-sm font-medium">
+                  Exam Name <span className="text-red-300">*</span>
+                </Label>
                 <Select 
                   value={examName || undefined} 
                   onValueChange={(value) => setExamName(value || "")} 
-                  disabled={loadingExams}
+                  disabled={loadingExams || !mounted}
                 >
-                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
+                  <SelectTrigger className="h-12 bg-white/95 border-0 hover:bg-white transition-colors text-gray-900">
                     <SelectValue placeholder={loadingExams ? "Loading..." : availableExams.length === 0 ? "No exams available" : "Select exam"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -222,24 +223,18 @@ export function AdmissionPredictorClient() {
                     )}
                   </SelectContent>
                 </Select>
-              ) : (
-                <div className="h-12 border-2 border-gray-200 rounded-md bg-background flex items-center px-3 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              )}
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-base font-semibold text-gray-900">
-                Category <span className="text-red-500">*</span>
-              </Label>
-              {mounted ? (
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-white text-sm font-medium">
+                  Category <span className="text-red-300">*</span>
+                </Label>
                 <Select
                   value={category || undefined}
                   onValueChange={(value) => setCategory(value || "")}
-                  disabled={!examName || loadingExams}
+                  disabled={!examName || loadingExams || !mounted}
                 >
-                  <SelectTrigger className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors">
+                  <SelectTrigger className="h-12 bg-white/95 border-0 hover:bg-white transition-colors text-gray-900">
                     <SelectValue placeholder={!examName ? "Select exam first" : availableCategories.length === 0 ? "No categories available" : "Select category"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -256,85 +251,81 @@ export function AdmissionPredictorClient() {
                     )}
                   </SelectContent>
                 </Select>
-              ) : (
-                <div className="h-12 border-2 border-gray-200 rounded-md bg-background flex items-center px-3 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="score" className="text-white text-sm font-medium">
+                  Score / Percentile
+                </Label>
+                <Input
+                  id="score"
+                  type="number"
+                  placeholder="Enter your score"
+                  value={score}
+                  onChange={(e) => setScore(e.target.value)}
+                  disabled={loading}
+                  className="h-12 bg-white/95 border-0 hover:bg-white transition-colors text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rank" className="text-white text-sm font-medium">
+                  Rank
+                </Label>
+                <Input
+                  id="rank"
+                  type="number"
+                  placeholder="Enter your rank"
+                  value={rank}
+                  onChange={(e) => setRank(e.target.value)}
+                  disabled={loading}
+                  className="h-12 bg-white/95 border-0 hover:bg-white transition-colors text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="courseName" className="text-white text-sm font-medium">
+                  Course Name <span className="text-white/70 text-xs font-normal">(Optional)</span>
+                </Label>
+                <Input
+                  id="courseName"
+                  type="text"
+                  placeholder="e.g., B.Tech, MBA"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  disabled={loading}
+                  className="h-12 bg-white/95 border-0 hover:bg-white transition-colors text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="score" className="text-base font-semibold text-gray-900">
-                Score / Percentile
-              </Label>
-              <Input
-                id="score"
-                type="number"
-                placeholder="Enter your score"
-                value={score}
-                onChange={(e) => setScore(e.target.value)}
-                disabled={loading}
-                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="rank" className="text-base font-semibold text-gray-900">
-                Rank
-              </Label>
-              <Input
-                id="rank"
-                type="number"
-                placeholder="Enter your rank"
-                value={rank}
-                onChange={(e) => setRank(e.target.value)}
-                disabled={loading}
-                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
-              />
-            </div>
-
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="courseName" className="text-base font-semibold text-gray-900">
-                Course Name <span className="text-gray-500 text-sm font-normal">(Optional)</span>
-              </Label>
-              <Input
-                id="courseName"
-                type="text"
-                placeholder="e.g., B.Tech, MBA"
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
-                disabled={loading}
-                className="h-12 border-2 border-gray-200 hover:border-blue-400 transition-colors"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button
-            onClick={handlePredict}
-            disabled={loading || !examName || !category || (!score && !rank)}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Predicting...
-              </>
-            ) : (
-              <>
-                <TrendingUp className="mr-2 h-5 w-5" />
-                Predict Admission Chances
-              </>
+            {error && (
+              <Alert variant="destructive" className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
+              </Alert>
             )}
-          </Button>
-        </CardContent>
-      </Card>
+
+            <Button
+              onClick={handlePredict}
+              disabled={loading || !examName || !category || (!score && !rank)}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Predicting...
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  Predict Admission Chances
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Results */}
       {predictions.length > 0 && (

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { EventRegistrationForm } from "@/components/events/EventRegistrationForm"
 import { CalendarButton } from "@/components/events/CalendarButton"
-import { baseUrl } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 
 interface EventPageProps {
   params: Promise<{ slug: string }>

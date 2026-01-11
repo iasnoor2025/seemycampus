@@ -1,4 +1,5 @@
 import { colleges, courses, studentAnswers } from "@/db/schema"
+import { generateRecommendationExplanation, type RecommendationContext } from "@/lib/ai/recommendationExplanations"
 
 interface QuizAnswers {
   interests?: string[] | null
@@ -17,6 +18,7 @@ interface CollegeWithCourses {
 export interface ScoredCollege extends CollegeWithCourses {
   score: number
   matchReasons: string[]
+  aiExplanation?: string // AI-generated personalized explanation
 }
 
 export function calculateCollegeScore(

@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import { FeeCalculatorClient } from "@/components/fee-calculator/FeeCalculatorClient"
-import { baseUrl } from "@/lib/seo/generateMeta"
+import { baseUrl } from "@/lib/constants"
 import { Calculator } from "lucide-react"
 
 export const metadata: Metadata = {
