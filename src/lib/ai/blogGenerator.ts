@@ -103,7 +103,7 @@ export async function generateBlogPost(
     return null
   }
 
-  const provider = getAIProvider()
+  const provider = await getAIProvider()
   if (!provider) {
     throw new Error(`AI provider not configured. ${getProviderErrorMessage()}`)
   }
