@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { generateEssay, analyzeEssay, checkPlagiarism, getTemplate } from "@/lib/ai/essayAssistance"
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    // Essay Assistant is a public feature - no authentication required
     const body = await request.json()
     const { action, ...data } = body
 
@@ -57,7 +51,10 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error in essay assistance:", error)
     return NextResponse.json(
-      { error: "Failed to process essay assistance request" },
+      { 
+        error: error.message || "Failed to process essay assistance request",
+        details: process.env.NODE_ENV === "development" ? error.stack : undefined
+      },
       { status: 500 }
     )
   }
