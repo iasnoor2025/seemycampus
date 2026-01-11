@@ -1,4 +1,6 @@
 import { Metadata } from "next"
+import { Suspense } from "react"
+import { MessageCircle } from "lucide-react"
 import { ChatInterface } from "@/components/chat/ChatInterface"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com"
@@ -30,8 +32,6 @@ export const metadata: Metadata = {
     canonical: `${baseUrl}/chat`,
   },
 }
-
-import { MessageCircle } from "lucide-react"
 
 export default function ChatPage() {
   return (
@@ -66,7 +66,16 @@ export default function ChatPage() {
       {/* Chat Interface */}
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <ChatInterface />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-[700px]">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
+                <p className="text-gray-600">Loading chatbot...</p>
+              </div>
+            </div>
+          }>
+            <ChatInterface />
+          </Suspense>
         </div>
       </section>
     </div>

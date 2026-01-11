@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Calculator, TrendingUp, FileText, GitCompare, Target, MessageSquare } from "lucide-react"
+import { Calculator, TrendingUp, FileText, GitCompare, Target } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
 const tools = [
@@ -44,14 +44,6 @@ const tools = [
     link: "/essay-assistant",
     gradient: "from-sky-500 to-blue-600",
     color: "text-sky-600"
-  },
-  {
-    name: "AI Chatbot",
-    description: "Get instant answers",
-    icon: <MessageSquare className="w-6 h-6" />,
-    link: "/chat",
-    gradient: "from-purple-500 to-pink-600",
-    color: "text-purple-600"
   }
 ]
 

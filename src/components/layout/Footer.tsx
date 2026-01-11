@@ -85,9 +85,8 @@ export function Footer() {
               <div className="mb-8">
                 <Link href="/" className="inline-block group">
                   <div className="relative">
-                    <div className="w-32 h-32 bg-white rounded-2xl flex items-center justify-center p-4 mb-4 shadow-2xl group-hover:shadow-white/50 transition-all duration-300 group-hover:scale-105 border-2 border-white/20">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl"></div>
-                      <div className="w-full h-full flex items-center justify-center relative z-10">
+                    <div className="w-32 h-32 flex items-center justify-center p-4 mb-4 transition-all duration-300 group-hover:scale-105">
+                      <div className="w-full h-full flex items-center justify-center">
                         <Image
                           src="/main-logo-footer.png"
                           alt="See My Campus Logo"
