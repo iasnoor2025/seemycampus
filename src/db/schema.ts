@@ -738,6 +738,7 @@ export const faqs = pgTable("faqs", {
   source: varchar("source", { length: 50 }).default("chat"), // chat, manual, admin
   viewCount: integer("view_count").default(0), // Track how many times this FAQ is viewed
   isActive: boolean("is_active").default(true), // Enable/disable FAQ visibility
+  isApproved: boolean("is_approved").default(false), // Admin approval required before showing on home page
   displayOrder: integer("display_order").default(0), // Order for display on home page
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

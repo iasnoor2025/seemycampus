@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
               })
               .where(eq(faqs.id, existingFaq.id))
           } else {
-            // Create new FAQ
+            // Create new FAQ - not approved by default, needs admin approval
             await db
               .insert(faqs)
               .values({
@@ -255,6 +255,7 @@ export async function POST(request: NextRequest) {
                 source: "chat",
                 viewCount: 1,
                 isActive: true,
+                isApproved: false, // Requires admin approval
                 displayOrder: 0,
               })
           }

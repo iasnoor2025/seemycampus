@@ -22,7 +22,8 @@ import {
   UserCheck,
   Shield,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  HelpCircle
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -98,6 +99,13 @@ const allMenuItems = [
     icon: BookOpen,
     roles: ["admin", "moderator", "staff"],
     featureKey: "dashboard_news",
+  },
+  {
+    title: "FAQs",
+    href: "/dashboard/faqs",
+    icon: HelpCircle,
+    roles: ["admin", "moderator"],
+    featureKey: null,
   },
   {
     title: "Courses",

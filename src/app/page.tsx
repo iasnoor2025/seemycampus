@@ -3,7 +3,11 @@ import dynamic from "next/dynamic"
 import { HeroSection } from "@/components/home/HeroSection"
 import { StatsSection } from "@/components/home/StatsSection"
 import { QuickToolsSection } from "@/components/home/QuickToolsSection"
+import { FAQSection } from "@/components/home/FAQSection"
 import { generateFAQStructuredData } from "@/lib/seo/generateMeta"
+import { db } from "@/db"
+import { faqs } from "@/db/schema"
+import { eq, asc, desc, and } from "drizzle-orm"
 
 // Lazy load below-the-fold sections for better initial load performance
 const FeaturedColleges = dynamic(() => import("@/components/colleges/FeaturedColleges").then(mod => ({ default: mod.FeaturedColleges })), {
@@ -80,20 +84,23 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  // Fetch FAQs from database
+  // Fetch FAQs directly from database - only approved and active FAQs
   let faqData: Array<{ question: string; answer: string }> = []
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    const response = await fetch(`${baseUrl}/api/faqs?limit=6`, {
-      cache: "no-store", // Always fetch fresh data
-    })
-    if (response.ok) {
-      const data = await response.json()
-      faqData = data.faqs?.map((faq: any) => ({
-        question: faq.question,
-        answer: faq.answer,
-      })) || []
-    }
+    const results = await db
+      .select({
+        question: faqs.question,
+        answer: faqs.answer,
+      })
+      .from(faqs)
+      .where(and(eq(faqs.isActive, true), eq(faqs.isApproved, true)))
+      .orderBy(asc(faqs.displayOrder), desc(faqs.viewCount), desc(faqs.createdAt))
+      .limit(6)
+
+    faqData = results.map((faq) => ({
+      question: faq.question,
+      answer: faq.answer,
+    }))
   } catch (error) {
     console.error("Error fetching FAQs:", error)
   }
@@ -101,31 +108,31 @@ export default async function Home() {
   // Fallback to default FAQs if database is empty
   if (faqData.length === 0) {
     faqData = [
-    {
-      question: "How do I secure MBA admission?",
-      answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus."
-    },
-    {
-      question: "What criteria for MBA admission?",
-      answer: "Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews."
-    },
-    {
-      question: "Steps for MBA admission?",
-      answer: "Research schools, build strong profile, prepare for exams, seek guidance from Seemycampus."
-    },
-    {
-      question: "BBA program admission process?",
-      answer: "12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews."
-    },
-    {
-      question: "How to secure BBA admission?",
-      answer: "Requires 12th marks (50-60%), application, documents. Seemycampus covers 60,000+ institutions."
-    },
-    {
-      question: "Top BBA colleges for 93%?",
-      answer: "Christ University, Loyola, St. Xavier's, NMIMS, Symbiosis. Get personalized guidance."
-    }
-  ]
+      {
+        question: "What about courses?",
+        answer: "Delhi offers a wide range of courses across various colleges. Popular B.Tech specializations include Civil, Electrical, and Computer Science and Engineering at colleges like Jamia Millia Islamia (JMI), Shri Devi Sri Jyotir Matha College, and Sri Aurobindo College. M.Tech programs in Civil, Electrical, and Computer Science and Engineering are available at JMI. For management programs, MBA and other postgraduate courses are offered by IIM Ahmedabad, Shri Ram College of Commerce (SRCC), and Jesus and Mary College. Undergraduate programs include BA, B.Com, and B.A. (Hons.) in various subjects at many colleges. Law programs are available at NALSAR University of Law. Explore 60,000+ institutions and 375,000+ courses on Seemycampus."
+      },
+      {
+        question: "Tell me about JMI fee",
+        answer: "Jamia Millia Islamia (JMI) fee structure: Undergraduate courses (BA, BSc, BCom) range from ₹13,500 - ₹15,000 per year. Postgraduate courses (MA, MSc, MCom) range from ₹16,800 - ₹18,300 per year. Integrated programs: BBA+MBA at ₹1,80,000 - ₹2,00,000 per year, and Integrated M.Sc. Physics/Chemistry/Biology at ₹1,30,000 - ₹1,50,000 per year. Ph.D. programs: ₹18,000 - ₹20,000 per year for fellowship students and ₹35,000 - ₹40,000 per year for self-financing students. Additional fees include: Admissions fee (₹1,000 - ₹2,000), Examination fee (₹500 - ₹1,000), and Library fee (₹500 - ₹1,000). These are general guidelines and may vary by course. Get detailed fee information on Seemycampus."
+      },
+      {
+        question: "Show me best colleges",
+        answer: "Congratulations on considering further education! Based on your interest in Delhi colleges, here are some top recommendations: Top Engineering Colleges: 1. Jamia Millia Islamia (JMI) - One of the premier central universities in India, offering excellent engineering programs. 2. Shri Devi Sri Jyotir Matha College - A private college with a strong focus on engineering and technology. 3. Sri Aurobindo College - Another prominent private college with a good reputation for engineering. Top Management Colleges: 1. Indian Institute of Management (IIM) Ahmedabad - One of India's top management institutes, offering world-class MBA programs. 2. Indian Institute of Technology (IIT) Delhi - A premier technical institute with a strong focus on management and entrepreneurship. Top Law Colleges: NALSAR University of Law offers excellent law programs. Explore 60,000+ institutions on Seemycampus to find your perfect college."
+      },
+      {
+        question: "How do I secure MBA admission?",
+        answer: "Gain work experience, ace entrance exams (GMAT/CAT/XAT), and get expert support from Seemycampus."
+      },
+      {
+        question: "What criteria for MBA admission?",
+        answer: "Accredited degree, entrance exam scores, work experience, GPA, essays, and interviews."
+      },
+      {
+        question: "BBA program admission process?",
+        answer: "12th-grade completion required. Submit transcripts, essays, recommendations, and attend interviews."
+      }
+    ]
   }
 
   const faqStructuredData = generateFAQStructuredData(faqData)
@@ -179,67 +186,8 @@ export default async function Home() {
       {/* Testimonials Section */}
       <TestimonialsSection />
 
-      {/* FAQ Section - Modern Design */}
-      <section className="py-20 bg-gradient-to-br from-white via-slate-50 to-blue-50/30 relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-medium text-sm">Got Questions?</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4 leading-tight">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto">
-              About College Admissions and Courses
-            </p>
-          </div>
-
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* FAQ Items */}
-            {faqData.map((faq, index) => {
-              const gradients = [
-                "from-blue-500 to-cyan-600",
-                "from-indigo-500 to-purple-600",
-                "from-violet-500 to-purple-600",
-                "from-teal-500 to-emerald-600",
-                "from-sky-500 to-blue-600",
-                "from-purple-500 to-pink-600"
-              ]
-              return (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 group"
-              >
-                {/* Number Badge */}
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${gradients[index % gradients.length]} text-white font-bold text-lg mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                  {index + 1}
-                </div>
-                
-                {/* Question */}
-                <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                  {faq.question}
-                </h3>
-                
-                {/* Answer */}
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {faq.answer}
-                </p>
-              </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+      {/* FAQ Section */}
+      <FAQSection faqs={faqData} />
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { faqs } from "@/db/schema"
-import { eq, desc, and } from "drizzle-orm"
+import { eq, desc, asc, and } from "drizzle-orm"
 
 // GET - Fetch FAQs for home page
 export async function GET(request: NextRequest) {
@@ -15,15 +15,15 @@ export async function GET(request: NextRequest) {
       results = await db
         .select()
         .from(faqs)
-        .where(and(eq(faqs.isActive, true), eq(faqs.category, category)))
-        .orderBy(desc(faqs.viewCount), desc(faqs.displayOrder), desc(faqs.createdAt))
+        .where(and(eq(faqs.isActive, true), eq(faqs.isApproved, true), eq(faqs.category, category)))
+        .orderBy(asc(faqs.displayOrder), desc(faqs.viewCount), desc(faqs.createdAt))
         .limit(limit)
     } else {
       results = await db
         .select()
         .from(faqs)
-        .where(eq(faqs.isActive, true))
-        .orderBy(desc(faqs.viewCount), desc(faqs.displayOrder), desc(faqs.createdAt))
+        .where(and(eq(faqs.isActive, true), eq(faqs.isApproved, true)))
+        .orderBy(asc(faqs.displayOrder), desc(faqs.viewCount), desc(faqs.createdAt))
         .limit(limit)
     }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         created: false,
       })
     } else {
-      // Create new FAQ
+      // Create new FAQ - not approved by default, needs admin approval
       const [newFaq] = await db
         .insert(faqs)
         .values({
@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
           source: "chat",
           viewCount: 1,
           isActive: true,
+          isApproved: false, // Requires admin approval
           displayOrder: 0,
         })
         .returning()
