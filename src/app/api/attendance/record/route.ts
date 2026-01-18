@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const scanDateTime = scanTime ? new Date(scanTime) : new Date()
 
     const result = await recordAttendance({
-      employeeId: empId,
+      employeeId,
       qrCodeData,
       scanTime: scanDateTime,
     })

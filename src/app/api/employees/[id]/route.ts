@@ -188,19 +188,22 @@ export async function DELETE(
 
     const result = await deleteEmployee(employeeId)
 
+    // Check if it was a hard delete (result has 'deleted' property)
+    const isHardDelete = "deleted" in result && result.deleted === true
+
     return NextResponse.json({
       success: true,
-      message: result.deleted
+      message: isHardDelete
         ? "Employee deleted successfully"
         : "Employee deactivated successfully",
-      employee: result.deleted
+      employee: isHardDelete
         ? { id: result.id, deleted: true }
         : {
             id: result.id,
-            name: result.name,
-            employeeId: result.employeeId,
-            email: result.email,
-            isActive: result.isActive,
+            name: (result as any).name,
+            employeeId: (result as any).employeeId,
+            email: (result as any).email,
+            isActive: (result as any).isActive,
           },
     })
   } catch (error: any) {

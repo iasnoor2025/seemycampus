@@ -76,8 +76,8 @@ export async function getCollegesByCity(city: string, page: number = 1, limit: n
     pagination: {
       currentPage: page,
       totalPages,
-      totalCount: Number(totalCount),
-      limit,
+      totalItems: Number(totalCount),
+      itemsPerPage: limit,
     },
   }
 }
@@ -150,8 +150,8 @@ export async function getCollegesByCategoryPaginated(category: string, page: num
     pagination: {
       currentPage: page,
       totalPages,
-      totalCount: totalCount.length,
-      limit,
+      totalItems: totalCount.length,
+      itemsPerPage: limit,
     },
   }
 }
@@ -214,8 +214,8 @@ export async function getCollegesByCategoryAndSubcategoryPaginated(
     pagination: {
       currentPage: page,
       totalPages,
-      totalCount: totalCount.length,
-      limit,
+      totalItems: totalCount.length,
+      itemsPerPage: limit,
     },
   }
 }
@@ -248,8 +248,8 @@ export async function getCollegesPaginated(page: number = 1, limit: number = 10,
     pagination: {
       currentPage: page,
       totalPages,
-      totalCount: totalCount.length,
-      limit,
+      totalItems: totalCount.length,
+      itemsPerPage: limit,
     },
   }
 }
