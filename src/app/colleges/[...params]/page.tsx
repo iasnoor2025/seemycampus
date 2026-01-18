@@ -200,10 +200,35 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Pass courses to meta generation for better SEO
-  return await generateCollegeMeta({
-    ...collegeData,
-    courses: collegeData.courses || null,
-  })
+  // Wrap in try-catch to ensure page renders even if AI fails
+  try {
+    return await generateCollegeMeta({
+      ...collegeData,
+      courses: collegeData.courses || null,
+    })
+  } catch (error: any) {
+    // If AI fails, return basic metadata so page still renders
+    console.error("Error generating college metadata:", error?.message || error)
+    return {
+      title: `${collegeData.name}${collegeData.location ? ` - ${collegeData.location}` : ""} | Admission, Courses, Fees, Placements | SeeMyCampus`,
+      description: collegeData.description || `Find complete information about ${collegeData.name} including admission process, courses, fees, placements, rankings, and cutoffs.`,
+      keywords: [
+        collegeData.name,
+        `${collegeData.name} admission`,
+        `${collegeData.name} courses`,
+        `${collegeData.name} fees`,
+      ],
+      openGraph: {
+        title: `${collegeData.name} | SeeMyCampus`,
+        description: collegeData.description || `Complete information about ${collegeData.name}`,
+        type: "website",
+        url: `${baseUrl}/colleges/${collegeData.slug}`,
+      },
+      alternates: {
+        canonical: `${baseUrl}/colleges/${collegeData.slug}`,
+      },
+    }
+  }
 }
 
 export default async function CollegesPage({ params, searchParams }: PageProps) {
@@ -219,9 +244,37 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
     if (categoryInfo) {
       // Category page (e.g., /colleges/design, /colleges/law, /colleges/commerce, /colleges/arts)
       const categoryName = categoryInfo.name
-      // Get colleges with pagination
-      const { colleges: collegesList, pagination } = await getCollegesByCategoryPaginated(categorySlug, currentPage, 10)
-      const categoryStats = await getCategoryStats(categoryName)
+      // Get colleges with pagination (with error handling)
+      let collegesList: any[] = []
+      let pagination = { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 }
+      let categoryStats = { 
+        totalColleges: 0, 
+        privateColleges: 0, 
+        governmentColleges: 0, 
+        averageRanking: null,
+        topColleges: [],
+        averagePackage: null,
+        highestPackage: null
+      }
+      
+      try {
+        const result = await getCollegesByCategoryPaginated(categorySlug, currentPage, 10)
+        collegesList = result.colleges || []
+        pagination = result.pagination || pagination
+      } catch (error) {
+        console.error("Error fetching colleges by category:", error)
+        // Use empty arrays/defaults - page will still render
+      }
+      
+      try {
+        const stats = await getCategoryStats(categoryName)
+        if (stats) {
+          categoryStats = stats
+        }
+      } catch (error) {
+        console.error("Error fetching category stats:", error)
+        // Use defaults - page will still render
+      }
       
       // Generate breadcrumb structured data
       const breadcrumbData = generateBreadcrumbList([
@@ -604,7 +657,13 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   
   // Otherwise, treat as individual college slug
   const slug = routeParams.join("/")
-  const collegeData = await getCollegeWithCourses(slug)
+  let collegeData
+  try {
+    collegeData = await getCollegeWithCourses(slug)
+  } catch (error) {
+    console.error("Error fetching college data:", error)
+    notFound()
+  }
 
   if (!collegeData) {
     notFound()
@@ -655,11 +714,18 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
     averageRating: averageRating,
   })
 
-  // Generate FAQ structured data
-  const faqStructuredData = await generateCollegeFAQStructuredData({
-    ...college,
-    courses: courses || null,
-  })
+  // Generate FAQ structured data (with error handling to ensure page renders)
+  let faqStructuredData: any = null
+  try {
+    faqStructuredData = await generateCollegeFAQStructuredData({
+      ...college,
+      courses: courses || null,
+    })
+  } catch (error: any) {
+    // Silently fail - FAQ structured data is optional
+    // Page will still render without it
+    console.error("Error generating FAQ structured data:", error?.message || error)
+  }
 
   // Fetch related content for internal linking
   const [relatedColleges, relatedScholarships, relatedExams] = await Promise.all([

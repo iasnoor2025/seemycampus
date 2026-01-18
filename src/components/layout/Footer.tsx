@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Mail, Globe, ChevronRight, Facebook, Instagram, Linkedin, Phone, MapPin, Send, Sparkles } from "lucide-react"
 import Image from "next/image"
 
+interface Category {
+  id: number
+  name: string
+  slug: string
+  displayOrder: number
+}
+
 export function Footer() {
   const [email, setEmail] = useState("")
   const [contactInfo, setContactInfo] = useState({
@@ -14,6 +21,7 @@ export function Footer() {
     phone: "+91-XXX-XXX-XXXX",
     address: "New Delhi, India",
   })
+  const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
     // Fetch contact information
@@ -24,6 +32,39 @@ export function Footer() {
       })
       .catch(() => {
         // Use defaults if fetch fails
+      })
+
+    // Fetch categories for footer links
+    fetch("/api/menu")
+      .then((res) => res.json())
+      .then((data) => {
+        // API returns { menu: [...] }, so check data.menu
+        const menuData = data?.menu || (Array.isArray(data) ? data : [])
+        if (Array.isArray(menuData) && menuData.length > 0) {
+          // Extract categories from menu structure
+          const footerCategories = menuData
+            .map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              slug: item.slug,
+              displayOrder: item.displayOrder || 0,
+            }))
+            .filter((cat: Category) => cat.slug) // Only include items with slugs
+            .sort((a: Category, b: Category) => a.displayOrder - b.displayOrder)
+            .slice(0, 5) // Limit to top 5 categories for footer
+          setCategories(footerCategories)
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching categories:", error)
+        // Fallback to default categories if API fails
+        setCategories([
+          { id: 1, name: "Management", slug: "management", displayOrder: 1 },
+          { id: 2, name: "Engineering", slug: "engineering", displayOrder: 2 },
+          { id: 3, name: "Medical", slug: "medical", displayOrder: 3 },
+          { id: 4, name: "Design", slug: "design", displayOrder: 4 },
+          { id: 5, name: "Law", slug: "law", displayOrder: 5 },
+        ])
       })
   }, [])
 
@@ -93,7 +134,7 @@ export function Footer() {
                           width={120}
                           height={120}
                           className="w-full h-full object-contain"
-                          quality={90}
+                          quality={75}
                           priority
                         />
                       </div>
@@ -147,36 +188,53 @@ export function Footer() {
                 Courses
               </h3>
               <ul className="space-y-3">
-                <li>
-                  <Link href="/colleges/management" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
-                    <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
-                    <span>Management</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/colleges/engineering" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
-                    <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
-                    <span>Engineering</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/colleges/medical" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
-                    <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
-                    <span>Medical</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/colleges/design" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
-                    <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
-                    <span>Design</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/colleges/law" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
-                    <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
-                    <span>Law</span>
-                  </Link>
-                </li>
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <li key={category.id}>
+                      <Link 
+                        href={`/colleges/${category.slug}`} 
+                        className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group"
+                      >
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>{category.name}</span>
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  // Fallback while loading or if no categories
+                  <>
+                    <li>
+                      <Link href="/colleges/management" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>Management</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/colleges/engineering" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>Engineering</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/colleges/medical" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>Medical</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/colleges/design" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>Design</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/colleges/law" className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group">
+                        <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
+                        <span>Law</span>
+                      </Link>
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 

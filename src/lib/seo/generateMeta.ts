@@ -65,8 +65,14 @@ async function enhanceDescriptionWithAI(
     additionalInfo?: string
   }
 ): Promise<string | null> {
-  const provider = await getAIProvider()
-  if (!provider) return null
+  let provider: AIProvider | null = null
+  try {
+    provider = await getAIProvider()
+    if (!provider) return null
+  } catch (error) {
+    // Provider initialization failed, fall back to database values
+    return null
+  }
 
   try {
     const prompt = `You are an SEO expert. Generate a compelling, SEO-optimized meta description (120-160 characters) for a college/university page.
@@ -112,8 +118,23 @@ Generate the optimized description:`
     }
 
     return null
-  } catch (error) {
-    console.error("AI description enhancement failed:", error)
+  } catch (error: any) {
+    // Silently fail and fall back to database values
+    // Only log unexpected errors (not service unavailable/timeout/connection issues)
+    const errorMsg = (error?.message || error?.toString() || "").toLowerCase()
+    const isExpectedError = 
+      errorMsg.includes("service unavailable") || 
+      errorMsg.includes("timed out") ||
+      errorMsg.includes("timeout") ||
+      errorMsg.includes("cannot connect") ||
+      errorMsg.includes("bad gateway") ||
+      errorMsg.includes("connection") ||
+      errorMsg.includes("econnrefused") ||
+      error?.name === "AbortError"
+    
+    if (!isExpectedError) {
+      console.error("AI description enhancement failed:", error?.message || error)
+    }
     return null
   }
 }
@@ -130,8 +151,14 @@ async function enhanceTitleWithAI(
     type?: string
   }
 ): Promise<string | null> {
-  const provider = await getAIProvider()
-  if (!provider) return null
+  let provider: AIProvider | null = null
+  try {
+    provider = await getAIProvider()
+    if (!provider) return null
+  } catch (error) {
+    // Provider initialization failed, fall back to database values
+    return null
+  }
 
   try {
     const prompt = `You are an SEO expert. Optimize this page title for better search rankings.
@@ -172,8 +199,23 @@ Generate the optimized title:`
     }
 
     return null
-  } catch (error) {
-    console.error("AI title enhancement failed:", error)
+  } catch (error: any) {
+    // Silently fail and fall back to database values
+    // Only log unexpected errors (not service unavailable/timeout/connection issues)
+    const errorMsg = (error?.message || error?.toString() || "").toLowerCase()
+    const isExpectedError = 
+      errorMsg.includes("service unavailable") || 
+      errorMsg.includes("timed out") ||
+      errorMsg.includes("timeout") ||
+      errorMsg.includes("cannot connect") ||
+      errorMsg.includes("bad gateway") ||
+      errorMsg.includes("connection") ||
+      errorMsg.includes("econnrefused") ||
+      error?.name === "AbortError"
+    
+    if (!isExpectedError) {
+      console.error("AI title enhancement failed:", error?.message || error)
+    }
     return null
   }
 }
@@ -192,8 +234,14 @@ async function generateKeywordsWithAI(
     accreditation?: string | null
   }
 ): Promise<string[] | null> {
-  const provider = await getAIProvider()
-  if (!provider) return null
+  let provider: AIProvider | null = null
+  try {
+    provider = await getAIProvider()
+    if (!provider) return null
+  } catch (error) {
+    // Provider initialization failed, fall back to database values
+    return null
+  }
 
   try {
     const courseNames = context.courses?.slice(0, 5).map((c) => c.name).join(", ") || "Not specified"
@@ -245,8 +293,23 @@ Generate the keywords:`
     }
 
     return null
-  } catch (error) {
-    console.error("AI keyword generation failed:", error)
+  } catch (error: any) {
+    // Silently fail and fall back to database values
+    // Only log unexpected errors (not service unavailable/timeout/connection issues)
+    const errorMsg = (error?.message || error?.toString() || "").toLowerCase()
+    const isExpectedError = 
+      errorMsg.includes("service unavailable") || 
+      errorMsg.includes("timed out") ||
+      errorMsg.includes("timeout") ||
+      errorMsg.includes("cannot connect") ||
+      errorMsg.includes("bad gateway") ||
+      errorMsg.includes("connection") ||
+      errorMsg.includes("econnrefused") ||
+      error?.name === "AbortError"
+    
+    if (!isExpectedError) {
+      console.error("AI keyword generation failed:", error?.message || error)
+    }
     return null
   }
 }
@@ -264,8 +327,14 @@ async function enhanceFAQAnswerWithAI(
     additionalContext?: string
   }
 ): Promise<string | null> {
-  const provider = await getAIProvider()
-  if (!provider) return null
+  let provider: AIProvider | null = null
+  try {
+    provider = await getAIProvider()
+    if (!provider) return null
+  } catch (error) {
+    // Provider initialization failed, fall back to database values
+    return null
+  }
 
   try {
     const prompt = `You are an educational content expert. Enhance this FAQ answer to be more natural, comprehensive, and helpful.
@@ -307,8 +376,23 @@ Generate the enhanced answer:`
     }
 
     return null
-  } catch (error) {
-    console.error("AI FAQ enhancement failed:", error)
+  } catch (error: any) {
+    // Silently fail and fall back to database values
+    // Only log unexpected errors (not service unavailable/timeout/connection issues)
+    const errorMsg = (error?.message || error?.toString() || "").toLowerCase()
+    const isExpectedError = 
+      errorMsg.includes("service unavailable") || 
+      errorMsg.includes("timed out") ||
+      errorMsg.includes("timeout") ||
+      errorMsg.includes("cannot connect") ||
+      errorMsg.includes("bad gateway") ||
+      errorMsg.includes("connection") ||
+      errorMsg.includes("econnrefused") ||
+      error?.name === "AbortError"
+    
+    if (!isExpectedError) {
+      console.error("AI FAQ enhancement failed:", error?.message || error)
+    }
     return null
   }
 }
@@ -460,61 +544,11 @@ export async function generateCollegeMeta(college: CollegeForMeta, useAI: boolea
     }
   }
   
-  // AI-powered description enhancement (optional, with fallback)
-  const aiEnabled = await isAIEnabled()
-  if (useAI && aiEnabled) {
-    const aiDescription = await enhanceDescriptionWithAI(description, {
-      name: collegeName,
-      location: location,
-      type: "College/University",
-      additionalInfo: `Ranking: ${college.ranking || "N/A"}, Established: ${college.establishedYear || "N/A"}, Accreditation: ${college.accreditation || "N/A"}`,
-    })
-    if (aiDescription) {
-      description = aiDescription
-    }
-  }
-  
-  // Ensure description is between 120-160 characters for optimal SEO
-  // But prioritize including full college name
-  if (description.length > 160) {
-    // Try to keep full name in first 160 chars
-    const nameIndex = description.toLowerCase().indexOf(collegeName.toLowerCase())
-    if (nameIndex > 0 && nameIndex < 50) {
-      // Name appears early, truncate from end
-      description = description.substring(0, 157) + "..."
-    } else {
-      // Name appears late, truncate but keep name
-      const beforeName = description.substring(0, nameIndex)
-      const nameAndAfter = description.substring(nameIndex)
-      if (beforeName.length + nameAndAfter.length > 160) {
-        description = beforeName.substring(0, Math.max(0, 160 - nameAndAfter.length - 3)) + "..." + nameAndAfter.substring(0, Math.min(nameAndAfter.length, 160 - beforeName.length))
-      }
-    }
-  } else if (description.length < 120) {
-    description += ` Find complete information about ${collegeName}${locationText} including admission, courses, fees, placements, and reviews.`
-  }
-  
   // Enhanced title with full college name first for better rankings
   // Put full name at the start for exact match searches
   let title = `${collegeName}${locationText ? ` - ${location}` : ""} | Admission 2025, Courses, Fees, Placements, Rankings, Cutoffs | SeeMyCampus`
   
-  // AI-powered title optimization (optional, with fallback)
-  if (useAI && aiEnabled) {
-    const aiTitle = await enhanceTitleWithAI(title, {
-      name: collegeName,
-      location: location,
-      type: "College/University",
-    })
-    if (aiTitle) {
-      title = aiTitle
-    }
-  }
-  const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
-    ? college.images[0] 
-    : (typeof college.images === 'string' ? college.images : undefined)
-
-  // Build comprehensive keywords array with more variations for better rankings
-  // Include full name, abbreviations, and common search variations
+  // Build comprehensive keywords array first (needed for AI enhancement)
   const keywords: string[] = [
     collegeName, // Full name first for exact match
     ...alternativeNames, // Add abbreviations (e.g., "JMI")
@@ -585,24 +619,100 @@ export async function generateCollegeMeta(college: CollegeForMeta, useAI: boolea
     })
   }
 
-  // AI-powered keyword generation (optional, with fallback)
+  // AI-powered enhancements (optional, with fallback)
+  // Run AI enhancements in parallel with timeout to avoid blocking page render
+  let aiEnabled = false
+  try {
+    aiEnabled = await isAIEnabled()
+  } catch (error) {
+    // If AI check fails, continue without AI
+    aiEnabled = false
+  }
+  
+  // Run all AI enhancements in parallel with timeout to avoid blocking page render
+  // Use Promise.race to timeout after 2 seconds max, ensuring fast page loads
   if (useAI && aiEnabled) {
-    const aiKeywords = await generateKeywordsWithAI(keywords, {
-      name: collegeName,
-      location: location,
-      courses: college.courses || null,
-      ranking: college.ranking || null,
-      accreditation: college.accreditation || null,
-    })
-    if (aiKeywords && aiKeywords.length > 0) {
-      // Merge AI keywords with existing ones, avoiding duplicates
-      aiKeywords.forEach((kw) => {
-        if (!keywords.includes(kw)) {
-          keywords.push(kw)
-        }
+    try {
+      // Create a timeout promise that resolves to null after 2 seconds
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), 2000)
       })
+      
+      // Run all AI enhancements in parallel
+      const aiEnhancementsPromise = Promise.allSettled([
+        enhanceDescriptionWithAI(description, {
+          name: collegeName,
+          location: location,
+          type: "College/University",
+          additionalInfo: `Ranking: ${college.ranking || "N/A"}, Established: ${college.establishedYear || "N/A"}, Accreditation: ${college.accreditation || "N/A"}`,
+        }).catch(() => null),
+        enhanceTitleWithAI(title, {
+          name: collegeName,
+          location: location,
+          type: "College/University",
+        }).catch(() => null),
+        generateKeywordsWithAI(keywords, {
+          name: collegeName,
+          location: location,
+          courses: college.courses || null,
+          ranking: college.ranking || null,
+          accreditation: college.accreditation || null,
+        }).catch(() => null),
+      ])
+      
+      // Race: either get results or timeout after 2 seconds
+      const raceResult: PromiseSettledResult<string | string[] | null>[] | null = await Promise.race([
+        aiEnhancementsPromise,
+        timeoutPromise.then(() => null)
+      ]) as PromiseSettledResult<string | string[] | null>[] | null
+      
+      // Process results if we got them before timeout
+      if (raceResult && Array.isArray(raceResult)) {
+        // Update description if AI enhancement succeeded
+        if (raceResult[0]?.status === "fulfilled" && raceResult[0].value) {
+          description = raceResult[0].value
+        }
+        // Update title if AI enhancement succeeded
+        if (raceResult[1]?.status === "fulfilled" && raceResult[1].value) {
+          title = raceResult[1].value
+        }
+        // Update keywords if AI enhancement succeeded
+        if (raceResult[2]?.status === "fulfilled" && raceResult[2].value && Array.isArray(raceResult[2].value) && raceResult[2].value.length > 0) {
+          raceResult[2].value.forEach((kw: string) => {
+            if (!keywords.includes(kw)) {
+              keywords.push(kw)
+            }
+          })
+        }
+      }
+    } catch (error) {
+      // Silently fail - use database values
     }
   }
+  
+  // Ensure description is between 120-160 characters for optimal SEO
+  // But prioritize including full college name
+  if (description.length > 160) {
+    // Try to keep full name in first 160 chars
+    const nameIndex = description.toLowerCase().indexOf(collegeName.toLowerCase())
+    if (nameIndex > 0 && nameIndex < 50) {
+      // Name appears early, truncate from end
+      description = description.substring(0, 157) + "..."
+    } else {
+      // Name appears late, truncate but keep name
+      const beforeName = description.substring(0, nameIndex)
+      const nameAndAfter = description.substring(nameIndex)
+      if (beforeName.length + nameAndAfter.length > 160) {
+        description = beforeName.substring(0, Math.max(0, 160 - nameAndAfter.length - 3)) + "..." + nameAndAfter.substring(0, Math.min(nameAndAfter.length, 160 - beforeName.length))
+      }
+    }
+  } else if (description.length < 120) {
+    description += ` Find complete information about ${collegeName}${locationText} including admission, courses, fees, placements, and reviews.`
+  }
+  
+  const imageUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
+    ? college.images[0] 
+    : (typeof college.images === 'string' ? college.images : undefined)
 
   return {
     title,
@@ -901,19 +1011,34 @@ export async function generateCollegeFAQStructuredData(college: CollegeWithDetai
   const admissionAnswer = `The admission process for ${college.name}${college.location ? ` in ${college.location}` : ""} typically involves${college.entranceExams && college.entranceExams.length > 0 ? ` entrance exams like ${college.entranceExams.slice(0, 3).join(", ")}` : " application submission"}. Visit the official website or contact the college directly for detailed admission requirements and deadlines.`
   
   let enhancedAdmissionAnswer = admissionAnswer
-  const aiEnabled = await isAIEnabled()
+  let aiEnabled = false
+  try {
+    aiEnabled = await isAIEnabled()
+  } catch (error) {
+    // If AI check fails, continue without AI
+    aiEnabled = false
+  }
+  
   if (useAI && aiEnabled) {
-    const aiAnswer = await enhanceFAQAnswerWithAI(
-      `What is the admission process for ${college.name}?`,
-      admissionAnswer,
-      {
-        collegeName: college.name,
-        location: college.location || null,
-        additionalContext: `Entrance Exams: ${college.entranceExams?.join(", ") || "Not specified"}`,
+    try {
+      // Add timeout to FAQ enhancement (1 second max)
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000))
+      const aiAnswerPromise = enhanceFAQAnswerWithAI(
+        `What is the admission process for ${college.name}?`,
+        admissionAnswer,
+        {
+          collegeName: college.name,
+          location: college.location || null,
+          additionalContext: `Entrance Exams: ${college.entranceExams?.join(", ") || "Not specified"}`,
+        }
+      ).catch(() => null)
+      
+      const aiAnswer: string | null = await Promise.race([aiAnswerPromise, timeoutPromise]) as string | null
+      if (aiAnswer) {
+        enhancedAdmissionAnswer = aiAnswer
       }
-    )
-    if (aiAnswer) {
-      enhancedAdmissionAnswer = aiAnswer
+    } catch (error) {
+      // Silently fail - use database answer
     }
   }
   
@@ -927,17 +1052,25 @@ export async function generateCollegeFAQStructuredData(college: CollegeWithDetai
   
   let enhancedFeesAnswer = feesAnswer
   if (useAI && aiEnabled) {
-    const aiAnswer = await enhanceFAQAnswerWithAI(
-      `What are the fees for ${college.name}?`,
-      feesAnswer,
-      {
-        collegeName: college.name,
-        location: college.location || null,
-        additionalContext: `Courses: ${college.courses?.length || 0} courses available`,
+    try {
+      // Add timeout to FAQ enhancement (1 second max)
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000))
+      const aiAnswerPromise = enhanceFAQAnswerWithAI(
+        `What are the fees for ${college.name}?`,
+        feesAnswer,
+        {
+          collegeName: college.name,
+          location: college.location || null,
+          additionalContext: `Courses: ${college.courses?.length || 0} courses available`,
+        }
+      ).catch(() => null)
+      
+      const aiAnswer: string | null = await Promise.race([aiAnswerPromise, timeoutPromise]) as string | null
+      if (aiAnswer) {
+        enhancedFeesAnswer = aiAnswer
       }
-    )
-    if (aiAnswer) {
-      enhancedFeesAnswer = aiAnswer
+    } catch (error) {
+      // Silently fail - use database answer
     }
   }
   
