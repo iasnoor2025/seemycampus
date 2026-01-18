@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         employeeId: record.employeeId,
         employeeName: record.employeeName,
         employeeEmail: record.employeeEmail,
-        date: record.date.toISOString().split("T")[0], // Format as YYYY-MM-DD
+        date: record.date, // Already in YYYY-MM-DD format (string from PostgreSQL date type)
         checkInTime: record.checkInTime,
         checkOutTime: record.checkOutTime,
         status: record.status,
