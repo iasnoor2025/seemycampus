@@ -61,6 +61,13 @@ const allMenuItems = [
     featureKey: null, // Attendance QR is always available for admins
   },
   {
+    title: "Attendance Records",
+    href: "/dashboard/attendance",
+    icon: Calendar,
+    roles: ["admin"],
+    featureKey: null, // Attendance Records is always available for admins
+  },
+  {
     title: "Colleges",
     href: "/dashboard/colleges",
     icon: Building2,
