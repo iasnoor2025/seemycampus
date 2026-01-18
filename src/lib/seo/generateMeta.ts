@@ -669,11 +669,11 @@ export async function generateCollegeMeta(college: CollegeForMeta, useAI: boolea
       // Process results if we got them before timeout
       if (raceResult && Array.isArray(raceResult)) {
         // Update description if AI enhancement succeeded
-        if (raceResult[0]?.status === "fulfilled" && raceResult[0].value) {
+        if (raceResult[0]?.status === "fulfilled" && raceResult[0].value && typeof raceResult[0].value === "string") {
           description = raceResult[0].value
         }
         // Update title if AI enhancement succeeded
-        if (raceResult[1]?.status === "fulfilled" && raceResult[1].value) {
+        if (raceResult[1]?.status === "fulfilled" && raceResult[1].value && typeof raceResult[1].value === "string") {
           title = raceResult[1].value
         }
         // Update keywords if AI enhancement succeeded

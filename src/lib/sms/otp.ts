@@ -38,7 +38,6 @@ export async function sendOTP(phone: string, otp: string): Promise<boolean> {
 
       try {
         // Dynamic import to avoid bundling Twilio in client code
-        // @ts-expect-error - twilio is an optional dependency
         const twilio = await import("twilio")
         const client = twilio.default(accountSid, authToken)
 
