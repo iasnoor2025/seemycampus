@@ -247,7 +247,15 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
       // Get colleges with pagination (with error handling)
       let collegesList: any[] = []
       let pagination = { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 }
-      let categoryStats = { 
+      let categoryStats: {
+        totalColleges: number
+        privateColleges: number
+        governmentColleges: number
+        averageRanking: number | null
+        topColleges: { name: string; slug: string; ranking: number | null; location: string | null }[]
+        averagePackage: number | null
+        highestPackage: number | null
+      } = { 
         totalColleges: 0, 
         privateColleges: 0, 
         governmentColleges: 0, 
