@@ -23,7 +23,9 @@ import {
   Shield,
   Sparkles,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  UserCog,
+  QrCode
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -43,6 +45,20 @@ const allMenuItems = [
     icon: FileText,
     roles: ["admin", "moderator", "staff", "counselor"],
     featureKey: "dashboard_leads",
+  },
+  {
+    title: "Employees",
+    href: "/dashboard/employees",
+    icon: UserCog,
+    roles: ["admin"],
+    featureKey: null, // Employees is always available for admins
+  },
+  {
+    title: "Attendance QR Code",
+    href: "/dashboard/attendance-qr",
+    icon: QrCode,
+    roles: ["admin"],
+    featureKey: null, // Attendance QR is always available for admins
   },
   {
     title: "Colleges",

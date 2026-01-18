@@ -25,8 +25,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isDashboard = pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin")
   const isAuth = pathname?.startsWith("/auth")
+  const isAttendanceQR = pathname === "/attendance-qr"
 
-  if (isDashboard || isAuth) {
+  if (isDashboard || isAuth || isAttendanceQR) {
     return <>{children}</>
   }
 

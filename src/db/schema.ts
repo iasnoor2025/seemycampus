@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, serial, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, serial, pgEnum, date, time } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Colleges table
@@ -785,6 +785,53 @@ export const featureFlags = pgTable("feature_flags", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Employees table - For attendance tracking system
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  employeeId: varchar("employee_id", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }), // Hashed password for login
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Daily QR Codes table - Stores daily QR codes for attendance
+export const dailyQRCodes = pgTable("daily_qr_codes", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull().unique(), // Date in YYYY-MM-DD format
+  qrCode: text("qr_code").notNull(), // QR code data (JSON string)
+  token: varchar("token", { length: 64 }).notNull(), // Validation token
+  expiresAt: timestamp("expires_at").notNull(), // Expires at end of day
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Attendance Records table - Store attendance records
+export const attendanceRecords = pgTable("attendance_records", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").references(() => employees.id, { onDelete: "cascade" }).notNull(),
+  date: date("date").notNull(),
+  checkInTime: time("check_in_time"),
+  checkOutTime: time("check_out_time"),
+  status: varchar("status", { length: 50 }).notNull(), // "present", "absent", "late"
+  syncedToSheets: boolean("synced_to_sheets").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Employees Relations
+export const employeesRelations = relations(employees, ({ many }) => ({
+  attendanceRecords: many(attendanceRecords),
+}));
+
+export const attendanceRecordsRelations = relations(attendanceRecords, ({ one }) => ({
+  employee: one(employees, {
+    fields: [attendanceRecords.employeeId],
+    references: [employees.id],
+  }),
+}));
 
 // Update colleges relations to include new tables
 export const collegesRelations = relations(colleges, ({ many }) => ({

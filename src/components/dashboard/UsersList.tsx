@@ -297,6 +297,8 @@ export function UsersList() {
         return "secondary"
       case USER_ROLES.COUNSELOR:
         return "secondary"
+      case USER_ROLES.EMPLOYEE:
+        return "secondary"
       default:
         return "outline"
     }
@@ -501,7 +503,9 @@ export function UsersList() {
                         </Select>
                       ) : (
                         <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {ROLE_DISPLAY_NAMES[(user.role as UserRole) || USER_ROLES.STUDENT]}
+                          {user.role && user.role in ROLE_DISPLAY_NAMES
+                            ? ROLE_DISPLAY_NAMES[user.role as UserRole]
+                            : user.role || "Student"}
                         </Badge>
                       )}
                     </TableCell>
@@ -624,7 +628,9 @@ export function UsersList() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {ROLE_DISPLAY_NAMES[(user.role as UserRole) || USER_ROLES.STUDENT]}
+                          {user.role && user.role in ROLE_DISPLAY_NAMES
+                            ? ROLE_DISPLAY_NAMES[user.role as UserRole]
+                            : user.role || "Student"}
                         </Badge>
                         {user.role !== USER_ROLES.ADMIN && (
                           <Button
