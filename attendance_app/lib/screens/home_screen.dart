@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   SyncStatus? _syncStatus;
   AttendanceStatus? _todayStatus;
   bool _isLoadingStatus = true;
+  bool _isInitialLoad = true;
+  Future<void>? _loadingFuture; // Track ongoing load operation to prevent concurrent loads
+  DateTime? _lastLoadTime; // Track last load time for debouncing
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   
@@ -40,8 +43,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
     _animationController.forward();
     
-    // Check session validity first
-    _checkSessionAndLoad();
+    // Load today's status immediately - don't wait for session check
+    _loadTodayStatus();
+    _loadSyncStatus();
+    
+    // Check session validity in parallel (non-blocking, but don't reload data)
+    _checkSessionValidity();
     
     // Start periodic session check (every 2 minutes)
     _startPeriodicSessionCheck();
@@ -56,9 +63,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Skip initial load - we already loaded in initState
+    if (_isInitialLoad) {
+      _isInitialLoad = false;
+      return;
+    }
+    
     // Refresh status when screen comes into focus (e.g., returning from scanner)
+    // Only refresh if we're not already loading
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && _loadingFuture == null && !_isLoadingStatus) {
         _loadTodayStatus();
       }
     });
@@ -118,24 +132,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
-  Future<void> _checkSessionAndLoad() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final user = authProvider.user;
-    
-    if (user != null && user.role == 'employee') {
-      // Check session validity immediately
-      await _checkSessionValidity();
-      
-      // If session check logged us out, don't continue loading
-      if (!mounted || authProvider.user == null) {
-        return;
-      }
-    }
-    
-    // Load data if session is valid
-    _loadTodayStatus();
-    _loadSyncStatus();
-  }
 
   @override
   void dispose() {
@@ -146,8 +142,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _loadTodayStatus() async {
+    // Prevent concurrent loads - if a load is already in progress, skip
+    if (_loadingFuture != null) {
+      print('[HomeScreen] Load already in progress, skipping duplicate call');
+      return;
+    }
+    
+    // Debounce: prevent loading if we just loaded less than 500ms ago
+    final now = DateTime.now();
+    if (_lastLoadTime != null && now.difference(_lastLoadTime!).inMilliseconds < 500) {
+      print('[HomeScreen] Load debounced - last load was ${now.difference(_lastLoadTime!).inMilliseconds}ms ago');
+      return;
+    }
+    
+    _lastLoadTime = now;
+    print('[HomeScreen] Starting _loadTodayStatus');
+    
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user;
+    
+    // Create and track the loading future
+    _loadingFuture = _performLoadTodayStatus(authProvider, user);
+    
+    try {
+      await _loadingFuture;
+    } finally {
+      // Clear the future when done
+      _loadingFuture = null;
+      print('[HomeScreen] Completed _loadTodayStatus');
+    }
+  }
+  
+  Future<void> _performLoadTodayStatus(AuthProvider authProvider, dynamic user) async {
+    // Set loading state at the start - ensure it's visible
+    if (mounted) {
+      setState(() {
+        _isLoadingStatus = true;
+      });
+    }
     
     if (user != null) {
       final employeeId = user.employeeId ?? user.id;
@@ -160,11 +192,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           userEmail: user.email,
           userRole: user.role,
         );
-        print('[HomeScreen] Today status loaded: checkedIn=${status?.checkedIn}, checkInTime=${status?.checkInTime}');
+        print('[HomeScreen] Today status loaded: checkedIn=${status?.checkedIn}, checkInTime=${status?.checkInTime}, status is null: ${status == null}');
         
         if (mounted) {
           setState(() {
-            _todayStatus = status;
+            _todayStatus = status; // This can be null when no record exists - UI will show "Not checked in today"
             _isLoadingStatus = false;
           });
         }
@@ -172,6 +204,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         print('[HomeScreen] Error loading today status: $e');
         if (mounted) {
           setState(() {
+            _todayStatus = null;
             _isLoadingStatus = false;
           });
         }
@@ -179,6 +212,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } else {
       if (mounted) {
         setState(() {
+          _todayStatus = null;
           _isLoadingStatus = false;
         });
       }
@@ -475,9 +509,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         final result = await Navigator.of(context).pushNamed('/scanner');
                         // Refresh status when returning from scanner
                         if (result == true || mounted) {
-                          setState(() {
-                            _isLoadingStatus = true;
-                          });
                           _loadTodayStatus();
                         }
                       },
@@ -651,9 +682,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               // Refresh button
               InkWell(
                 onTap: () {
-                  setState(() {
-                    _isLoadingStatus = true;
-                  });
                   _loadTodayStatus();
                 },
                 borderRadius: BorderRadius.circular(8),
