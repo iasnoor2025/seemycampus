@@ -119,15 +119,9 @@ export async function GET(request: NextRequest) {
       success: true,
       records: records.map((record) => {
         // Handle date - PostgreSQL date type returns as string in YYYY-MM-DD format
-        // But Drizzle might return it as Date object, so convert properly
-        let dateString: string
-        if (record.date instanceof Date) {
-          dateString = record.date.toISOString().split("T")[0]
-        } else if (typeof record.date === "string") {
-          dateString = record.date
-        } else {
-          dateString = String(record.date)
-        }
+        const dateString: string = typeof record.date === "string" 
+          ? record.date 
+          : String(record.date)
 
         return {
           id: record.id,

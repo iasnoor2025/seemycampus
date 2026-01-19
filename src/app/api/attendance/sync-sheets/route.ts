@@ -48,14 +48,10 @@ export async function POST(request: NextRequest) {
 
     // Format records for Google Sheets sync
     const recordsForSheets = pendingRecords.map((record) => {
-      let dateString: string
-      if (record.date instanceof Date) {
-        dateString = record.date.toISOString().split("T")[0]
-      } else if (typeof record.date === "string") {
-        dateString = record.date
-      } else {
-        dateString = String(record.date)
-      }
+      // PostgreSQL date type returns as string in YYYY-MM-DD format
+      const dateString: string = typeof record.date === "string" 
+        ? record.date 
+        : String(record.date)
 
       return {
         employeeId: record.employeeEmployeeId || String(record.employeeId),

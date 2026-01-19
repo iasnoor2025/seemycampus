@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
       .from(attendanceRecords)
       .where(
         and(
-          eq(attendanceRecords.employeeId, employeeId),
+          eq(attendanceRecords.employeeId, parseInt(employeeId)),
           eq(attendanceRecords.date, todayStr)
         )
       )
@@ -183,14 +183,10 @@ export async function GET(request: NextRequest) {
     const record = records[0]
     
     // Verify the record date matches today (safety check)
-    let recordDateStr: string
-    if (record.date instanceof Date) {
-      recordDateStr = record.date.toISOString().split('T')[0]
-    } else if (typeof record.date === 'string') {
-      recordDateStr = record.date
-    } else {
-      recordDateStr = String(record.date)
-    }
+    // PostgreSQL date type returns as string in YYYY-MM-DD format
+    const recordDateStr: string = typeof record.date === 'string' 
+      ? record.date 
+      : String(record.date)
     
     console.log(`[My Status API] Found record with date: ${recordDateStr}, Today: ${todayStr}`)
     
