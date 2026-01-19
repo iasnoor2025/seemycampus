@@ -194,7 +194,7 @@ class SyncService {
       // Check if session expired
       if (e is ApiException && e.requiresReauth) {
         // Session expired - stop syncing and notify
-        throw e; // Re-throw to be handled by caller
+        rethrow; // Re-throw to be handled by caller
       }
       // Network error or API error
       return false;

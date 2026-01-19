@@ -200,37 +200,27 @@ class AttendanceService {
   /// Get today's attendance status for current user
   /// First checks local storage, then fetches from API if not found
   Future<AttendanceStatus?> getTodayStatus(String employeeId, {String? employeeName, String? userEmail, String? userRole}) async {
-    print('[AttendanceService] Getting today status for employeeId: $employeeId');
-    
     // Get today's date in YYYY-MM-DD format
     final today = DateTime.now();
     final todayStr = today.toIso8601String().split('T')[0];
-    print('[AttendanceService] Today date: $todayStr');
     
     // Always fetch from API first to ensure we get today's latest data
     // Only use local storage as fallback if API fails
     try {
-      print('[AttendanceService] Fetching today status from API...');
-      print('[AttendanceService] Using userEmail: $userEmail, userRole: $userRole');
       final response = await _apiService.get(
         ApiConfig.myStatusEndpoint,
         userEmail: userEmail,
         userRole: userRole,
       );
       
-      print('[AttendanceService] API response: success=${response['success']}, hasRecord=${response['hasRecord']}, date=${response['date']}');
-      
       if (response['success'] == true) {
         // Verify the API returned data for today - REJECT if it's not today's data
         final apiDate = response['date'] as String?;
         if (apiDate != null && apiDate != todayStr) {
-          print('[AttendanceService] ERROR: API returned date $apiDate but today is $todayStr - REJECTING this data');
           return null; // Don't process yesterday's data as today's
         }
         
         if (response['hasRecord'] == true) {
-          print('[AttendanceService] API returned status: checkedIn=${response['checkedIn']}, checkOutTime=${response['checkOutTime']}, checkInTime=${response['checkInTime']}');
-          
           // Parse check-in and check-out times
           DateTime? checkInTime;
           DateTime? checkOutTime;
@@ -239,7 +229,6 @@ class AttendanceService {
             try {
               // Parse time string (HH:MM:SS) and combine with today's date
               final timeStr = response['checkInTime'] as String;
-              print('[AttendanceService] Parsing checkInTime: $timeStr');
               final timeParts = timeStr.split(':');
               if (timeParts.length >= 2) {
                 checkInTime = DateTime(
@@ -250,17 +239,15 @@ class AttendanceService {
                   int.parse(timeParts[1]),
                   timeParts.length > 2 ? int.parse(timeParts[2]) : 0,
                 );
-                print('[AttendanceService] Parsed checkInTime: $checkInTime');
               }
             } catch (e) {
-              print('[AttendanceService] Error parsing checkInTime: $e');
+              // Ignore parsing errors
             }
           }
           
           if (response['checkOutTime'] != null) {
             try {
               final timeStr = response['checkOutTime'] as String;
-              print('[AttendanceService] Parsing checkOutTime: $timeStr');
               final timeParts = timeStr.split(':');
               if (timeParts.length >= 2) {
                 checkOutTime = DateTime(
@@ -271,10 +258,9 @@ class AttendanceService {
                   int.parse(timeParts[1]),
                   timeParts.length > 2 ? int.parse(timeParts[2]) : 0,
                 );
-                print('[AttendanceService] Parsed checkOutTime: $checkOutTime');
               }
             } catch (e) {
-              print('[AttendanceService] Error parsing checkOutTime: $e');
+              // Ignore parsing errors
             }
           }
           
@@ -295,58 +281,40 @@ class AttendanceService {
             );
             
             try {
-              // Use insert with ConflictAlgorithm.replace to update if exists
               await _storageService.insertAttendanceRecord(apiRecord);
-              print('[AttendanceService] Saved API record to local storage: date=${apiRecord.date.toIso8601String().split('T')[0]}, checkInTime=$checkInTime');
             } catch (e) {
-              print('[AttendanceService] Error saving API record to local storage: $e');
+              // Ignore storage errors
             }
           }
-          
-          final checkInStatusValue = response['checkInStatus'] as String?;
-          print('[AttendanceService] API returned checkInStatus: $checkInStatusValue');
-          
-          final checkOutStatusValue = response['checkOutStatus'] as String?;
-          print('[AttendanceService] API returned checkOutStatus: $checkOutStatusValue');
           
           return AttendanceStatus(
             checkedIn: response['checkedIn'] as bool? ?? false,
             checkedOut: response['checkedOut'] as bool? ?? false,
             checkInTime: checkInTime,
             checkOutTime: checkOutTime,
-            checkInStatus: checkInStatusValue,
-            checkOutStatus: checkOutStatusValue,
+            checkInStatus: response['checkInStatus'] as String?,
+            checkOutStatus: response['checkOutStatus'] as String?,
           );
         } else {
-          print('[AttendanceService] API returned no record for today (hasRecord=false)');
           return null;
         }
       } else {
-        print('[AttendanceService] API returned success=false');
         return null;
       }
     } catch (e) {
-      print('[AttendanceService] Error fetching from API: $e');
       // If API fails, check local storage as fallback, but ONLY if it's for today
-      print('[AttendanceService] Falling back to local storage...');
       final localRecord = await _storageService.getTodayAttendanceRecord(employeeId);
       
       if (localRecord != null) {
         final recordDateStr = localRecord.date.toIso8601String().split('T')[0];
-        print('[AttendanceService] Local record date: $recordDateStr, Today: $todayStr');
         if (recordDateStr == todayStr) {
-          print('[AttendanceService] Using local record for today as fallback');
           return AttendanceStatus(
             checkedIn: localRecord.checkInTime != null,
             checkedOut: localRecord.checkOutTime != null,
             checkInTime: localRecord.checkInTime,
             checkOutTime: localRecord.checkOutTime,
           );
-        } else {
-          print('[AttendanceService] Local record is NOT for today ($recordDateStr vs $todayStr), returning null');
         }
-      } else {
-        print('[AttendanceService] No local record found for today');
       }
       return null;
     }

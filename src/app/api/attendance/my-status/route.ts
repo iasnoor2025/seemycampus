@@ -70,15 +70,6 @@ export async function GET(request: NextRequest) {
         .limit(1)
 
       if (employee.length === 0) {
-        console.log(`[My Status API] Employee not found for email: ${email}`)
-        
-        // Debug: Check if there are any employees at all
-        const allEmployees = await db.select().from(employees).limit(10)
-        console.log(`[My Status API] Total employees in DB: ${allEmployees.length}`)
-        allEmployees.forEach((emp, i) => {
-          console.log(`[My Status API] Employee ${i + 1}: id=${emp.id}, employeeId=${emp.employeeId}, email=${emp.email}`)
-        })
-        
         return NextResponse.json(
           { error: "Employee record not found" },
           { 
@@ -88,21 +79,6 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      console.log(`[My Status API] Found employee: id=${employee[0].id}, employeeId=${employee[0].employeeId}, email=${employee[0].email}`)
-      
-      // Check if there are multiple employees with this email (shouldn't happen, but debug)
-      const allEmployeesWithEmail = await db
-        .select()
-        .from(employees)
-        .where(eq(employees.email, email))
-      
-      if (allEmployeesWithEmail.length > 1) {
-        console.log(`[My Status API] WARNING: Found ${allEmployeesWithEmail.length} employees with email ${email}`)
-        allEmployeesWithEmail.forEach((emp, i) => {
-          console.log(`[My Status API] Duplicate ${i + 1}: id=${emp.id}, employeeId=${emp.employeeId}`)
-        })
-      }
-      
       employeeId = employee[0].id.toString()
     } else {
       // Session-based auth for web
@@ -174,107 +150,54 @@ export async function GET(request: NextRequest) {
     // Get today's date using the same utility function used throughout the codebase
     // This ensures consistency with how dates are stored in the database
     const todayStr = getDateString()
-    
-    console.log(`[My Status API] Today date: ${todayStr}, Employee ID (internal): ${employeeId}`)
 
-    // Get employee details for debugging
-    const employeeDetails = await db
+    // Get email from headers
+    const email = request.headers.get("x-user-email")
+    let records: any[] = []
+    
+    // Get all records for today, then filter by email
+    const allTodayRecordsWithEmployees = await db
       .select({
-        id: employees.id,
-        employeeId: employees.employeeId,
-        email: employees.email,
-        name: employees.name,
-      })
-      .from(employees)
-      .where(eq(employees.id, parseInt(employeeId)))
-      .limit(1)
-    
-    if (employeeDetails.length > 0) {
-      console.log(`[My Status API] Employee details: id=${employeeDetails[0].id}, employeeId=${employeeDetails[0].employeeId}, email=${employeeDetails[0].email}, name=${employeeDetails[0].name}`)
-    }
-
-    // Fetch today's attendance record
-    const records = await db
-      .select()
-      .from(attendanceRecords)
-      .where(
-        and(
-          eq(attendanceRecords.employeeId, parseInt(employeeId)),
-          eq(attendanceRecords.date, todayStr)
-        )
-      )
-      .limit(1)
-
-    console.log(`[My Status API] Query result: Found ${records.length} record(s) for employeeId=${employeeId}, date=${todayStr}`)
-    
-    // Debug: Check all records for this employee (all dates)
-    const allEmployeeRecords = await db
-      .select()
-      .from(attendanceRecords)
-      .where(eq(attendanceRecords.employeeId, parseInt(employeeId)))
-      .orderBy(desc(attendanceRecords.date))
-      .limit(5)
-    
-    console.log(`[My Status API] All records for employee (internal id=${employeeId}): ${allEmployeeRecords.length} found`)
-    allEmployeeRecords.forEach((r, i) => {
-      console.log(`[My Status API] Employee Record ${i + 1}: date=${r.date}, checkInTime=${r.checkInTime}, checkOutTime=${r.checkOutTime}`)
-    })
-    
-    // Debug: Check all records for today with employee info
-    const allTodayRecords = await db
-      .select({
-        recordId: attendanceRecords.id,
-        employeeId: attendanceRecords.employeeId,
-        date: attendanceRecords.date,
-        checkInTime: attendanceRecords.checkInTime,
-        checkOutTime: attendanceRecords.checkOutTime,
+        record: attendanceRecords,
         employeeEmail: employees.email,
-        employeeEmployeeId: employees.employeeId,
+        employeeId: employees.id,
+        employeeIdString: employees.employeeId,
+        employeeName: employees.name,
       })
       .from(attendanceRecords)
       .leftJoin(employees, eq(attendanceRecords.employeeId, employees.id))
       .where(eq(attendanceRecords.date, todayStr))
     
-    console.log(`[My Status API] All records for today (${todayStr}): ${allTodayRecords.length} total`)
-    allTodayRecords.forEach((r, i) => {
-      console.log(`[My Status API] Today Record ${i + 1}: employeeId (internal)=${r.employeeId}, employeeId (string)=${r.employeeEmployeeId}, email=${r.employeeEmail}, checkInTime=${r.checkInTime}, checkOutTime=${r.checkOutTime}`)
-    })
-
-    // If no record found by employeeId, try finding by email (fallback)
-    if (records.length === 0) {
-      console.log(`[My Status API] No record found by employeeId, trying fallback query by email...`)
+    // Filter by email if provided
+    if (email) {
+      const normalizedEmail = email.trim().toLowerCase()
+      const matchingRecords = allTodayRecordsWithEmployees.filter(r => {
+        const recordEmail = r.employeeEmail?.trim().toLowerCase()
+        return recordEmail === normalizedEmail
+      })
       
-      // Get email from request headers or employee details
-      const email = request.headers.get("x-user-email") || employeeDetails[0]?.email
-      
-      if (email) {
-        const recordsByEmail = await db
-          .select({
-            record: attendanceRecords,
-            employeeEmail: employees.email,
-          })
-          .from(attendanceRecords)
-          .leftJoin(employees, eq(attendanceRecords.employeeId, employees.id))
-          .where(
-            and(
-              eq(employees.email, email),
-              eq(attendanceRecords.date, todayStr)
-            )
-          )
-          .limit(1)
-        
-        console.log(`[My Status API] Fallback query by email (${email}): Found ${recordsByEmail.length} record(s)`)
-        
-        if (recordsByEmail.length > 0) {
-          console.log(`[My Status API] FOUND RECORD via fallback! employeeId in record=${recordsByEmail[0].record.employeeId}, employeeId we queried=${employeeId}`)
-          // Use the record found by email
-          records.push(recordsByEmail[0].record)
-        }
+      if (matchingRecords.length > 0) {
+        records = [matchingRecords[0].record]
       }
+    }
+    
+    // FALLBACK: If email filter didn't work, try by internal employeeId
+    if (records.length === 0) {
+      const recordsById = await db
+        .select()
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.employeeId, parseInt(employeeId)),
+            eq(attendanceRecords.date, todayStr)
+          )
+        )
+        .limit(1)
+      
+      records = recordsById
     }
 
     if (records.length === 0) {
-      console.log(`[My Status API] No record found - returning hasRecord=false`)
       return NextResponse.json({
         success: true,
         hasRecord: false,
@@ -290,31 +213,6 @@ export async function GET(request: NextRequest) {
     }
 
     const record = records[0]
-    
-    // Verify the record date matches today (safety check)
-    // PostgreSQL date type returns as string in YYYY-MM-DD format
-    const recordDateStr: string = typeof record.date === 'string' 
-      ? record.date 
-      : String(record.date)
-    
-    console.log(`[My Status API] Found record with date: ${recordDateStr}, Today: ${todayStr}`)
-    
-    // Only return the record if it's for today
-    if (recordDateStr !== todayStr) {
-      console.log(`[My Status API] WARNING: Record date (${recordDateStr}) doesn't match today (${todayStr}), returning no record`)
-      return NextResponse.json({
-        success: true,
-        hasRecord: false,
-        checkedIn: false,
-        checkedOut: false,
-        checkInTime: null,
-        checkOutTime: null,
-        status: 'absent',
-        date: todayStr,
-      }, {
-        headers: corsHeaders,
-      })
-    }
 
     // Get employee's shift timing for calculating checkInStatus and checkOutStatus if missing
     const [employeeRecord] = await db
@@ -352,9 +250,8 @@ export async function GET(request: NextRequest) {
             .update(attendanceRecords)
             .set({ checkInStatus: checkInStatus })
             .where(eq(attendanceRecords.id, record.id))
-          console.log(`[My Status API] Calculated and updated checkInStatus: ${checkInStatus}`)
         } catch (error) {
-          console.error(`[My Status API] Error updating checkInStatus:`, error)
+          console.error("Error updating checkInStatus:", error)
         }
       }
       
@@ -373,9 +270,8 @@ export async function GET(request: NextRequest) {
             .update(attendanceRecords)
             .set({ checkOutStatus: checkOutStatus })
             .where(eq(attendanceRecords.id, record.id))
-          console.log(`[My Status API] Calculated and updated checkOutStatus: ${checkOutStatus}`)
         } catch (error) {
-          console.error(`[My Status API] Error updating checkOutStatus:`, error)
+          console.error("Error updating checkOutStatus:", error)
         }
       }
     }

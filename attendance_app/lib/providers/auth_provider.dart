@@ -3,7 +3,6 @@ import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
-import '../services/api_service.dart' show ApiException;
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();

@@ -144,19 +144,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _loadTodayStatus() async {
     // Prevent concurrent loads - if a load is already in progress, skip
     if (_loadingFuture != null) {
-      print('[HomeScreen] Load already in progress, skipping duplicate call');
       return;
     }
     
     // Debounce: prevent loading if we just loaded less than 500ms ago
     final now = DateTime.now();
     if (_lastLoadTime != null && now.difference(_lastLoadTime!).inMilliseconds < 500) {
-      print('[HomeScreen] Load debounced - last load was ${now.difference(_lastLoadTime!).inMilliseconds}ms ago');
       return;
     }
     
     _lastLoadTime = now;
-    print('[HomeScreen] Starting _loadTodayStatus');
     
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user;
@@ -169,12 +166,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } finally {
       // Clear the future when done
       _loadingFuture = null;
-      print('[HomeScreen] Completed _loadTodayStatus');
     }
   }
   
   Future<void> _performLoadTodayStatus(AuthProvider authProvider, dynamic user) async {
-    // Set loading state at the start - ensure it's visible
+    // Set loading state at the start
     if (mounted) {
       setState(() {
         _isLoadingStatus = true;
@@ -183,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     
     if (user != null) {
       final employeeId = user.employeeId ?? user.id;
-      print('[HomeScreen] Loading today status for employeeId: $employeeId');
       
       try {
         final status = await _attendanceService.getTodayStatus(
@@ -192,16 +187,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           userEmail: user.email,
           userRole: user.role,
         );
-        print('[HomeScreen] Today status loaded: checkedIn=${status?.checkedIn}, checkInTime=${status?.checkInTime}, status is null: ${status == null}');
         
         if (mounted) {
           setState(() {
-            _todayStatus = status; // This can be null when no record exists - UI will show "Not checked in today"
+            _todayStatus = status;
             _isLoadingStatus = false;
           });
         }
       } catch (e) {
-        print('[HomeScreen] Error loading today status: $e');
         if (mounted) {
           setState(() {
             _todayStatus = null;

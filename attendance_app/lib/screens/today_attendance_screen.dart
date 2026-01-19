@@ -280,7 +280,7 @@ class _TodayAttendanceScreenState extends State<TodayAttendanceScreen> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF2C3E50),
+                                color: Color(0xFF2C3E50),
                               ),
                             ),
                           ),
@@ -572,7 +572,7 @@ class _TodayAttendanceScreenState extends State<TodayAttendanceScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3E50),
+                        color: Color(0xFF2C3E50),
                       ),
                     ),
                     const SizedBox(height: 8),
