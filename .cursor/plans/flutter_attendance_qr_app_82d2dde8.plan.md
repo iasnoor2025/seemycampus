@@ -156,6 +156,30 @@ content: Add error handling, loading states, and user feedback
 
 status: pending
 
+  - id: implement_shift_timing_feature
+
+content: Implement shift timing feature - admin can set global shift timings, app calculates early/late check-in/out status
+
+status: completed
+
+  - id: add_checkin_status_badges
+
+content: Add status badges (Early/On Time/Late) to Flutter app home screen for check-in and check-out
+
+status: completed
+
+  - id: add_admin_dashboard_status_badges
+
+content: Add status badges and total hours column to admin attendance records dashboard
+
+status: completed
+
+  - id: database_migration_shift_timing
+
+content: Run database migrations for shift timing columns (shift_start_time, shift_end_time, early_threshold_minutes, late_threshold_minutes, check_in_status, check_out_status)
+
+status: completed
+
 ---
 
 # Flutter Attendance QR Code App - Implementation Plan
@@ -384,7 +408,26 @@ export const dailyQRCodes = pgTable("daily_qr_codes", {
 })
 ```
 
-### Attendance Records Table
+### Employees Table (Updated with Shift Timing)
+
+```typescript
+export const employees = pgTable("employees", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  employeeId: varchar("employee_id", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  shiftStartTime: time("shift_start_time"), // Shift start time (e.g., "09:00:00")
+  shiftEndTime: time("shift_end_time"), // Shift end time (e.g., "17:00:00")
+  earlyThresholdMinutes: integer("early_threshold_minutes").default(15), // Minutes before shift to be considered "early"
+  lateThresholdMinutes: integer("late_threshold_minutes").default(15), // Minutes after shift to be considered "late"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
+```
+
+### Attendance Records Table (Updated with Status Fields)
 
 ```typescript
 export const attendanceRecords = pgTable("attendance_records", {
@@ -394,6 +437,8 @@ export const attendanceRecords = pgTable("attendance_records", {
   checkInTime: time("check_in_time"), // First scan of the day
   checkOutTime: time("check_out_time"), // Last scan of the day
   status: varchar("status", { length: 50 }).notNull(), // "present", "absent", "late"
+  checkInStatus: varchar("check_in_status", { length: 50 }), // "early", "on-time", "late" - calculated based on shift timing
+  checkOutStatus: varchar("check_out_status", { length: 50 }), // "early", "on-time", "late" - calculated based on shift timing
   syncedToSheets: boolean("synced_to_sheets").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -502,16 +547,31 @@ run_terminal_cmd
 8. ✅ Implement admin-only features (View History button)
 9. ✅ Fix alignment issues in header and spacing
 
-### Phase 9: Testing & Configuration - IN PROGRESS
+### Phase 9: Testing & Configuration - COMPLETED ✅
 
 1. ✅ Add environment configuration for API base URL (production/debug)
 2. ✅ Create configuration file for API endpoints
 3. ✅ Test offline functionality
 4. ✅ Test sync functionality
 5. ✅ Add error handling and user feedback
-6. ⏳ Test on physical devices
-7. ⏳ Performance optimization
-8. ⏳ Final UI polish and edge case handling
+6. ✅ Test on physical devices
+7. ✅ Performance optimization
+
+   - QR code caching (memory + SharedPreferences)
+   - Request timeout handling (30 seconds)
+   - Batch sync processing (5 records per batch)
+   - Debounced search (300ms delay)
+   - Database query optimization (indexes)
+
+8. ✅ Final UI polish and edge case handling
+
+   - Improved error messages with actionable steps
+   - Better empty states with action buttons
+   - Enhanced loading states
+   - Network error handling
+   - Retry mechanisms
+   - Form validation improvements
+   - Better user feedback for all actions
 
 ## Google Sheets Structure
 
@@ -538,9 +598,16 @@ src/app/api/
 │   ├── employees/
 │   │   └── route.ts          # GET /api/attendance/employees
 │   ├── record/
-│   │   └── route.ts          # POST /api/attendance/record
+│   │   └── route.ts          # POST /api/attendance/record (includes checkInStatus/checkOutStatus)
+│   ├── my-status/
+│   │   └── route.ts          # GET /api/attendance/my-status (returns today's status with check-in/out status)
+│   ├── records/
+│   │   └── route.ts          # GET /api/attendance/records (admin - all records with status)
 │   └── sync/
 │       └── route.ts          # POST /api/attendance/sync
+├── admin/
+│   └── shift-timing/
+│       └── route.ts          # GET/PUT /api/admin/shift-timing (manage global shift timing)
 └── employees/
     ├── route.ts              # GET, POST /api/employees
     └── [id]/
@@ -573,9 +640,16 @@ attendance_app/
 │   ├── services/
 │   │   ├── api_service.dart      # HTTP client for Next.js API
 │   │   ├── auth_service.dart     # Authentication handling
-│   │   ├── storage_service.dart  # Local SQLite operations
+│   │   ├── attendance_service.dart # Attendance logic with status support
+│   │   ├── storage_service.dart   # Local SQLite operations
+│   │   ├── database_service.dart  # Database schema (version 3 - includes check_out_status)
 │   │   └── sync_service.dart     # Sync queue management
-│   └── ...
+│   ├── models/
+│   │   ├── attendance_record.dart # Includes checkInStatus and checkOutStatus fields
+│   │   └── ...
+│   └── screens/
+│       ├── home_screen.dart       # Displays status badges for check-in/check-out
+│       └── ...
 ```
 
 ### Employee Management Library
@@ -584,7 +658,10 @@ attendance_app/
 src/lib/employees/
 ├── index.ts                 # Export employee functions
 ├── service.ts               # Employee CRUD operations
-└── utils.ts                 # QR code generation, validation
+├── utils.ts                 # QR code generation, validation, date utilities
+├── attendance.ts            # Attendance recording logic with shift timing
+├── shiftTiming.ts           # Shift timing utilities (calculateCheckInStatus, calculateCheckOutStatus)
+└── dailyQR.ts               # Daily QR code generation and validation
 ```
 
 ## Recent Updates & Improvements
@@ -612,6 +689,28 @@ src/lib/employees/
 - ✅ Enhanced error handling and debug logging
 - ✅ Offline sync with QR code data preservation
 - ✅ Production-ready API configuration
+
+### Shift Timing Feature Implementation (Latest) ✅
+
+- ✅ **Global Shift Timing System**: Admin can set one default shift timing for all employees (9 AM - 5 PM default)
+- ✅ **Check-In Status Calculation**: Automatically calculates "Early", "On Time", or "Late" based on check-in time vs shift start time
+- ✅ **Check-Out Status Calculation**: Automatically calculates "Left Early", "On Time", or "Left Late" based on check-out time vs shift end time
+- ✅ **Flutter App Badges**: 
+  - Check-In card shows green "Early", blue "On Time", or orange "Late" badge
+  - Check-Out card shows red "Left Early", blue "On Time", or orange "Left Late" badge
+- ✅ **Admin Dashboard Enhancements**:
+  - Status badges displayed next to check-in/check-out times
+  - "Total Hours" column calculates hours worked between check-in and check-out
+  - CSV export includes status fields and total hours
+- ✅ **Database Migrations**:
+  - Added `shift_start_time`, `shift_end_time`, `early_threshold_minutes`, `late_threshold_minutes` to employees table
+  - Added `check_in_status` and `check_out_status` to attendance_records table
+  - Migration scripts created and executed
+- ✅ **API Endpoints**:
+  - `/api/admin/shift-timing` - GET/PUT for managing global shift timing
+  - `/api/attendance/my-status` - Returns check-in/check-out status for employees
+  - `/api/attendance/records` - Returns status fields for admin dashboard
+- ✅ **Backward Compatibility**: API automatically calculates status for existing records that don't have it
 
 ### File Structure Updates
 
@@ -644,6 +743,44 @@ attendance_app/
 │       └── sync_service.dart     # Complete sync implementation
 └── pubspec.yaml                  # Updated with assets and mobile_scanner
 ```
+
+## Shift Timing Feature Details
+
+### How It Works
+
+1. **Admin Configuration**:
+
+   - Admin sets global shift timing via `/dashboard/employees` page
+   - Click "Shift Timing" button to configure:
+     - Shift Start Time (default: 09:00)
+     - Shift End Time (default: 17:00)
+     - Early Threshold (default: 15 minutes)
+     - Late Threshold (default: 15 minutes)
+   - Changes apply to ALL employees automatically
+
+2. **Check-In Status Calculation**:
+
+   - **Early**: Check-in time is more than threshold minutes BEFORE shift start
+   - **On Time**: Check-in time is within threshold window of shift start
+   - **Late**: Check-in time is more than threshold minutes AFTER shift start
+
+3. **Check-Out Status Calculation**:
+
+   - **Left Early**: Check-out time is more than threshold minutes BEFORE shift end (RED badge)
+   - **On Time**: Check-out time is within threshold window of shift end (BLUE badge)
+   - **Left Late**: Check-out time is more than threshold minutes AFTER shift end (ORANGE badge)
+
+4. **Display Locations**:
+
+   - **Flutter App Home Screen**: Badges appear below check-in/check-out times
+   - **Admin Dashboard**: Badges appear next to times in attendance records table
+   - **Total Hours**: Calculated and displayed in admin dashboard
+
+### Migration Scripts
+
+- `scripts/migrate-shift-timing.ts` - Adds shift timing columns and sets defaults
+- `scripts/migrate-checkout-status.ts` - Adds check_out_status column
+- Run with: `npm run db:migrate:shift-timing` and `npm run db:migrate:checkout-status`
 
 ## Important Notes
 

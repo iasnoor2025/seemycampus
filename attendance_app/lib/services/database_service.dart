@@ -20,7 +20,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3, // Incremented to add check_out_status column
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -37,6 +37,8 @@ class DatabaseService {
         check_in_time TEXT,
         check_out_time TEXT,
         status TEXT NOT NULL,
+        check_in_status TEXT,
+        check_out_status TEXT,
         synced_to_server INTEGER NOT NULL DEFAULT 0,
         qr_code_data TEXT,
         created_at TEXT NOT NULL,
@@ -57,8 +59,31 @@ class DatabaseService {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // Handle database migrations here
-    if (oldVersion < newVersion) {
-      // Add migration logic as needed
+    if (oldVersion < 2) {
+      // Add check_in_status column for shift timing feature
+      try {
+        await db.execute('''
+          ALTER TABLE attendance_records 
+          ADD COLUMN check_in_status TEXT
+        ''');
+        print('[DatabaseService] Added check_in_status column');
+      } catch (e) {
+        // Column might already exist, ignore error
+        print('[DatabaseService] check_in_status column may already exist: $e');
+      }
+    }
+    if (oldVersion < 3) {
+      // Add check_out_status column for check-out timing feature
+      try {
+        await db.execute('''
+          ALTER TABLE attendance_records 
+          ADD COLUMN check_out_status TEXT
+        ''');
+        print('[DatabaseService] Added check_out_status column');
+      } catch (e) {
+        // Column might already exist, ignore error
+        print('[DatabaseService] check_out_status column may already exist: $e');
+      }
     }
   }
 

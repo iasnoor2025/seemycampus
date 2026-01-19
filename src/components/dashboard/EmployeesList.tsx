@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Search, Plus, Edit, Trash2, CheckCircle, XCircle } from "lucide-react"
+import { Users, Search, Plus, Edit, Trash2, CheckCircle, XCircle, Smartphone, Clock, LogOut, Timer } from "lucide-react"
+import { format, formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -41,6 +42,19 @@ interface Employee {
   employeeId: string
   email: string
   isActive: boolean
+  shiftStartTime?: string | null
+  shiftEndTime?: string | null
+  earlyThresholdMinutes?: number | null
+  lateThresholdMinutes?: number | null
+  deviceInfo?: {
+    platform?: string
+    deviceModel?: string
+    deviceId?: string
+    osVersion?: string
+    appVersion?: string
+    manufacturer?: string
+  } | null
+  lastLogin?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -52,8 +66,10 @@ export function EmployeesList() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [shiftTimingDialogOpen, setShiftTimingDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
+  const [loadingShiftTiming, setLoadingShiftTiming] = useState(false)
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -68,6 +84,13 @@ export function EmployeesList() {
     email: "",
     password: "",
     isActive: true,
+  })
+
+  const [shiftTimingData, setShiftTimingData] = useState({
+    shiftStartTime: "",
+    shiftEndTime: "",
+    earlyThresholdMinutes: 15,
+    lateThresholdMinutes: 15,
   })
 
   useEffect(() => {
@@ -218,6 +241,37 @@ export function EmployeesList() {
     }
   }
 
+  const handleLogoutEmployee = async (employee: Employee) => {
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/logout`, {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: data.message || "Employee logged out successfully",
+        })
+        fetchEmployees()
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to logout employee",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error logging out employee:", error)
+      toast({
+        title: "Error",
+        description: "Failed to logout employee",
+        variant: "destructive",
+      })
+    }
+  }
+
   const openEditDialog = (employee: Employee) => {
     setSelectedEmployee(employee)
     setEditFormData({
@@ -227,6 +281,99 @@ export function EmployeesList() {
       isActive: employee.isActive,
     })
     setEditDialogOpen(true)
+  }
+
+  const openShiftTimingDialog = async () => {
+    // Open global shift timing dialog (applies to all employees)
+    setLoadingShiftTiming(true)
+    try {
+      const response = await fetch(`/api/admin/shift-timing`)
+      const data = await response.json()
+      
+      if (data.success) {
+        const timing = data.shiftTiming
+        // Convert time format from HH:MM:SS to HH:MM for input field
+        const formatTimeForInput = (timeStr: string | null | undefined) => {
+          if (!timeStr) return ""
+          return timeStr.substring(0, 5) // Take HH:MM part
+        }
+        
+        setShiftTimingData({
+          shiftStartTime: formatTimeForInput(timing.shiftStartTime),
+          shiftEndTime: formatTimeForInput(timing.shiftEndTime),
+          earlyThresholdMinutes: timing.earlyThresholdMinutes || 15,
+          lateThresholdMinutes: timing.lateThresholdMinutes || 15,
+        })
+      } else {
+        // Set defaults if fetch fails
+        setShiftTimingData({
+          shiftStartTime: "09:00",
+          shiftEndTime: "17:00",
+          earlyThresholdMinutes: 15,
+          lateThresholdMinutes: 15,
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching shift timing:", error)
+      // Set defaults on error
+      setShiftTimingData({
+        shiftStartTime: "09:00",
+        shiftEndTime: "17:00",
+        earlyThresholdMinutes: 15,
+        lateThresholdMinutes: 15,
+      })
+    } finally {
+      setLoadingShiftTiming(false)
+      setShiftTimingDialogOpen(true)
+    }
+  }
+
+  const handleShiftTimingUpdate = async () => {
+    setLoadingShiftTiming(true)
+    try {
+      // Convert HH:MM to HH:MM:SS format for database
+      const formatTimeForDB = (timeStr: string) => {
+        if (!timeStr) return null
+        return timeStr.length === 5 ? `${timeStr}:00` : timeStr
+      }
+      
+      const response = await fetch(`/api/admin/shift-timing`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shiftStartTime: formatTimeForDB(shiftTimingData.shiftStartTime),
+          shiftEndTime: formatTimeForDB(shiftTimingData.shiftEndTime),
+          earlyThresholdMinutes: shiftTimingData.earlyThresholdMinutes,
+          lateThresholdMinutes: shiftTimingData.lateThresholdMinutes,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: "Global shift timing updated for all employees",
+        })
+        setShiftTimingDialogOpen(false)
+        fetchEmployees() // Refresh to show updated shift timing
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to update shift timing",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating shift timing:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update shift timing",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingShiftTiming(false)
+    }
   }
 
   const openDeleteDialog = (employee: Employee) => {
@@ -279,6 +426,14 @@ export function EmployeesList() {
               onClick={() => setIsActiveFilter(false)}
             >
               Inactive
+            </Button>
+            <Button
+              variant="outline"
+              onClick={openShiftTimingDialog}
+              title="Manage global shift timing for all employees"
+            >
+              <Timer className="h-4 w-4 mr-2" />
+              Shift Timing
             </Button>
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>
@@ -364,6 +519,9 @@ export function EmployeesList() {
                     <TableHead>Name</TableHead>
                     <TableHead>Employee ID</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Shift Timing</TableHead>
+                    <TableHead>Device Info</TableHead>
+                    <TableHead>Last Login</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -373,8 +531,65 @@ export function EmployeesList() {
                   {filteredEmployees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell className="font-medium">{employee.name}</TableCell>
-                      <TableCell>{employee.employeeId}</TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                          {employee.employeeId}
+                        </code>
+                      </TableCell>
                       <TableCell>{employee.email}</TableCell>
+                      <TableCell>
+                        {employee.shiftStartTime ? (
+                          <div className="text-sm">
+                            <div className="font-medium">
+                              {employee.shiftStartTime.substring(0, 5)} - {employee.shiftEndTime?.substring(0, 5) || 'N/A'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Early: {employee.earlyThresholdMinutes || 15}min, Late: {employee.lateThresholdMinutes || 15}min
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Not set</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {employee.deviceInfo ? (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Smartphone className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium">
+                                {employee.deviceInfo.deviceModel || 'Unknown Device'}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {employee.deviceInfo.platform || 'Unknown'} {employee.deviceInfo.osVersion || ''}
+                              </div>
+                              {employee.deviceInfo.appVersion && (
+                                <div className="text-xs text-muted-foreground">
+                                  App v{employee.deviceInfo.appVersion}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Never logged in</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {employee.lastLogin ? (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium">
+                                {format(new Date(employee.lastLogin), 'MMM dd, yyyy')}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(employee.lastLogin), { addSuffix: true })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Never</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {employee.isActive ? (
                           <span className="flex items-center text-green-600">
@@ -393,6 +608,15 @@ export function EmployeesList() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLogoutEmployee(employee)}
+                            title="Force logout employee (invalidate session)"
+                            className={employee.lastLogin ? "" : "opacity-50"}
+                          >
+                            <LogOut className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -479,6 +703,94 @@ export function EmployeesList() {
               Cancel
             </Button>
             <Button onClick={handleEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Global Shift Timing Dialog */}
+      <Dialog open={shiftTimingDialogOpen} onOpenChange={setShiftTimingDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Global Shift Timing</DialogTitle>
+            <DialogDescription>
+              Set default shift start/end times and thresholds for all employees. This will apply to all employees automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="shift-start">Shift Start Time</Label>
+              <Input
+                id="shift-start"
+                type="time"
+                value={shiftTimingData.shiftStartTime}
+                onChange={(e) =>
+                  setShiftTimingData({ ...shiftTimingData, shiftStartTime: e.target.value })
+                }
+                placeholder="09:00"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Format: HH:MM (24-hour format)
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="shift-end">Shift End Time</Label>
+              <Input
+                id="shift-end"
+                type="time"
+                value={shiftTimingData.shiftEndTime}
+                onChange={(e) =>
+                  setShiftTimingData({ ...shiftTimingData, shiftEndTime: e.target.value })
+                }
+                placeholder="17:00"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Format: HH:MM (24-hour format)
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="early-threshold">Early Threshold (minutes)</Label>
+              <Input
+                id="early-threshold"
+                type="number"
+                min="0"
+                value={shiftTimingData.earlyThresholdMinutes}
+                onChange={(e) =>
+                  setShiftTimingData({
+                    ...shiftTimingData,
+                    earlyThresholdMinutes: parseInt(e.target.value) || 15,
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Minutes before shift start to be considered "early" (default: 15)
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="late-threshold">Late Threshold (minutes)</Label>
+              <Input
+                id="late-threshold"
+                type="number"
+                min="0"
+                value={shiftTimingData.lateThresholdMinutes}
+                onChange={(e) =>
+                  setShiftTimingData({
+                    ...shiftTimingData,
+                    lateThresholdMinutes: parseInt(e.target.value) || 15,
+                  })
+                }
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Minutes after shift start to be considered "late" (default: 15)
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShiftTimingDialogOpen(false)} disabled={loadingShiftTiming}>
+              Cancel
+            </Button>
+            <Button onClick={handleShiftTimingUpdate} disabled={loadingShiftTiming}>
+              {loadingShiftTiming ? "Saving..." : "Save Shift Timing"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

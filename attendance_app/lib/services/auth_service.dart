@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
+import '../services/device_info_service.dart';
 import '../config/api_config.dart';
 
 class AuthService {
@@ -45,11 +46,24 @@ class AuthService {
   /// Login with email and password
   Future<User> login(String email, String password) async {
     try {
+      // Get device info (optional - don't fail login if device info fails)
+      Map<String, String?>? deviceInfo;
+      try {
+        final deviceInfoService = DeviceInfoService();
+        await deviceInfoService.initialize();
+        deviceInfo = await deviceInfoService.getDeviceInfo();
+      } catch (e) {
+        // Log error but don't fail login
+        print('Warning: Could not collect device info: $e');
+        // Continue with login without device info
+      }
+      
       final response = await _apiService.post(
         ApiConfig.loginEndpoint,
         {
           'email': email,
           'password': password,
+          if (deviceInfo != null) 'deviceInfo': deviceInfo,
         },
       );
 

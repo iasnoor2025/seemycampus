@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { recordAttendance } from "@/lib/employees/attendance"
+import { isEmployeeSessionValid } from "@/lib/employees/session"
 
 // POST record attendance
 export async function POST(request: NextRequest) {
@@ -20,6 +21,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: "Employee ID is required" },
           { status: 400 }
+        )
+      }
+
+      // Check if employee session is still valid (not logged out by admin)
+      const isSessionValid = await isEmployeeSessionValid(employeeId)
+      if (!isSessionValid) {
+        return NextResponse.json(
+          { 
+            error: "Session expired. Please login again.",
+            requiresReauth: true,
+          },
+          { status: 401 }
         )
       }
     } else {
@@ -81,6 +94,8 @@ export async function POST(request: NextRequest) {
       type: result.type,
       message: result.message,
       record: result.record,
+      checkInStatus: result.record?.checkInStatus || null, // Include check-in status
+      checkOutStatus: result.record?.checkOutStatus || null, // Include check-out status
     })
   } catch (error: any) {
     console.error("Error recording attendance:", error)

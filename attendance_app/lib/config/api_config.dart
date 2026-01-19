@@ -47,8 +47,12 @@ class ApiConfig {
   static const String loginEndpoint = '/api/attendance/login';
   static const String dailyQREndpoint = '/api/attendance/daily-qr/public';
   static const String recordEndpoint = '/api/attendance/record';
-  static const String employeesEndpoint = '/api/attendance/employees';
   static const String syncEndpoint = '/api/attendance/sync';
+  static const String checkSessionEndpoint = '/api/attendance/check-session';
+  static const String allRecordsEndpoint = '/api/attendance/records'; // Admin only
+  static const String todayAttendanceEndpoint = '/api/attendance/today'; // Admin only - today's attendance
+  static const String myStatusEndpoint = '/api/attendance/my-status'; // Employee - get own today's status
+  static const String employeesEndpoint = '/api/employees'; // Admin only - get all employees
 
   // Helper method to build full URL
   static String getUrl(String endpoint) {

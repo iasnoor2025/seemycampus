@@ -6,7 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Download, RefreshCw, Search, User } from "lucide-react"
+import { Calendar, Download, RefreshCw, Search, User, Trash2 } from "lucide-react"
+import { useDebounce } from "@/lib/hooks/useDebounce"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { format } from "date-fns"
 
 interface AttendanceRecord {
@@ -14,12 +25,16 @@ interface AttendanceRecord {
   employeeId: number
   employeeName: string
   employeeEmail: string
+  employeeEmployeeId?: string
   date: string
   checkInTime: string | null
   checkOutTime: string | null
   status: string
+  checkInStatus: string | null
+  checkOutStatus: string | null
   syncedToSheets: boolean
   createdAt: string
+  updatedAt: string
 }
 
 export default function AttendancePage() {
@@ -27,6 +42,13 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [recordToDelete, setRecordToDelete] = useState<AttendanceRecord | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [syncingSheets, setSyncingSheets] = useState(false)
+  
+  // Debounce search term for performance
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   useEffect(() => {
     loadRecords()
@@ -35,24 +57,45 @@ export default function AttendancePage() {
   const loadRecords = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/attendance/records")
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+      
+      const response = await fetch("/api/attendance/records", {
+        signal: controller.signal,
+      })
+      
+      clearTimeout(timeoutId)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log("Loaded attendance records:", data.records?.length || 0)
         setRecords(data.records || [])
       } else {
-        console.error("Failed to load attendance records")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Failed to load attendance records:", response.status, errorData)
+        // Show error to user (using console for now, can add toast notification)
+        if (errorData.error) {
+          console.error("Error:", errorData.error)
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading attendance records:", error)
+      if (error.name === 'AbortError') {
+        console.error("Request timeout. Please check your connection and try again.")
+      } else {
+        console.error("Failed to load attendance records. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  // Use debounced search term for filtering
   const filteredRecords = records.filter((record) => {
     const matchesSearch =
-      record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.employeeEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      debouncedSearchTerm === "" ||
+      record.employeeName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      record.employeeEmail.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     const matchesDate = dateFilter === "" || record.date === dateFilter
     return matchesSearch && matchesDate
   })
@@ -60,6 +103,74 @@ export default function AttendancePage() {
   const formatTime = (time: string | null) => {
     if (!time) return "--"
     return time.substring(0, 5) // HH:mm format
+  }
+
+  const calculateTotalHours = (checkInTime: string | null, checkOutTime: string | null): string => {
+    if (!checkInTime || !checkOutTime) return "--"
+    
+    try {
+      const [inHours, inMinutes] = checkInTime.split(':').map(Number)
+      const [outHours, outMinutes] = checkOutTime.split(':').map(Number)
+      
+      const checkInMinutes = inHours * 60 + inMinutes
+      const checkOutMinutes = outHours * 60 + outMinutes
+      
+      // Handle case where check-out is next day (e.g., night shift)
+      let diffMinutes = checkOutMinutes - checkInMinutes
+      if (diffMinutes < 0) {
+        diffMinutes += 24 * 60 // Add 24 hours
+      }
+      
+      const hours = Math.floor(diffMinutes / 60)
+      const minutes = diffMinutes % 60
+      
+      return `${hours}h ${minutes}m`
+    } catch {
+      return "--"
+    }
+  }
+
+  const getStatusBadge = (status: string | null, type: 'check-in' | 'check-out') => {
+    if (!status) return null
+    
+    const isCheckOut = type === 'check-out'
+    const isEarly = status === 'early'
+    const isLate = status === 'late'
+    const isOnTime = status === 'on-time'
+    
+    let bgColor: string
+    let textColor: string
+    let label: string
+    
+    if (isEarly) {
+      if (isCheckOut) {
+        // Left Early = Red (bad)
+        bgColor = 'bg-red-100'
+        textColor = 'text-red-700'
+        label = 'Left Early'
+      } else {
+        // Checked In Early = Green (good)
+        bgColor = 'bg-green-100'
+        textColor = 'text-green-700'
+        label = 'Early'
+      }
+    } else if (isLate) {
+      bgColor = 'bg-orange-100'
+      textColor = 'text-orange-700'
+      label = isCheckOut ? 'Left Late' : 'Late'
+    } else if (isOnTime) {
+      bgColor = 'bg-blue-100'
+      textColor = 'text-blue-700'
+      label = 'On Time'
+    } else {
+      return null
+    }
+    
+    return (
+      <Badge variant="outline" className={`${bgColor} ${textColor} text-xs ml-1`}>
+        {label}
+      </Badge>
+    )
   }
 
   const formatDate = (dateString: string) => {
@@ -70,16 +181,76 @@ export default function AttendancePage() {
     }
   }
 
+  const handleDeleteClick = (record: AttendanceRecord) => {
+    setRecordToDelete(record)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!recordToDelete) return
+
+    try {
+      setDeleting(true)
+      const response = await fetch(`/api/attendance/records/${recordToDelete.id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        // Remove the record from the list
+        setRecords(records.filter((r) => r.id !== recordToDelete.id))
+        setDeleteDialogOpen(false)
+        setRecordToDelete(null)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Failed to delete attendance record:", errorData)
+        alert(errorData.error || "Failed to delete attendance record")
+      }
+    } catch (error) {
+      console.error("Error deleting attendance record:", error)
+      alert("Error deleting attendance record")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleSyncSheets = async () => {
+    try {
+      setSyncingSheets(true)
+      const response = await fetch("/api/attendance/sync-sheets", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`Successfully synced ${data.syncedCount} records to Google Sheets${data.failedCount > 0 ? `\n${data.failedCount} records failed to sync` : ""}`)
+        loadRecords() // Refresh to update sync status
+      } else {
+        alert(`Failed to sync: ${data.error || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error syncing to Google Sheets:", error)
+      alert("Error syncing to Google Sheets. Please try again.")
+    } finally {
+      setSyncingSheets(false)
+    }
+  }
+
   const exportToCSV = () => {
-    const headers = ["Date", "Employee Name", "Email", "Check-In", "Check-Out", "Status", "Synced"]
+    const headers = ["Date", "Employee Name", "Email", "Employee ID", "Check-In", "Check-In Status", "Check-Out", "Check-Out Status", "Total Hours", "Status", "Synced", "Created At"]
     const rows = filteredRecords.map((record) => [
-      formatDate(record.date),
+      record.date, // Use original date format
       record.employeeName,
       record.employeeEmail,
-      formatTime(record.checkInTime),
-      formatTime(record.checkOutTime),
+      record.employeeEmployeeId || String(record.employeeId),
+      record.checkInTime || "--",
+      record.checkInStatus || "--",
+      record.checkOutTime || "--",
+      record.checkOutStatus || "--",
+      calculateTotalHours(record.checkInTime, record.checkOutTime),
       record.status,
       record.syncedToSheets ? "Yes" : "No",
+      record.createdAt,
     ])
 
     const csvContent = [
@@ -109,6 +280,10 @@ export default function AttendancePage() {
           <Button onClick={loadRecords} variant="outline" disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
+          </Button>
+          <Button onClick={handleSyncSheets} variant="outline" disabled={syncingSheets}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncingSheets ? "animate-spin" : ""}`} />
+            {syncingSheets ? "Syncing..." : "Sync to Sheets"}
           </Button>
           <Button onClick={exportToCSV} variant="outline">
             <Download className="h-4 w-4 mr-2" />
@@ -182,10 +357,14 @@ export default function AttendancePage() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Employee</TableHead>
+                    <TableHead>Employee ID</TableHead>
                     <TableHead>Check-In</TableHead>
                     <TableHead>Check-Out</TableHead>
+                    <TableHead>Total Hours</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Synced</TableHead>
+                    <TableHead>Created At</TableHead>
+                    <TableHead className="w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -203,22 +382,36 @@ export default function AttendancePage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {record.checkInTime ? (
-                          <Badge variant="outline" className="bg-green-50">
-                            {formatTime(record.checkInTime)}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">--</span>
-                        )}
+                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                          {record.employeeEmployeeId || `ID: ${record.employeeId}`}
+                        </code>
                       </TableCell>
                       <TableCell>
-                        {record.checkOutTime ? (
-                          <Badge variant="outline" className="bg-blue-50">
-                            {formatTime(record.checkOutTime)}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">--</span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {record.checkInTime ? (
+                            <Badge variant="outline" className="bg-green-50">
+                              {formatTime(record.checkInTime)}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">--</span>
+                          )}
+                          {getStatusBadge(record.checkInStatus, 'check-in')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {record.checkOutTime ? (
+                            <Badge variant="outline" className="bg-blue-50">
+                              {formatTime(record.checkOutTime)}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">--</span>
+                          )}
+                          {getStatusBadge(record.checkOutStatus, 'check-out')}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {calculateTotalHours(record.checkInTime, record.checkOutTime)}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -245,6 +438,19 @@ export default function AttendancePage() {
                           </Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {format(new Date(record.createdAt), "MMM dd, HH:mm")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(record)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -253,6 +459,41 @@ export default function AttendancePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Attendance Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this attendance record? This action cannot be undone.
+              {recordToDelete && (
+                <div className="mt-4 p-3 bg-muted rounded-md">
+                  <div className="text-sm">
+                    <strong>Date:</strong> {formatDate(recordToDelete.date)}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Employee:</strong> {recordToDelete.employeeName} ({recordToDelete.employeeEmail})
+                  </div>
+                  <div className="text-sm">
+                    <strong>Check-In:</strong> {formatTime(recordToDelete.checkInTime)} | <strong>Check-Out:</strong> {formatTime(recordToDelete.checkOutTime)}
+                  </div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

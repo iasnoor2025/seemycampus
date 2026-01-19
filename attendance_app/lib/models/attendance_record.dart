@@ -6,6 +6,8 @@ class AttendanceRecord {
   final DateTime? checkInTime;
   final DateTime? checkOutTime;
   final String status; // "present", "absent", "late"
+  final String? checkInStatus; // "early", "on-time", "late", or null
+  final String? checkOutStatus; // "early", "on-time", "late", or null
   final bool syncedToServer;
   final String? qrCodeData; // Original QR code data for syncing
   final DateTime createdAt;
@@ -19,6 +21,8 @@ class AttendanceRecord {
     this.checkInTime,
     this.checkOutTime,
     required this.status,
+    this.checkInStatus,
+    this.checkOutStatus,
     this.syncedToServer = false,
     this.qrCodeData,
     required this.createdAt,
@@ -38,6 +42,8 @@ class AttendanceRecord {
           ? DateTime.parse(json['checkOutTime'] as String)
           : null,
       status: json['status'] as String,
+      checkInStatus: json['checkInStatus'] as String?,
+      checkOutStatus: json['checkOutStatus'] as String?,
       syncedToServer: (json['syncedToServer'] as bool?) ?? false,
       qrCodeData: json['qrCodeData'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -56,6 +62,8 @@ class AttendanceRecord {
       'checkInTime': checkInTime?.toIso8601String(),
       'checkOutTime': checkOutTime?.toIso8601String(),
       'status': status,
+      'checkInStatus': checkInStatus,
+      'checkOutStatus': checkOutStatus,
       'syncedToServer': syncedToServer,
       'qrCodeData': qrCodeData,
       'createdAt': createdAt.toIso8601String(),
@@ -72,6 +80,8 @@ class AttendanceRecord {
       'check_in_time': checkInTime?.toIso8601String(),
       'check_out_time': checkOutTime?.toIso8601String(),
       'status': status,
+      'check_in_status': checkInStatus,
+      'check_out_status': checkOutStatus,
       'synced_to_server': syncedToServer ? 1 : 0,
       'qr_code_data': qrCodeData,
       'created_at': createdAt.toIso8601String(),
@@ -92,6 +102,8 @@ class AttendanceRecord {
           ? DateTime.parse(map['check_out_time'] as String)
           : null,
       status: map['status'] as String,
+      checkInStatus: map['check_in_status'] as String?,
+      checkOutStatus: map['check_out_status'] as String?,
       syncedToServer: (map['synced_to_server'] as int? ?? 0) == 1,
       qrCodeData: map['qr_code_data'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
@@ -109,6 +121,8 @@ class AttendanceRecord {
     DateTime? checkInTime,
     DateTime? checkOutTime,
     String? status,
+    String? checkInStatus,
+    String? checkOutStatus,
     bool? syncedToServer,
     String? qrCodeData,
     DateTime? createdAt,
@@ -122,6 +136,8 @@ class AttendanceRecord {
       checkInTime: checkInTime ?? this.checkInTime,
       checkOutTime: checkOutTime ?? this.checkOutTime,
       status: status ?? this.status,
+      checkInStatus: checkInStatus ?? this.checkInStatus,
+      checkOutStatus: checkOutStatus ?? this.checkOutStatus,
       syncedToServer: syncedToServer ?? this.syncedToServer,
       qrCodeData: qrCodeData ?? this.qrCodeData,
       createdAt: createdAt ?? this.createdAt,

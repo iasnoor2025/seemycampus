@@ -41,9 +41,20 @@ class _LoginScreenState extends State<LoginScreen> {
       final errorMsg = authProvider.errorMessage ?? 'Login failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMsg),
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  errorMsg,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: 'Dismiss',
             textColor: Colors.white,
@@ -60,17 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE0E5EC), // Light Neumorphism background
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colorScheme.primary.withOpacity(0.1),
-              Colors.white,
-              colorScheme.secondary.withOpacity(0.05),
-            ],
-          ),
+        decoration: const BoxDecoration(
+          color: Color(0xFFE0E5EC),
         ),
         child: SafeArea(
           child: Center(
@@ -88,13 +92,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFFE0E5EC), // Light Neumorphism background
                         shape: BoxShape.circle,
                         boxShadow: [
+                          // Embossed effect
                           BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            color: Colors.white.withOpacity(0.8),
+                            offset: const Offset(-6, -6),
+                            blurRadius: 12,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            offset: const Offset(6, 6),
+                            blurRadius: 12,
                           ),
                         ],
                       ),
@@ -120,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'SeeMyCampus',
                       style: theme.textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey[900],
+                            color: const Color(0xFF2C3E50),
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -137,19 +147,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Email Field
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFFE0E5EC), // Light Neumorphism background
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
+                          // Embossed effect
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: Colors.white.withOpacity(0.8),
+                            offset: const Offset(-4, -4),
+                            blurRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            offset: const Offset(4, 4),
+                            blurRadius: 8,
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Color(0xFF2C3E50)),
                         decoration: InputDecoration(
                           labelText: 'Email',
                           labelStyle: TextStyle(color: Colors.grey[600]),
@@ -159,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: Colors.transparent,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 18,
@@ -181,19 +198,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Password Field
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFFE0E5EC), // Light Neumorphism background
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
+                          // Embossed effect
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: Colors.white.withOpacity(0.8),
+                            offset: const Offset(-4, -4),
+                            blurRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            offset: const Offset(4, 4),
+                            blurRadius: 8,
                           ),
                         ],
                       ),
                       child: TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        style: const TextStyle(color: Color(0xFF2C3E50)),
                         decoration: InputDecoration(
                           labelText: 'Password',
                           labelStyle: TextStyle(color: Colors.grey[600]),
@@ -216,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: Colors.transparent,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 20,
                             vertical: 18,
@@ -240,12 +264,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       builder: (context, authProvider, child) {
                         return Container(
                           decoration: BoxDecoration(
+                            color: const Color(0xFFE0E5EC), // Light Neumorphism background
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
+                              // Embossed effect
                               BoxShadow(
-                                color: colorScheme.primary.withOpacity(0.4),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
+                                color: Colors.white.withOpacity(0.8),
+                                offset: const Offset(-4, -4),
+                                blurRadius: 8,
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(4, 4),
+                                blurRadius: 8,
                               ),
                             ],
                           ),

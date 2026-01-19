@@ -28,6 +28,16 @@ class ApiService {
     return headers;
   }
 
+  /// Set user info headers for admin API calls
+  void setUserInfoHeaders(Map<String, String> headers, String? email, String? role) {
+    if (email != null) {
+      headers['x-user-email'] = email;
+    }
+    if (role != null) {
+      headers['x-user-role'] = role;
+    }
+  }
+
   Future<Map<String, dynamic>> post(
     String endpoint,
     Map<String, dynamic> body,
@@ -46,6 +56,14 @@ class ApiService {
         Uri.parse(url),
         headers: _headers,
         body: jsonEncode(body),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw ApiException(
+            message: 'Request timeout. Please check your internet connection.',
+            statusCode: 0,
+          );
+        },
       );
       
       // Debug logging
@@ -105,19 +123,34 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> get(String endpoint) async {
+  Future<Map<String, dynamic>> get(String endpoint, {String? userEmail, String? userRole}) async {
     try {
       final url = ApiConfig.getUrl(endpoint);
+      
+      // Add user info headers if provided (for admin endpoints)
+      final headers = Map<String, String>.from(_headers);
+      if (userEmail != null && userRole != null) {
+        headers['x-user-email'] = userEmail;
+        headers['x-user-role'] = userRole;
+      }
       
       // Debug logging (remove in production)
       if (const bool.fromEnvironment('dart.vm.product') == false) {
         print('API Request: GET $url');
-        print('Headers: $_headers');
+        print('Headers: $headers');
       }
       
       final response = await http.get(
         Uri.parse(url),
-        headers: _headers,
+        headers: headers,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw ApiException(
+            message: 'Request timeout. Please check your internet connection.',
+            statusCode: 0,
+          );
+        },
       );
       
       // Debug logging
@@ -144,6 +177,15 @@ class ApiService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return responseData;
       } else {
+        // Check if session expired (requires reauth)
+        if (response.statusCode == 401 && responseData['requiresReauth'] == true) {
+          throw ApiException(
+            message: responseData['error'] as String? ?? 'Session expired. Please login again.',
+            statusCode: response.statusCode,
+            requiresReauth: true,
+          );
+        }
+        
         throw ApiException(
           message: responseData['error'] as String? ?? 
                    'Request failed with status ${response.statusCode}',
@@ -181,8 +223,13 @@ class ApiService {
 class ApiException implements Exception {
   final String message;
   final int statusCode;
+  final bool requiresReauth;
 
-  ApiException({required this.message, required this.statusCode});
+  ApiException({
+    required this.message,
+    required this.statusCode,
+    this.requiresReauth = false,
+  });
 
   @override
   String toString() => message;

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { email, password } = body
+    const { email, password, deviceInfo } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -96,6 +96,19 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Update last login and device info if user is an employee
+      if (userRole === "employee" && employeeId) {
+        await db
+          .update(employees)
+          .set({
+            lastLogin: new Date(),
+            lastLogout: null, // Clear logout timestamp on successful login
+            deviceInfo: deviceInfo || null,
+            updatedAt: new Date(),
+          })
+          .where(eq(employees.employeeId, employeeId))
+      }
+
       // Generate a simple token for Flutter app
       // In production, use JWT or a proper token system
       const token = crypto
@@ -149,6 +162,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if employee was logged out by admin (device info cleared)
+    // If deviceInfo is null but employee has logged in before, they need to re-login
+    // This check happens naturally since we update deviceInfo on login
+
     const isValid = await bcrypt.compare(password, employee[0].password || "")
 
     if (!isValid) {
@@ -160,6 +177,17 @@ export async function POST(request: NextRequest) {
         }
       )
     }
+
+    // Update last login and device info, clear lastLogout
+    await db
+      .update(employees)
+      .set({
+        lastLogin: new Date(),
+        lastLogout: null, // Clear logout timestamp on successful login
+        deviceInfo: deviceInfo || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(employees.id, employee[0].id))
 
     // Generate a simple token for Flutter app
     // In production, use JWT or a proper token system

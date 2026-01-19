@@ -7,26 +7,61 @@ class StorageService {
 
   /// Insert a new attendance record
   Future<int> insertAttendanceRecord(AttendanceRecord record) async {
-    final db = await _dbService.database;
-    return await db.insert(
-      'attendance_records',
-      record.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    try {
+      print('[StorageService] Inserting record: employeeId=${record.employeeId}, date=${record.date.toIso8601String().split('T')[0]}, checkInTime=${record.checkInTime}');
+      final db = await _dbService.database;
+      final recordMap = record.toMap();
+      print('[StorageService] Record map: $recordMap');
+      
+      final result = await db.insert(
+        'attendance_records',
+        recordMap,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      
+      print('[StorageService] Record inserted successfully with id: $result');
+      
+      // Verify insertion
+      final verifyMaps = await db.query(
+        'attendance_records',
+        where: 'employee_id = ? AND date = ?',
+        whereArgs: [record.employeeId, record.date.toIso8601String().split('T')[0]],
+        limit: 1,
+      );
+      print('[StorageService] Verification query returned ${verifyMaps.length} records');
+      
+      return result;
+    } catch (e, stackTrace) {
+      print('[StorageService] ERROR inserting record: $e');
+      print('[StorageService] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   /// Get all attendance records
   Future<List<AttendanceRecord>> getAllAttendanceRecords() async {
-    final db = await _dbService.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'attendance_records',
-      orderBy: 'date DESC, created_at DESC',
-    );
+    try {
+      print('[StorageService] Getting all attendance records');
+      final db = await _dbService.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'attendance_records',
+        orderBy: 'date DESC, created_at DESC',
+      );
 
-    return List.generate(
-      maps.length,
-      (i) => AttendanceRecord.fromMap(maps[i]),
-    );
+      print('[StorageService] Found ${maps.length} total records in database');
+      if (maps.isNotEmpty) {
+        print('[StorageService] First record: ${maps.first}');
+      }
+
+      return List.generate(
+        maps.length,
+        (i) => AttendanceRecord.fromMap(maps[i]),
+      );
+    } catch (e, stackTrace) {
+      print('[StorageService] ERROR getting all records: $e');
+      print('[StorageService] Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   /// Get attendance records for a specific employee
@@ -51,38 +86,71 @@ class StorageService {
   Future<AttendanceRecord?> getTodayAttendanceRecord(
     String employeeId,
   ) async {
-    final db = await _dbService.database;
-    final today = DateTime.now().toIso8601String().split('T')[0];
+    try {
+      print('[StorageService] Getting today record for employeeId: $employeeId');
+      final db = await _dbService.database;
+      final today = DateTime.now().toIso8601String().split('T')[0];
+      print('[StorageService] Today date: $today');
 
-    final List<Map<String, dynamic>> maps = await db.query(
-      'attendance_records',
-      where: 'employee_id = ? AND date = ?',
-      whereArgs: [employeeId, today],
-      limit: 1,
-    );
+      // First, check if table exists and has any records
+      final allMaps = await db.query('attendance_records', limit: 1);
+      print('[StorageService] Database has ${allMaps.length} records (sample check)');
 
-    if (maps.isEmpty) {
-      return null;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'attendance_records',
+        where: 'employee_id = ? AND date = ?',
+        whereArgs: [employeeId, today],
+        limit: 1,
+      );
+
+      print('[StorageService] Query returned ${maps.length} records for employeeId=$employeeId, date=$today');
+      if (maps.isNotEmpty) {
+        print('[StorageService] Found record: ${maps[0]}');
+      } else {
+        // Check if there are any records with this employeeId
+        final empMaps = await db.query(
+          'attendance_records',
+          where: 'employee_id = ?',
+          whereArgs: [employeeId],
+        );
+        print('[StorageService] Found ${empMaps.length} total records for employeeId=$employeeId');
+        if (empMaps.isNotEmpty) {
+          print('[StorageService] Latest record date: ${empMaps.first['date']}');
+        }
+      }
+
+      if (maps.isEmpty) {
+        return null;
+      }
+
+      return AttendanceRecord.fromMap(maps[0]);
+    } catch (e, stackTrace) {
+      print('[StorageService] ERROR getting today record: $e');
+      print('[StorageService] Stack trace: $stackTrace');
+      rethrow;
     }
-
-    return AttendanceRecord.fromMap(maps[0]);
   }
 
   /// Update an attendance record (INTERNAL USE ONLY - System updates only)
   /// Users cannot manually update attendance records.
   /// This method is only called by the attendance service when processing QR scans.
   Future<int> updateAttendanceRecord(AttendanceRecord record) async {
-    if (record.id == null) {
-      throw Exception('Cannot update record without id');
+    try {
+      print('[StorageService] Updating record: id=${record.id}, employeeId=${record.employeeId}, date=${record.date.toIso8601String().split('T')[0]}');
+      final db = await _dbService.database;
+      final result = await db.update(
+        'attendance_records',
+        record.toMap(),
+        where: 'id = ?',
+        whereArgs: [record.id],
+      );
+      print('[StorageService] Record updated: $result rows affected');
+      return result;
+    } catch (e, stackTrace) {
+      print('[StorageService] ERROR updating record: $e');
+      print('[StorageService] Stack trace: $stackTrace');
+      rethrow;
     }
-
-    final db = await _dbService.database;
-    return await db.update(
-      'attendance_records',
-      record.copyWith(updatedAt: DateTime.now()).toMap(),
-      where: 'id = ?',
-      whereArgs: [record.id],
-    );
   }
 
   /// Internal method to update check-out time (called by attendance service)

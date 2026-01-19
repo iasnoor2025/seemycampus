@@ -32,6 +32,8 @@
     "db:fix-review-dates": "tsx src/db/fix-review-dates.ts",
     "db:import:linkingsky": "tsx src/db/import-linkingsky.ts",
     "db:discover:comprehensive": "tsx scripts/discover-colleges-comprehensive.ts",
+    "db:migrate:shift-timing": "tsx scripts/migrate-shift-timing.ts",
+    "db:migrate:checkout-status": "tsx scripts/migrate-checkout-status.ts",
     "seo:audit": "node scripts/seo-audit.js"
   },
   "dependencies": {

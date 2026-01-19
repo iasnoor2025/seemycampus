@@ -794,6 +794,20 @@ export const employees = pgTable("employees", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }), // Hashed password for login
   isActive: boolean("is_active").default(true).notNull(),
+  // Shift timing fields
+  shiftStartTime: time("shift_start_time"), // Default shift start time (HH:MM:SS format)
+  shiftEndTime: time("shift_end_time"), // Default shift end time (HH:MM:SS format)
+  earlyThresholdMinutes: integer("early_threshold_minutes").default(15), // Minutes before shift start to be considered "early"
+  lateThresholdMinutes: integer("late_threshold_minutes").default(15), // Minutes after shift start to be considered "late"
+  deviceInfo: jsonb("device_info").$type<{
+    platform?: string;
+    deviceModel?: string;
+    deviceId?: string;
+    osVersion?: string;
+    appVersion?: string;
+  }>(),
+  lastLogin: timestamp("last_login"),
+  lastLogout: timestamp("last_logout"), // Track when admin logged out employee
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -815,7 +829,9 @@ export const attendanceRecords = pgTable("attendance_records", {
   date: date("date").notNull(),
   checkInTime: time("check_in_time"),
   checkOutTime: time("check_out_time"),
-  status: varchar("status", { length: 50 }).notNull(), // "present", "absent", "late"
+  status: varchar("status", { length: 50 }).notNull(), // "present", "absent", "late", "early"
+  checkInStatus: varchar("check_in_status", { length: 50 }), // "on-time", "early", "late" - calculated based on shift timing
+  checkOutStatus: varchar("check_out_status", { length: 50 }), // "on-time", "early", "late" - calculated based on shift timing
   syncedToSheets: boolean("synced_to_sheets").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

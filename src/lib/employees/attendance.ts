@@ -3,6 +3,8 @@ import { attendanceRecords, employees } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { getDateString, validateDailyQRCode } from "./utils"
 import { validateTodayQRCode } from "./dailyQR"
+import { calculateCheckInStatus, calculateCheckOutStatus } from "./shiftTiming"
+import { syncToGoogleSheets } from "./googleSheets"
 
 export interface RecordAttendanceData {
   employeeId: string
@@ -62,6 +64,13 @@ export async function recordAttendance(
   const today = getDateString(data.scanTime)
   const scanTime = data.scanTime.toTimeString().split(' ')[0] // HH:MM:SS format
 
+  // Get shift timing (use employee's shift timing or default global shift timing)
+  // Default: 9 AM - 5 PM if not set
+  const shiftStartTime = emp.shiftStartTime || "09:00:00"
+  const shiftEndTime = emp.shiftEndTime || "17:00:00"
+  const earlyThreshold = emp.earlyThresholdMinutes || 15
+  const lateThreshold = emp.lateThresholdMinutes || 15
+
   // Check if employee already has a record for today
   const [existingRecord] = await db
     .select()
@@ -78,16 +87,49 @@ export async function recordAttendance(
     // Employee already has a record for today
     // If no check-out time, this scan becomes check-out
     // If already checked out, update check-out time (last scan = check-out)
+    
+    // Calculate check-out status based on shift timing
+    const checkOutStatus = calculateCheckOutStatus(
+      scanTime,
+      shiftEndTime,
+      earlyThreshold,
+      lateThreshold
+    )
+    
     const [updated] = await db
       .update(attendanceRecords)
       .set({
         checkOutTime: scanTime, // Always update to latest scan time
+        checkOutStatus: checkOutStatus, // Set check-out status
         updatedAt: new Date(),
       })
       .where(eq(attendanceRecords.id, existingRecord.id))
       .returning()
 
     const isFirstCheckOut = !existingRecord.checkOutTime
+
+    // Sync to Google Sheets in background (don't await)
+    syncToGoogleSheets({
+      employeeId: emp.employeeId,
+      employeeName: emp.name,
+      employeeEmail: emp.email,
+      date: today,
+      checkInTime: existingRecord.checkInTime,
+      checkOutTime: scanTime,
+      status: existingRecord.status,
+      checkInStatus: existingRecord.checkInStatus,
+      checkOutStatus: checkOutStatus,
+    })
+      .then((success) => {
+        if (success) {
+          // Update syncedToSheets flag in database
+          db.update(attendanceRecords)
+            .set({ syncedToSheets: true })
+            .where(eq(attendanceRecords.id, updated.id))
+            .catch((err) => console.error("[Attendance] Error updating syncedToSheets:", err))
+        }
+      })
+      .catch((err) => console.error("[Attendance] Error syncing to Google Sheets:", err))
 
     return {
       success: true,
@@ -98,6 +140,22 @@ export async function recordAttendance(
       record: updated,
     }
   } else {
+    // Calculate check-in status based on shift timing
+    const checkInStatus = calculateCheckInStatus(
+      scanTime,
+      shiftStartTime,
+      earlyThreshold,
+      lateThreshold
+    )
+
+    // Determine overall status
+    let overallStatus = "present"
+    if (checkInStatus === "late") {
+      overallStatus = "late"
+    } else if (checkInStatus === "early") {
+      overallStatus = "present" // Early is still present, just marked as early
+    }
+
     // Create new check-in record
     const [newRecord] = await db
       .insert(attendanceRecords)
@@ -105,15 +163,49 @@ export async function recordAttendance(
         employeeId: emp.id,
         date: today,
         checkInTime: scanTime,
-        status: "present",
+        status: overallStatus,
+        checkInStatus: checkInStatus,
         syncedToSheets: false,
       })
       .returning()
 
+    // Format message based on check-in status
+    let message = "Check-in recorded successfully"
+    if (checkInStatus === "early") {
+      message = "Checked in early - Great job!"
+    } else if (checkInStatus === "late") {
+      message = "Checked in late"
+    } else if (checkInStatus === "on-time") {
+      message = "Checked in on time"
+    }
+
+    // Sync to Google Sheets in background (don't await)
+    syncToGoogleSheets({
+      employeeId: emp.employeeId,
+      employeeName: emp.name,
+      employeeEmail: emp.email,
+      date: today,
+      checkInTime: scanTime,
+      checkOutTime: null,
+      status: overallStatus,
+      checkInStatus: checkInStatus,
+      checkOutStatus: null,
+    })
+      .then((success) => {
+        if (success) {
+          // Update syncedToSheets flag in database
+          db.update(attendanceRecords)
+            .set({ syncedToSheets: true })
+            .where(eq(attendanceRecords.id, newRecord.id))
+            .catch((err) => console.error("[Attendance] Error updating syncedToSheets:", err))
+        }
+      })
+      .catch((err) => console.error("[Attendance] Error syncing to Google Sheets:", err))
+
     return {
       success: true,
       type: "check-in",
-      message: "Check-in recorded successfully",
+      message: message,
       record: newRecord,
     }
   }

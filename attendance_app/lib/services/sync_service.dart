@@ -14,6 +14,7 @@ class SyncService {
 
   /// Start automatic background sync
   /// Syncs every 5 minutes when online
+  /// Uses exponential backoff for retries
   void startAutoSync() {
     // Stop existing timer if any
     stopAutoSync();
@@ -24,7 +25,12 @@ class SyncService {
     // Then sync every 5 minutes
     _syncTimer = Timer.periodic(
       const Duration(minutes: 5),
-      (_) => syncPendingRecords(),
+      (_) {
+        // Only sync if not already syncing
+        if (!_isSyncing) {
+          syncPendingRecords();
+        }
+      },
     );
   }
 
@@ -83,20 +89,43 @@ class SyncService {
         return result;
       }
 
-      // Sync each record
-      for (var record in unsyncedRecords) {
-        try {
-          final success = await _syncSingleRecord(record);
-          if (success) {
-            syncedCount++;
-            await _storageService.markAsSynced(record.id!);
-          } else {
+      // Sync records in batches to avoid overwhelming the server
+      const batchSize = 5;
+      for (var i = 0; i < unsyncedRecords.length; i += batchSize) {
+        final batch = unsyncedRecords.skip(i).take(batchSize).toList();
+        
+        // Sync batch
+        for (var record in batch) {
+          try {
+            final success = await _syncSingleRecord(record);
+            if (success) {
+              syncedCount++;
+              await _storageService.markAsSynced(record.id!);
+            } else {
+              failedCount++;
+              errors.add('Failed to sync record for ${record.date}');
+            }
+          } catch (e) {
+            // Check if session expired - stop syncing immediately
+            if (e is ApiException && e.requiresReauth) {
+              failedCount++;
+              errors.add('Session expired. Please login again.');
+              // Break out of loop - session expired
+              break;
+            }
             failedCount++;
-            errors.add('Failed to sync record for ${record.date}');
+            errors.add('Error syncing ${record.date}: ${e.toString()}');
           }
-        } catch (e) {
-          failedCount++;
-          errors.add('Error syncing ${record.date}: ${e.toString()}');
+        }
+        
+        // If session expired, stop processing remaining batches
+        if (errors.any((e) => e.contains('Session expired'))) {
+          break;
+        }
+        
+        // Small delay between batches to avoid rate limiting
+        if (i + batchSize < unsyncedRecords.length) {
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       }
 
@@ -113,6 +142,19 @@ class SyncService {
       _notifyListeners(result);
       return result;
     } catch (e) {
+      // Check if session expired
+      if (e is ApiException && e.requiresReauth) {
+        final result = SyncResult(
+          success: false,
+          message: 'Session expired. Please login again.',
+          syncedCount: syncedCount,
+          failedCount: failedCount,
+          errors: [...errors, 'Session expired. Please login again.'],
+        );
+        _notifyListeners(result);
+        return result;
+      }
+      
       final result = SyncResult(
         success: false,
         message: 'Sync error: ${e.toString()}',
@@ -149,6 +191,11 @@ class SyncService {
 
       return response['success'] == true;
     } catch (e) {
+      // Check if session expired
+      if (e is ApiException && e.requiresReauth) {
+        // Session expired - stop syncing and notify
+        throw e; // Re-throw to be handled by caller
+      }
       // Network error or API error
       return false;
     }

@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../providers/auth_provider.dart';
 import '../services/attendance_service.dart';
 import '../services/qr_service.dart';
+import '../services/api_service.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -63,11 +64,31 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
 
     try {
-      // Validate QR code first
-      final isValid = await _qrService.validateQRCode(qrCodeData);
+      // Validate QR code first (this will also check session)
+      bool isValid;
+      try {
+        isValid = await _qrService.validateQRCode(qrCodeData);
+      } catch (e) {
+        // Check if session expired during QR validation
+        if (e is ApiException && e.requiresReauth) {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          await authProvider.logout();
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/login');
+          }
+          return;
+        }
+        rethrow;
+      }
       
       if (!isValid) {
-        _showError('Invalid or expired QR code. Please scan today\'s QR code.');
+        _showError(
+          'Invalid or expired QR code.\n\n'
+          'Please ensure:\n'
+          '• You are scanning today\'s QR code\n'
+          '• The QR code is not expired\n'
+          '• Your device has internet connection',
+        );
         _resumeScanning();
         return;
       }
@@ -85,18 +106,37 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // Wait a bit before navigating back
           await Future.delayed(const Duration(seconds: 2));
           
-          // Navigate back to home screen
+          // Navigate back to home screen and refresh
           if (mounted) {
-            Navigator.of(context).pop();
-            // Refresh home screen status
-            Navigator.of(context).pushReplacementNamed('/home');
+            Navigator.of(context).pop(true); // Pass true to indicate successful scan
           }
         } else {
+          // Check if session expired
+          if (result.message.contains('Session expired') || 
+              result.message.contains('login again')) {
+            // Force logout and redirect to login
+            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+            await authProvider.logout();
+            if (mounted) {
+              Navigator.of(context).pushReplacementNamed('/login');
+            }
+            return;
+          }
           _showError(result.message);
           _resumeScanning();
         }
       }
     } catch (e) {
+      // Check if it's a session expiration error
+      if (e.toString().contains('Session expired') || 
+          e.toString().contains('requiresReauth')) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.logout();
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+        return;
+      }
       _showError('Error processing QR code: ${e.toString()}');
       _resumeScanning();
     } finally {
@@ -138,11 +178,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   void _showError(String message) {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error, color: Colors.white),
+            const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -153,7 +195,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ],
         ),
         backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'OK',
+          textColor: Colors.white,
+          onPressed: () {},
+        ),
       ),
     );
   }
@@ -161,8 +208,14 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFE0E5EC), // Light Neumorphism background
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
+        backgroundColor: const Color(0xFFE0E5EC),
+        elevation: 0,
+        title: const Text(
+          'Scan QR Code',
+          style: TextStyle(color: Color(0xFF2C3E50)),
+        ),
       ),
       body: Stack(
         children: [
@@ -240,9 +293,44 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (!_isScanning)
-                    ElevatedButton(
-                      onPressed: _resumeScanning,
-                      child: const Text('Scan Again'),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.05),
+                            offset: const Offset(-4, -4),
+                            blurRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            offset: const Offset(4, 4),
+                            blurRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _resumeScanning,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('Scan Again'),
+                      ),
                     ),
                 ],
               ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/qr_scanner_screen.dart';
 import 'screens/attendance_history_screen.dart';
+import 'screens/today_attendance_screen.dart';
 import 'config/api_config.dart';
 
 void main() {
@@ -22,38 +24,41 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AuthProvider()..initialize(),
+      create: (_) => AuthProvider(),
       child: MaterialApp(
         title: 'SeeMyCampus Attendance',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2563EB), // Professional blue
+            seedColor: const Color(0xFF5B9FD8), // Soft blue (Light Neumorphic primary)
             brightness: Brightness.light,
           ),
           useMaterial3: true,
+          scaffoldBackgroundColor: const Color(0xFFE0E5EC), // Light Neumorphism background
           cardTheme: CardThemeData(
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
             ),
+            color: const Color(0xFFE0E5EC), // Same as background for embossed effect
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
         ),
-        home: const AuthWrapper(),
+        home: const SplashScreen(),
         routes: {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
           '/scanner': (context) => const QRScannerScreen(),
           '/history': (context) => const AttendanceHistoryScreen(),
+          '/today': (context) => const TodayAttendanceScreen(),
         },
       ),
     );
