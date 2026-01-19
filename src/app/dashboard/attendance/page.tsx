@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Download, RefreshCw, Search, User, Trash2 } from "lucide-react"
 import { useDebounce } from "@/lib/hooks/useDebounce"
+import { useToast } from "@/components/ui/use-toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ export default function AttendancePage() {
   const [recordToDelete, setRecordToDelete] = useState<AttendanceRecord | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [syncingSheets, setSyncingSheets] = useState(false)
+  const { toast } = useToast()
   
   // Debounce search term for performance
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -223,14 +225,26 @@ export default function AttendancePage() {
       const data = await response.json()
 
       if (data.success) {
-        alert(`Successfully synced ${data.syncedCount} records to Google Sheets${data.failedCount > 0 ? `\n${data.failedCount} records failed to sync` : ""}`)
+        toast({
+          title: "Sync Complete",
+          description: `Successfully synced ${data.syncedCount} records to Google Sheets${data.failedCount > 0 ? `. ${data.failedCount} records failed to sync.` : ""}`,
+          variant: data.failedCount > 0 ? "destructive" : "default",
+        })
         loadRecords() // Refresh to update sync status
       } else {
-        alert(`Failed to sync: ${data.error || "Unknown error"}`)
+        toast({
+          title: "Sync Failed",
+          description: data.error || "Unknown error occurred",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Error syncing to Google Sheets:", error)
-      alert("Error syncing to Google Sheets. Please try again.")
+      toast({
+        title: "Sync Error",
+        description: "Error syncing to Google Sheets. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setSyncingSheets(false)
     }
