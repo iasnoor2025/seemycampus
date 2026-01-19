@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
 import { attendanceRecords, employees, users } from "@/db/schema"
-import { eq, and } from "drizzle-orm"
+import { eq, and, desc } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { getDateString } from "@/lib/employees/utils"
 import { calculateCheckInStatus, calculateCheckOutStatus } from "@/lib/employees/shiftTiming"
