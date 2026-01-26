@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { BookOpen, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { BookOpen, Edit, Trash2, Eye, Plus, ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useDebounce } from "@/lib/hooks/useDebounce"
 import {
   Select,
   SelectContent,
@@ -56,7 +57,8 @@ const ITEMS_PER_PAGE = 20
 export function CoursesList() {
   const [courses, setCourses] = useState<Course[]>([])
   const [colleges, setColleges] = useState<College[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -64,21 +66,38 @@ export function CoursesList() {
   const [deleteCourseId, setDeleteCourseId] = useState<number | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (isInitial = false) => {
     try {
-      setLoading(true)
-      const url = selectedCollege && selectedCollege !== "all"
-        ? `/api/dashboard/courses?limit=1000&collegeId=${selectedCollege}`
-        : "/api/dashboard/courses?limit=1000"
-      const response = await fetch(url)
+      if (isInitial) setInitialLoading(true)
+      else setLoading(true)
+
+      const params = new URLSearchParams()
+      params.append("page", currentPage.toString())
+      params.append("limit", ITEMS_PER_PAGE.toString())
+
+      if (selectedCollege && selectedCollege !== "all") {
+        params.append("collegeId", selectedCollege)
+      }
+
+      if (debouncedSearchTerm) {
+        params.append("search", debouncedSearchTerm)
+      }
+
+      const response = await fetch(`/api/dashboard/courses?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
         setCourses(data.courses || [])
+        setTotalCount(data.pagination.totalCount || 0)
+        setTotalPages(data.pagination.totalPages || 0)
       }
     } catch (error) {
       console.error("Error fetching courses:", error)
     } finally {
+      setInitialLoading(false)
       setLoading(false)
     }
   }
@@ -96,9 +115,17 @@ export function CoursesList() {
   }
 
   useEffect(() => {
-    fetchCourses()
+    // Initial load
+    fetchCourses(true)
     fetchColleges()
-  }, [selectedCollege])
+  }, [])
+
+  useEffect(() => {
+    // Paging load
+    if (!initialLoading) {
+      fetchCourses()
+    }
+  }, [currentPage])
 
   const handleDelete = async () => {
     if (!deleteCourseId) return
@@ -142,26 +169,18 @@ export function CoursesList() {
     return college?.name || "Unknown"
   }
 
-  // Filter courses based on search term (by college name)
-  const filteredCourses = useMemo(() => {
-    return courses.filter((course) => {
-      if (!searchTerm) return true
-      const collegeName = getCollegeName(course.collegeId).toLowerCase()
-      return collegeName.includes(searchTerm.toLowerCase())
-    }).sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
-  }, [courses, searchTerm, colleges])
+  // No frontend filtering needed anymore as we do it on the server
+  const filteredCoursesCount = totalCount
+  const paginatedCourses = courses
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE)
-  const paginatedCourses = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredCourses.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  }, [filteredCourses, currentPage])
-
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (except for current page itself)
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, selectedCollege])
+    if (currentPage !== 1) {
+      setCurrentPage(1)
+    } else if (!initialLoading) {
+      fetchCourses()
+    }
+  }, [debouncedSearchTerm, selectedCollege])
 
   // Page navigation
   const goToPage = (page: number) => {
@@ -197,10 +216,13 @@ export function CoursesList() {
     return pages
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Loading courses...</div>
+      <div className="flex items-center justify-center p-8 min-h-[400px]">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="text-muted-foreground animate-pulse">Loading all courses...</div>
+        </div>
       </div>
     )
   }
@@ -215,13 +237,13 @@ export function CoursesList() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              placeholder="Search by college name..."
+              placeholder="Search by course or college name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-10"
             />
           </div>
-          
+
           {/* Filter and Action Buttons */}
           <div className="flex gap-3 flex-shrink-0">
             <Select
@@ -240,8 +262,8 @@ export function CoursesList() {
                 ))}
               </SelectContent>
             </Select>
-            
-            <Button 
+
+            <Button
               onClick={handleAdd}
               className="h-10 px-4 sm:px-6 whitespace-nowrap shadow-sm flex-shrink-0"
             >
@@ -253,14 +275,22 @@ export function CoursesList() {
         </div>
 
         {/* Results Count */}
-        <div className="text-xs sm:text-sm text-muted-foreground">
-          <span className="hidden sm:inline">Showing </span>
-          <span>{paginatedCourses.length} of {filteredCourses.length} courses</span>
-          {totalPages > 1 && <span className="hidden sm:inline"> (Page {currentPage} of {totalPages})</span>}
+        <div className="text-xs sm:text-sm text-muted-foreground flex items-center justify-between">
+          <div>
+            <span className="hidden sm:inline">Showing </span>
+            <span>{paginatedCourses.length} of {totalCount} courses</span>
+            {totalPages > 1 && <span className="hidden sm:inline"> (Page {currentPage} of {totalPages})</span>}
+          </div>
+          {loading && (
+            <div className="flex items-center text-xs">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              Updating...
+            </div>
+          )}
         </div>
 
         {/* Table */}
-        {filteredCourses.length === 0 ? (
+        {courses.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground border rounded-md">
             <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No courses found</p>
@@ -282,15 +312,14 @@ export function CoursesList() {
                         <span className="text-xs text-muted-foreground">
                           #{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                         </span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          course.level === "undergraduate" 
-                            ? "bg-green-100 text-green-700" 
-                            : course.level === "graduate" 
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${course.level === "undergraduate"
+                          ? "bg-green-100 text-green-700"
+                          : course.level === "graduate"
                             ? "bg-blue-100 text-blue-700"
                             : course.level === "diploma"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}>
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}>
                           {course.level || "-"}
                         </span>
                       </div>
@@ -376,15 +405,14 @@ export function CoursesList() {
                       </TableCell>
                       <TableCell className="hidden xl:table-cell">{course.duration || "-"}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
-                          course.level === "undergraduate" 
-                            ? "bg-green-100 text-green-700" 
-                            : course.level === "graduate" 
+                        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${course.level === "undergraduate"
+                          ? "bg-green-100 text-green-700"
+                          : course.level === "graduate"
                             ? "bg-blue-100 text-blue-700"
                             : course.level === "diploma"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}>
+                              ? "bg-purple-100 text-purple-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}>
                           {course.level || "-"}
                         </span>
                       </TableCell>

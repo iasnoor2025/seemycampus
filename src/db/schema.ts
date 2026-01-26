@@ -786,6 +786,21 @@ export const featureFlags = pgTable("feature_flags", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Featured Colleges table - Manage featured colleges with enable/disable functionality
+export const featuredColleges = pgTable("featured_colleges", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // management, engineering, medical, law, design, bba
+  displayOrder: integer("display_order").default(0), // Order for display
+  isActive: boolean("is_active").default(true), // Enable/disable specific college in category
+  featuredAt: timestamp("featured_at").defaultNow().notNull(), // When it was marked as featured
+  featuredBy: integer("featured_by").references(() => users.id, { onDelete: "set null" }), // Admin who featured it
+  expiresAt: timestamp("expires_at"), // Optional expiry date
+  metadata: jsonb("metadata").$type<Record<string, any>>(), // Additional metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Employees table - For attendance tracking system
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
@@ -849,6 +864,18 @@ export const attendanceRecordsRelations = relations(attendanceRecords, ({ one })
   }),
 }));
 
+// Featured Colleges Relations
+export const featuredCollegesRelations = relations(featuredColleges, ({ one }) => ({
+  college: one(colleges, {
+    fields: [featuredColleges.collegeId],
+    references: [colleges.id],
+  }),
+  featuredByUser: one(users, {
+    fields: [featuredColleges.featuredBy],
+    references: [users.id],
+  }),
+}));
+
 // Update colleges relations to include new tables
 export const collegesRelations = relations(colleges, ({ many }) => ({
   courses: many(courses),
@@ -864,5 +891,6 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   applicationGuides: many(applicationGuides),
   inquiries: many(collegeInquiries),
   news: many(collegeNews),
+  featuredIn: many(featuredColleges),
 }));
 

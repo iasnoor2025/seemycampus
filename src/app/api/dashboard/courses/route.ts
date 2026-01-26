@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/db"
-import { courses } from "@/db/schema"
-import { desc, eq } from "drizzle-orm"
+import { desc, eq, ilike, or, and, sql } from "drizzle-orm"
+import { courses, colleges } from "@/db/schema"
 
 // GET - Fetch all courses
 export async function GET(request: NextRequest) {
@@ -14,45 +14,65 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const limit = parseInt(searchParams.get("limit") || "20")
     const collegeId = searchParams.get("collegeId")
+    const search = searchParams.get("search")
     const offset = (page - 1) * limit
 
-    let coursesList
+    const conditions = []
     if (collegeId) {
-      coursesList = await db
-        .select()
-        .from(courses)
-        .where(eq(courses.collegeId, parseInt(collegeId)))
-        .orderBy(desc(courses.createdAt))
-        .limit(limit)
-        .offset(offset)
-    } else {
-      coursesList = await db
-        .select()
-        .from(courses)
-        .orderBy(desc(courses.createdAt))
-        .limit(limit)
-        .offset(offset)
+      conditions.push(eq(courses.collegeId, parseInt(collegeId)))
+    }
+    if (search) {
+      conditions.push(
+        or(
+          ilike(courses.name, `%${search}%`),
+          ilike(colleges.name, `%${search}%`)
+        )
+      )
     }
 
-    let totalCount
-    if (collegeId) {
-      totalCount = await db
-        .select()
-        .from(courses)
-        .where(eq(courses.collegeId, parseInt(collegeId)))
-    } else {
-      totalCount = await db.select().from(courses)
-    }
-    const totalPages = Math.ceil(totalCount.length / limit)
+    const where = conditions.length > 0 ? and(...conditions) : undefined
+
+    // For the list, we need the join if we are searching by college name
+    const coursesList = await db
+      .select({
+        id: courses.id,
+        name: courses.name,
+        slug: courses.slug,
+        collegeId: courses.collegeId,
+        description: courses.description,
+        duration: courses.duration,
+        fees: courses.fees,
+        feesCurrency: courses.feesCurrency,
+        studyMode: courses.studyMode,
+        level: courses.level,
+        createdAt: courses.createdAt,
+        updatedAt: courses.updatedAt,
+      })
+      .from(courses)
+      .leftJoin(colleges, eq(courses.collegeId, colleges.id))
+      .where(where)
+      .orderBy(desc(courses.createdAt))
+      .limit(limit)
+      .offset(offset)
+
+    // For total count, use a optimized count query
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(courses)
+      .leftJoin(colleges, eq(courses.collegeId, colleges.id))
+      .where(where)
+
+    const totalCount = Number(totalResult[0]?.count || 0)
+    const totalPages = Math.ceil(totalCount / limit)
 
     return NextResponse.json({
       courses: coursesList,
       pagination: {
         currentPage: page,
         totalPages,
-        totalCount: totalCount.length,
+        totalCount,
         limit,
       },
     })
