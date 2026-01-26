@@ -1,73 +1,38 @@
 import { db } from "@/db";
-import { courses, colleges, blogPosts, categories } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { courses } from "@/db/schema";
+import { sql } from "drizzle-orm";
 
 export async function GET() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com";
 
     try {
-        const staticUrls = [
-            "",
-            "/colleges",
-            "/scholarships",
-            "/entrance-exams",
-            "/about",
-            "/contact",
-        ];
-
-        const collegesData = await db.select({ slug: colleges.slug, updatedAt: colleges.updatedAt }).from(colleges).where(eq(colleges.isEnabled, true));
-        const coursesData = await db.select({ slug: courses.slug, updatedAt: courses.updatedAt }).from(courses).limit(45000);
-        const blogsData = await db.select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt }).from(blogPosts).where(eq(blogPosts.isPublished, true));
+        // 1. Get total course count to see how many chunks we need
+        const [result] = await db.select({ count: sql<number>`count(*)` }).from(courses);
+        const totalCourses = Number(result?.count || 0);
+        const COURSES_PER_FILE = 40000;
+        const chunkCount = Math.ceil(totalCourses / COURSES_PER_FILE);
 
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
-        // Static
-        staticUrls.forEach(url => {
-            xml += `
-  <url>
-    <loc>${baseUrl}${url}</loc>
+        // Add the main sitemap for static pages and colleges
+        xml += `
+  <sitemap>
+    <loc>${baseUrl}/sitemaps/main.xml</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>${url === "" ? "1.0" : "0.9"}</priority>
-  </url>`;
-        });
+  </sitemap>`;
 
-        // Colleges
-        collegesData.forEach(c => {
+        // Add a sitemap for each course chunk
+        for (let i = 1; i <= chunkCount; i++) {
             xml += `
-  <url>
-    <loc>${baseUrl}/colleges/${c.slug}</loc>
-    <lastmod>${(c.updatedAt || new Date()).toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`;
-        });
-
-        // Blogs
-        blogsData.forEach(b => {
-            xml += `
-  <url>
-    <loc>${baseUrl}/blog/${b.slug}</loc>
-    <lastmod>${(b.updatedAt || new Date()).toISOString()}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-        });
-
-        // Courses
-        coursesData.forEach(c => {
-            xml += `
-  <url>
-    <loc>${baseUrl}/courses/${c.slug}</loc>
-    <lastmod>${(c.updatedAt || new Date()).toISOString()}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>`;
-        });
+  <sitemap>
+    <loc>${baseUrl}/sitemaps/courses/${i}.xml</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+  </sitemap>`;
+        }
 
         xml += `
-</urlset>`;
+</sitemapindex>`;
 
         return new Response(xml, {
             headers: {
@@ -75,7 +40,7 @@ export async function GET() {
             },
         });
     } catch (error) {
-        console.error("Manual Sitemap Route Error:", error);
-        return new Response("Error generating sitemap", { status: 500 });
+        console.error("Sitemap Index Error:", error);
+        return new Response("Error generating sitemap index", { status: 500 });
     }
 }
