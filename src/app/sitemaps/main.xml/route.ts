@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { colleges, blogPosts, categories } from "@/db/schema";
+import { colleges, blogPosts, categories, studyGoals } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getAllCities } from "@/lib/colleges";
 
@@ -10,6 +10,8 @@ export async function GET() {
         const staticUrls = ["", "/colleges", "/scholarships", "/entrance-exams", "/about", "/contact"];
         const collegesData = await db.select({ slug: colleges.slug, updatedAt: colleges.updatedAt }).from(colleges).where(eq(colleges.isEnabled, true));
         const blogsData = await db.select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt }).from(blogPosts).where(eq(blogPosts.isPublished, true));
+        const categoriesData = await db.select({ slug: categories.slug }).from(categories).where(eq(categories.isActive, true));
+        const studyGoalsData = await db.select({ slug: studyGoals.slug }).from(studyGoals).where(eq(studyGoals.isActive, true));
         const cities = await getAllCities();
 
         let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -21,6 +23,14 @@ export async function GET() {
 
         collegesData.forEach(c => {
             xml += `<url><loc>${baseUrl}/colleges/${c.slug}</loc><lastmod>${(c.updatedAt || new Date()).toISOString()}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+        });
+
+        categoriesData.forEach(cat => {
+            xml += `<url><loc>${baseUrl}/colleges/${cat.slug}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
+        });
+
+        studyGoalsData.forEach(goal => {
+            xml += `<url><loc>${baseUrl}/colleges/${goal.slug}</loc><lastmod>${new Date().toISOString()}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`;
         });
 
         blogsData.forEach(b => {
