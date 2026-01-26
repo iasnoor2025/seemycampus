@@ -4,7 +4,7 @@ import { asc } from "drizzle-orm";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://seemycampus.com";
     const idStr = (await params).id.replace(".xml", "");
