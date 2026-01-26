@@ -5,10 +5,11 @@ import { eq, and } from "drizzle-orm"
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid ID" },
@@ -54,10 +55,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idStr } = await params
+    const id = parseInt(idStr)
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid ID" },
