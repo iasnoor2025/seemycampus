@@ -18,7 +18,7 @@ const connectionString = process.env.DATABASE_URL
 const client = postgres(connectionString)
 const db = drizzle(client, { schema })
 
-import { colleges, courses, collegeReviews, cutoffs, placementStats, applicationGuides } from "./schema"
+import { colleges, courses, collegeReviews, placementStats, applicationGuides } from "./schema"
 import { OllamaProvider } from "@/lib/ai/providers/ollama"
 import { removeDuplicates } from "./remove-duplicates"
 
@@ -28,14 +28,14 @@ const ollama = new OllamaProvider({})
 function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' = 'array'): any {
   try {
     let jsonStr = response.trim()
-    
+
     // Remove markdown code blocks
     if (jsonStr.includes("```json")) {
       jsonStr = jsonStr.split("```json")[1].split("```")[0].trim()
     } else if (jsonStr.includes("```")) {
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
-    
+
     // Try to extract JSON array or object
     if (expectedType === 'array') {
       const arrayMatch = jsonStr.match(/\[[\s\S]*\]/)
@@ -48,11 +48,11 @@ function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' 
         jsonStr = objectMatch[0]
       }
     }
-    
+
     // Try to fix common JSON issues
     // Remove trailing commas before closing brackets/braces
     jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1')
-    
+
     // Remove any text after the JSON structure
     if (expectedType === 'array') {
       const lastBracket = jsonStr.lastIndexOf(']')
@@ -65,18 +65,18 @@ function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' 
         jsonStr = jsonStr.substring(0, lastBrace + 1)
       }
     }
-    
+
     // Try to parse
     return JSON.parse(jsonStr)
   } catch (error: any) {
     // Log the problematic response for debugging
     console.error(`⚠️  JSON parsing error. Response preview: ${response.substring(0, 500)}...`)
     console.error(`⚠️  Error details: ${error.message}`)
-    
+
     // Try one more time with aggressive cleanup
     try {
       let cleaned = response.trim()
-      
+
       // Extract just the JSON part more aggressively
       if (expectedType === 'array') {
         const startIdx = cleaned.indexOf('[')
@@ -102,7 +102,7 @@ function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' 
       console.error(`❌ Failed to parse JSON after retry. Returning empty ${expectedType}.`)
       return expectedType === 'array' ? [] : {}
     }
-    
+
     // Return empty array/object as fallback
     return expectedType === 'array' ? [] : {}
   }
@@ -111,14 +111,14 @@ function parseJsonFromOllama(response: string, expectedType: 'array' | 'object' 
 // Function to check if college name needs correction
 function needsNameCorrection(name: string): boolean {
   if (!name) return false
-  
+
   // Check for common issues
   const hasTypo = /[a-z]{3,}[A-Z]/.test(name) // Mixed case in middle
   const hasAllCaps = name === name.toUpperCase() && name.length > 5 // All caps (except short acronyms)
   const hasAllLower = name === name.toLowerCase() && name.length > 5 // All lowercase
   const hasExtraSpaces = /\s{2,}/.test(name) // Multiple spaces
   const hasSpecialChars = /[^a-zA-Z0-9\s\-&.,()]/.test(name) // Unusual special characters
-  
+
   return hasTypo || hasAllCaps || hasAllLower || hasExtraSpaces || hasSpecialChars
 }
 
@@ -128,9 +128,9 @@ async function correctCollegeName(college: any): Promise<string | null> {
   if (!needsNameCorrection(college.name)) {
     return null
   }
-  
+
   console.log(`  ✏️  Checking name for corrections: "${college.name}"`)
-  
+
   const prompt = `Correct and standardize the following college name. Return ONLY the corrected official name, nothing else.
 
 Current name: "${college.name}"
@@ -159,32 +159,32 @@ Return ONLY the corrected name, no explanation, no quotes, no JSON, just the nam
       role: "user",
       content: prompt
     }])
-    
+
     let correctedName = response.trim()
-    
+
     // Remove quotes if present
     correctedName = correctedName.replace(/^["']|["']$/g, "")
-    
+
     // Remove any JSON formatting
     if (correctedName.includes("```")) {
       correctedName = correctedName.split("```")[1]?.split("```")[0] || correctedName
     }
-    
+
     correctedName = correctedName.trim()
-    
+
     // Only update if name actually changed and is valid
     if (correctedName && correctedName !== college.name && correctedName.length > 3) {
       // Normalize for comparison (ignore case and spacing)
       const normalizedOriginal = normalizeName(college.name)
       const normalizedCorrected = normalizeName(correctedName)
-      
+
       // Only update if significantly different
       if (normalizedOriginal !== normalizedCorrected) {
         console.log(`    ✅ Corrected name: "${college.name}" → "${correctedName}"`)
         return correctedName
       }
     }
-    
+
     return null
   } catch (error) {
     console.error(`    ⚠️  Error correcting name for ${college.name}:`, error)
@@ -195,7 +195,7 @@ Return ONLY the corrected name, no explanation, no quotes, no JSON, just the nam
 // Function to validate Indian phone number format
 function isValidIndianPhone(phone: string | null | undefined): boolean {
   if (!phone) return false
-  
+
   const cleaned = phone.replace(/[\s\-()]/g, "")
   // Indian phone numbers: +91 followed by 10 digits, or 10 digits starting with 6-9
   const patterns = [
@@ -204,33 +204,33 @@ function isValidIndianPhone(phone: string | null | undefined): boolean {
     /^0[6-9]\d{9}$/,    // 0XXXXXXXXXX
     /^[6-9]\d{9}$/      // XXXXXXXXXX
   ]
-  
+
   return patterns.some(pattern => pattern.test(cleaned))
 }
 
 // Function to normalize Indian phone number
 function normalizePhoneNumber(phone: string): string {
   if (!phone) return phone
-  
+
   let cleaned = phone.replace(/[\s\-()]/g, "")
-  
+
   // Remove country code if present
   if (cleaned.startsWith("+91")) {
     cleaned = cleaned.substring(3)
   } else if (cleaned.startsWith("91") && cleaned.length === 12) {
     cleaned = cleaned.substring(2)
   }
-  
+
   // Remove leading 0 if present
   if (cleaned.startsWith("0") && cleaned.length === 11) {
     cleaned = cleaned.substring(1)
   }
-  
+
   // Format as +91-XXXXXXXXXX
   if (cleaned.length === 10 && /^[6-9]\d{9}$/.test(cleaned)) {
     return `+91-${cleaned}`
   }
-  
+
   return phone // Return original if can't normalize
 }
 
@@ -238,7 +238,7 @@ function normalizePhoneNumber(phone: string): string {
 function getFieldsToCheck(college: any): { missing: string[]; needsVerification: string[] } {
   const missing: string[] = []
   const needsVerification: string[] = []
-  
+
   // Check missing fields
   if (!college.description || college.description.trim() === "") missing.push("description")
   if (!college.ranking) missing.push("ranking")
@@ -254,7 +254,7 @@ function getFieldsToCheck(college: any): { missing: string[]; needsVerification:
   if (!college.website) missing.push("website")
   if (!college.email) missing.push("email")
   if (!college.phone) missing.push("phone")
-  
+
   // Check fields that need verification (even if they exist)
   if (college.ranking) {
     // Verify ranking is realistic (1-1000 for NIRF, or reasonable range)
@@ -262,21 +262,21 @@ function getFieldsToCheck(college: any): { missing: string[]; needsVerification:
       needsVerification.push("ranking")
     }
   }
-  
+
   if (college.phone) {
     // Verify phone number format
     if (!isValidIndianPhone(college.phone)) {
       needsVerification.push("phone")
     }
   }
-  
+
   if (college.establishedYear) {
     // Verify established year is realistic (1800-2024)
     if (college.establishedYear < 1800 || college.establishedYear > new Date().getFullYear()) {
       needsVerification.push("establishedYear")
     }
   }
-  
+
   if (college.email) {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -284,7 +284,7 @@ function getFieldsToCheck(college: any): { missing: string[]; needsVerification:
       needsVerification.push("email")
     }
   }
-  
+
   if (college.website) {
     // Basic URL validation
     try {
@@ -293,18 +293,18 @@ function getFieldsToCheck(college: any): { missing: string[]; needsVerification:
       needsVerification.push("website")
     }
   }
-  
+
   return { missing, needsVerification }
 }
 
 // Function to enrich and verify college data using Ollama
 async function enrichCollegeData(college: any, missingFields: string[], needsVerification: string[]): Promise<Partial<any>> {
   const allFieldsToCheck = [...new Set([...missingFields, ...needsVerification])]
-  
+
   if (allFieldsToCheck.length === 0) {
     return {}
   }
-  
+
   const currentData: any = {}
   if (college.ranking) currentData.ranking = college.ranking
   if (college.phone) currentData.phone = college.phone
@@ -314,7 +314,7 @@ async function enrichCollegeData(college: any, missingFields: string[], needsVer
   if (college.description) currentData.description = college.description.substring(0, 200)
   if (college.accreditation) currentData.accreditation = college.accreditation
   if (college.ownership) currentData.ownership = college.ownership
-  
+
   const prompt = `You are a data verification and enrichment assistant for Indian colleges. Search the internet to find ACCURATE and VERIFIED information.
 
 College Name: ${college.name}
@@ -327,13 +327,13 @@ Fields to check/update: ${allFieldsToCheck.join(", ")}
 
 ${needsVerification.length > 0 ? `Current data that needs verification:
 ${needsVerification.map(field => {
-  if (field === "ranking" && currentData.ranking) return `- Ranking: ${currentData.ranking} (verify if this is correct NIRF/other ranking)`
-  if (field === "phone" && currentData.phone) return `- Phone: ${currentData.phone} (verify and correct format if needed)`
-  if (field === "email" && currentData.email) return `- Email: ${currentData.email} (verify if this is the official email)`
-  if (field === "website" && currentData.website) return `- Website: ${currentData.website} (verify if this is the official website)`
-  if (field === "establishedYear" && currentData.establishedYear) return `- Established Year: ${currentData.establishedYear} (verify if this is correct)`
-  return `- ${field}: ${currentData[field] || "N/A"} (verify and correct)`
-}).join("\n")}
+    if (field === "ranking" && currentData.ranking) return `- Ranking: ${currentData.ranking} (verify if this is correct NIRF/other ranking)`
+    if (field === "phone" && currentData.phone) return `- Phone: ${currentData.phone} (verify and correct format if needed)`
+    if (field === "email" && currentData.email) return `- Email: ${currentData.email} (verify if this is the official email)`
+    if (field === "website" && currentData.website) return `- Website: ${currentData.website} (verify if this is the official website)`
+    if (field === "establishedYear" && currentData.establishedYear) return `- Established Year: ${currentData.establishedYear} (verify if this is correct)`
+    return `- ${field}: ${currentData[field] || "N/A"} (verify and correct)`
+  }).join("\n")}
 
 IMPORTANT: Verify these fields by searching the internet. If the current data is WRONG, provide the CORRECTED value.` : ""}
 
@@ -373,7 +373,7 @@ CRITICAL REQUIREMENTS:
       role: "user",
       content: prompt
     }])
-    
+
     // Extract JSON from response (handle markdown code blocks)
     let jsonStr = response.trim()
     if (jsonStr.includes("```json")) {
@@ -381,16 +381,16 @@ CRITICAL REQUIREMENTS:
     } else if (jsonStr.includes("```")) {
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
-    
+
     // Parse JSON with error handling
     const enrichedData = parseJsonFromOllama(response, 'object')
-    
+
     // Validate that we got an object
     if (typeof enrichedData !== 'object' || Array.isArray(enrichedData)) {
       console.error(`⚠️  Expected object but got ${typeof enrichedData}. Returning empty object.`)
       return {}
     }
-    
+
     // Validate and clean the data
     const cleaned: any = {}
     for (const field of allFieldsToCheck) {
@@ -438,8 +438,8 @@ CRITICAL REQUIREMENTS:
           const currentYear = new Date().getFullYear()
           if (!isNaN(numValue) && numValue >= 1800 && numValue <= currentYear) {
             // Only update if current is invalid or significantly different
-            if (!college.establishedYear || college.establishedYear < 1800 || college.establishedYear > currentYear || 
-                Math.abs(college.establishedYear - numValue) > 5) {
+            if (!college.establishedYear || college.establishedYear < 1800 || college.establishedYear > currentYear ||
+              Math.abs(college.establishedYear - numValue) > 5) {
               cleaned[field] = numValue
             }
           }
@@ -461,7 +461,7 @@ CRITICAL REQUIREMENTS:
         }
       }
     }
-    
+
     return cleaned
   } catch (error) {
     console.error(`Error enriching ${college.name}:`, error)
@@ -472,7 +472,7 @@ CRITICAL REQUIREMENTS:
 // Function to verify image URL is accessible
 async function verifyImageUrl(url: string): Promise<boolean> {
   try {
-    const response = await fetch(url, { 
+    const response = await fetch(url, {
       method: "HEAD",
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
       signal: AbortSignal.timeout(5000) // 5 second timeout
@@ -516,7 +516,7 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Extract JSON from response
     let jsonStr = response.trim()
     if (jsonStr.includes("```json")) {
@@ -524,25 +524,25 @@ Important:
     } else if (jsonStr.includes("```")) {
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
-    
+
     // Parse JSON with error handling
     const imageData = parseJsonFromOllama(response, 'object')
-    
+
     // Validate that we got an object
     if (typeof imageData !== 'object' || Array.isArray(imageData)) {
       console.error(`⚠️  Expected object but got ${typeof imageData}. Returning empty object.`)
       return { campusImages: [] }
     }
-    
+
     // Validate URLs
-    const validLogo = imageData.logoUrl && 
+    const validLogo = imageData.logoUrl &&
       (imageData.logoUrl.startsWith("http://") || imageData.logoUrl.startsWith("https://"))
       ? imageData.logoUrl : undefined
-    
+
     const validCampusImages = (imageData.campusImages || [])
       .filter((url: string) => url && (url.startsWith("http://") || url.startsWith("https://")))
       .slice(0, 5) // Limit to 5 images
-    
+
     return {
       logoUrl: validLogo,
       campusImages: validCampusImages
@@ -556,23 +556,23 @@ Important:
 // Enhanced function to enrich images for a college
 async function enrichCollegeImages(college: any): Promise<void> {
   // Check if college already has a logo (first image is typically the logo)
-  const hasLogo = college.images && 
-    Array.isArray(college.images) && 
+  const hasLogo = college.images &&
+    Array.isArray(college.images) &&
     college.images.length > 0 &&
     college.images[0] &&
     (college.images[0].startsWith("http://") || college.images[0].startsWith("https://"))
-  
+
   if (hasLogo) {
     console.log(`  ⏭️  College already has logo: ${college.images[0]}`)
     // Still check for additional campus images if we have less than 3
-    const existingImages = college.images.filter((img: string) => 
+    const existingImages = college.images.filter((img: string) =>
       img && (img.startsWith("http://") || img.startsWith("https://"))
     )
-    
+
     if (existingImages.length < 3) {
       console.log(`  🖼️  Finding additional campus images (have ${existingImages.length}, need more)...`)
       const imageData = await findImagesWithOllama(college)
-      
+
       // Only add campus images, skip logo since we already have one
       const newCampusImages: string[] = []
       for (const campusImg of imageData.campusImages || []) {
@@ -583,11 +583,11 @@ async function enrichCollegeImages(college: any): Promise<void> {
         }
         if (newCampusImages.length >= 3) break // Limit to 3 additional images
       }
-      
+
       if (newCampusImages.length > 0) {
         // Add new campus images to existing ones (keep logo first)
         const allImages = [college.images[0], ...newCampusImages, ...existingImages.slice(1)]
-        
+
         await db
           .update(colleges)
           .set({
@@ -595,20 +595,20 @@ async function enrichCollegeImages(college: any): Promise<void> {
             updatedAt: new Date()
           })
           .where(eq(colleges.id, college.id))
-        
+
         console.log(`    ✅ Added ${newCampusImages.length} campus image(s)`)
       }
     }
     return
   }
-  
+
   // No logo exists, find logo and campus images
   console.log(`  🖼️  Finding logo and campus images with Ollama...`)
-  
+
   const imageData = await findImagesWithOllama(college)
-  
+
   const imagesToAdd: string[] = []
-  
+
   // Add logo first if found
   if (imageData.logoUrl) {
     const isValid = await verifyImageUrl(imageData.logoUrl)
@@ -619,7 +619,7 @@ async function enrichCollegeImages(college: any): Promise<void> {
       console.log(`    ⚠️  Logo URL not accessible: ${imageData.logoUrl}`)
     }
   }
-  
+
   // Add campus images
   for (const campusImg of imageData.campusImages || []) {
     const isValid = await verifyImageUrl(campusImg)
@@ -629,15 +629,15 @@ async function enrichCollegeImages(college: any): Promise<void> {
     }
     if (imagesToAdd.length >= 6) break // Limit total images
   }
-  
+
   if (imagesToAdd.length > 0) {
     // Merge with existing images (if any local paths exist)
-    const existingImages = college.images && Array.isArray(college.images) 
+    const existingImages = college.images && Array.isArray(college.images)
       ? college.images.filter((img: string) => !img.startsWith("http"))
       : []
-    
+
     const allImages = [...imagesToAdd, ...existingImages]
-    
+
     await db
       .update(colleges)
       .set({
@@ -645,7 +645,7 @@ async function enrichCollegeImages(college: any): Promise<void> {
         updatedAt: new Date()
       })
       .where(eq(colleges.id, college.id))
-    
+
     console.log(`    ✅ Updated with ${imagesToAdd.length} new image(s)`)
   } else {
     console.log(`    ⚠️  No valid images found`)
@@ -669,9 +669,9 @@ function normalizeCourseName(name: string): string {
 // Function to convert long course names to short format (matching database format)
 function normalizeCourseNameToShortFormat(name: string): string {
   if (!name) return name
-  
+
   let normalized = name.trim()
-  
+
   // Common patterns: convert long names to short abbreviations
   // Bachelor's degrees
   normalized = normalized.replace(/^Bachelor\s+of\s+Technology\s+in\s+/i, "B.Tech ")
@@ -687,7 +687,7 @@ function normalizeCourseNameToShortFormat(name: string): string {
   normalized = normalized.replace(/^Bachelor\s+of\s+Design\s*$/i, "B.Des")
   normalized = normalized.replace(/^Bachelor\s+of\s+Architecture\s*$/i, "B.Arch")
   normalized = normalized.replace(/^Bachelor\s+of\s+Medicine\s+and\s+Bachelor\s+of\s+Surgery\s*$/i, "MBBS")
-  
+
   // Master's degrees
   normalized = normalized.replace(/^Master\s+of\s+Technology\s+in\s+/i, "M.Tech ")
   normalized = normalized.replace(/^Master\s+of\s+Engineering\s+in\s+/i, "ME ")
@@ -705,14 +705,14 @@ function normalizeCourseNameToShortFormat(name: string): string {
   normalized = normalized.replace(/^Master\s+of\s+Architecture\s*$/i, "M.Arch")
   normalized = normalized.replace(/^Master\s+of\s+Law\s*$/i, "LLM")
   normalized = normalized.replace(/^Master\s+of\s+Laws\s*$/i, "LLM")
-  
+
   // Doctorate degrees
   normalized = normalized.replace(/^Doctor\s+of\s+Philosophy\s*$/i, "Ph.D")
   normalized = normalized.replace(/^Ph\.D\.?\s+in\s+/i, "Ph.D in ")
   normalized = normalized.replace(/^Master\s+of\s+Philosophy\s*$/i, "M.Phil")
   normalized = normalized.replace(/^M\.Phil\.?\s*\/\s*Ph\.D\.?\s+in\s+/i, "M.Phil/Ph.D in ")
   normalized = normalized.replace(/^M\.Phil\.?\s*\/\s*Ph\.D\.?\s*$/i, "M.Phil/Ph.D")
-  
+
   // Combined formats
   normalized = normalized.replace(/^BE\s*\/\s*B\.Tech\s*$/i, "BE/B.Tech")
   normalized = normalized.replace(/^B\.Tech\s*\/\s*BE\s*$/i, "BE/B.Tech")
@@ -722,10 +722,10 @@ function normalizeCourseNameToShortFormat(name: string): string {
   normalized = normalized.replace(/^PGDM\s*\/\s*MBA\s*$/i, "MBA/PGDM")
   normalized = normalized.replace(/^BBA\s*\/\s*BBM\s*$/i, "BBA/BBM")
   normalized = normalized.replace(/^BBM\s*\/\s*BBA\s*$/i, "BBA/BBM")
-  
+
   // Clean up extra spaces
   normalized = normalized.replace(/\s+/g, " ").trim()
-  
+
   // If no transformation happened and it's still a long name, try to extract key parts
   if (normalized === name && normalized.length > 30) {
     // Try to extract degree type and specialization
@@ -743,12 +743,12 @@ function normalizeCourseNameToShortFormat(name: string): string {
         else if (/^Master\s+of\s+Engineering/i.test(degree)) shortDegree = "ME"
         else if (/^Master\s+of\s+Business\s+Administration/i.test(degree)) shortDegree = "MBA"
         else if (/^Bachelor\s+of\s+Business\s+Administration/i.test(degree)) shortDegree = "BBA"
-        
+
         normalized = `${shortDegree} ${specialization}`
       }
     }
   }
-  
+
   return normalized || name
 }
 
@@ -759,26 +759,26 @@ async function enrichCoursesForCollege(college: any): Promise<void> {
     .select()
     .from(courses)
     .where(eq(courses.collegeId, college.id))
-  
+
   // Create a set of normalized existing course names for quick lookup
   const existingCourseNames = new Set(
     existingCourses.map(c => normalizeCourseName(c.name))
   )
-  
+
   if (existingCourses.length > 0) {
     console.log(`  📚 College has ${existingCourses.length} courses, searching for additional courses...`)
   } else {
     console.log(`  📚 Finding courses with Ollama (college has none)...`)
   }
-  
+
   // Get some example course names from database to show format
   const exampleCourses = await db
     .select({ name: courses.name })
     .from(courses)
     .limit(10)
-  
+
   const exampleCourseNames = exampleCourses.map(c => c.name).filter(Boolean).slice(0, 5)
-  
+
   const prompt = `List ALL the courses/programs offered by ${college.name} located in ${college.city || college.location || "India"}.
 
 ${college.website ? `College website: ${college.website} - check this website for complete course listings.` : ""}
@@ -838,7 +838,7 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Extract JSON array
     let jsonStr = response.trim()
     if (jsonStr.includes("```json")) {
@@ -846,37 +846,37 @@ Important:
     } else if (jsonStr.includes("```")) {
       jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
     }
-    
+
     // Parse JSON with error handling
     const coursesData = parseJsonFromOllama(response, 'array')
-    
+
     // Validate that we got an array
     if (!Array.isArray(coursesData)) {
       console.error(`⚠️  Expected array but got ${typeof coursesData}. Returning empty array.`)
       return
     }
-    
+
     let coursesAdded = 0
     let coursesSkipped = 0
-    
+
     // Add courses to database
     for (const courseData of coursesData) {
       if (!courseData.name) continue
-      
+
       // Normalize course name to short format (matching database format)
       const shortCourseName = normalizeCourseNameToShortFormat(courseData.name)
-      
+
       // Normalize course name for comparison
       const normalizedName = normalizeCourseName(shortCourseName)
-      
+
       // Skip if course already exists (by normalized name)
       if (existingCourseNames.has(normalizedName)) {
         coursesSkipped++
         continue
       }
-      
+
       const slug = `${shortCourseName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${college.slug}`.substring(0, 255)
-      
+
       try {
         // Double-check by slug to avoid duplicates
         const existing = await db
@@ -884,12 +884,12 @@ Important:
           .from(courses)
           .where(eq(courses.slug, slug))
           .limit(1)
-        
+
         if (existing.length > 0) {
           coursesSkipped++
           continue
         }
-        
+
         await db.insert(courses).values({
           name: shortCourseName,
           slug: slug,
@@ -903,7 +903,7 @@ Important:
         })
         console.log(`    ✅ Added course: ${shortCourseName}${shortCourseName !== courseData.name ? ` (normalized from: ${courseData.name})` : ""}`)
         coursesAdded++
-        
+
         // Add to existing set to avoid duplicates in same batch
         existingCourseNames.add(normalizedName)
       } catch (error: any) {
@@ -914,7 +914,7 @@ Important:
         }
       }
     }
-    
+
     if (coursesAdded > 0) {
       console.log(`  ✅ Added ${coursesAdded} new course(s)${coursesSkipped > 0 ? `, skipped ${coursesSkipped} duplicate(s)` : ""}`)
     } else if (coursesSkipped > 0) {
@@ -930,12 +930,12 @@ Important:
 // Main enrichment function
 async function enrichAllColleges(options: { discoverFirst?: boolean; importLinkingsky?: boolean } = {}) {
   const { discoverFirst = false, importLinkingsky = false } = options
-  
+
   // Step 0: Discover/Import colleges first if requested
   if (importLinkingsky) {
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     console.log("STEP 0: Importing Universities from Linkingsky")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     try {
       const linkingskyResult = await fetchUniversitiesFromLinkingsky()
       console.log(`✅ Imported ${linkingskyResult.added} universities from Linkingsky\n`)
@@ -944,11 +944,11 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
       console.error("⚠️  Linkingsky import failed, continuing with enrichment:", error)
     }
   }
-  
+
   if (discoverFirst) {
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     console.log("STEP 0: Discovering Missing Colleges")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     try {
       const discoveryResult = await discoverAndAddMissingColleges()
       console.log(`✅ Discovered and added ${discoveryResult.added} colleges\n`)
@@ -957,12 +957,12 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
       console.error("⚠️  Discovery failed, continuing with enrichment:", error)
     }
   }
-  
+
   // Step 1: Remove duplicates before enrichment
   if (discoverFirst || importLinkingsky) {
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     console.log("STEP 1: Removing Duplicate Colleges")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     try {
       const duplicateResult = await removeDuplicates(false) // Don't close connection
       console.log(`✅ Removed ${duplicateResult?.duplicatesRemoved || 0} duplicate colleges\n`)
@@ -971,11 +971,11 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
       console.error("⚠️  Duplicate removal failed, continuing with enrichment:", error)
     }
   }
-  
+
   // Step 2: Enrichment process
-  console.log("=" .repeat(60))
+  console.log("=".repeat(60))
   console.log("STEP 2: Enriching All Colleges")
-  console.log("=" .repeat(60))
+  console.log("=".repeat(60))
   console.log("🤖 Starting AI-powered data enrichment and verification with Ollama...\n")
   console.log("⚠️  This will:")
   console.log("   - Correct college names (fix typos, capitalization)")
@@ -985,11 +985,11 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
   console.log("   - Add courses")
   console.log("   - Add reviews and ratings")
   console.log("   - Search internet for accurate information\n")
-  
+
   try {
     const allColleges = await db.select().from(colleges)
     console.log(`📊 Found ${allColleges.length} colleges to process\n`)
-    
+
     let enrichedCount = 0
     let imagesAddedCount = 0
     let coursesAddedCount = 0
@@ -998,26 +998,26 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
     let placementsAddedCount = 0
     let guidesAddedCount = 0
     let skippedCount = 0
-    
+
     for (let i = 0; i < allColleges.length; i++) {
       const college = allColleges[i]
       console.log(`\n[${i + 1}/${allColleges.length}] Processing: ${college.name}`)
-      
+
       let collegeUpdated = false
-      
+
       // 0. Correct college name if needed
       const correctedName = await correctCollegeName(college)
       if (correctedName) {
         // Generate new slug if name changed
         const newSlug = generateSlug(correctedName)
-        
+
         // Check if new slug already exists
         const existingWithSlug = await db
           .select()
           .from(colleges)
           .where(eq(colleges.slug, newSlug))
           .limit(1)
-        
+
         if (existingWithSlug.length === 0 || existingWithSlug[0].id === college.id) {
           await db
             .update(colleges)
@@ -1027,7 +1027,7 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
               updatedAt: new Date()
             })
             .where(eq(colleges.id, college.id))
-          
+
           console.log(`  ✅ Name corrected and slug updated`)
           collegeUpdated = true
         } else {
@@ -1039,19 +1039,19 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
               updatedAt: new Date()
             })
             .where(eq(colleges.id, college.id))
-          
+
           collegeUpdated = true
         }
-        
+
         // Update college object for rest of processing
         college.name = correctedName
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
-      
+
       // 1. Enrich and verify all data fields
       const { missing, needsVerification } = getFieldsToCheck(college)
       const allFieldsToCheck = [...new Set([...missing, ...needsVerification])]
-      
+
       if (allFieldsToCheck.length > 0) {
         if (missing.length > 0) {
           console.log(`  📝 Missing fields: ${missing.join(", ")}`)
@@ -1060,9 +1060,9 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
           console.log(`  🔍 Fields needing verification: ${needsVerification.join(", ")}`)
         }
         console.log(`  🤖 Searching internet and verifying with Ollama...`)
-        
+
         const enrichedData = await enrichCollegeData(college, missing, needsVerification)
-        
+
         if (Object.keys(enrichedData).length > 0) {
           const updatedFields = Object.keys(enrichedData)
           await db
@@ -1072,9 +1072,9 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
               updatedAt: new Date()
             })
             .where(eq(colleges.id, college.id))
-          
+
           console.log(`  ✅ Updated ${updatedFields.length} field(s): ${updatedFields.join(", ")}`)
-          
+
           // Log specific corrections
           if (enrichedData.ranking && needsVerification.includes("ranking")) {
             console.log(`    📊 Ranking corrected: ${college.ranking} → ${enrichedData.ranking}`)
@@ -1088,29 +1088,29 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
           if (enrichedData.website && needsVerification.includes("website")) {
             console.log(`    🌐 Website corrected: ${college.website} → ${enrichedData.website}`)
           }
-          
+
           enrichedCount++
           collegeUpdated = true
         } else {
           console.log(`  ⚠️  No data updates needed`)
         }
-        
+
         // Small delay to avoid overwhelming Ollama
         await new Promise(resolve => setTimeout(resolve, 2000))
       } else {
         console.log(`  ✅ All data fields present and verified`)
       }
-      
+
       // 2. Enrich images (logo + campus) - only if logo missing
       await enrichCollegeImages(college)
       imagesAddedCount++
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
       // 3. Enrich courses - add if none exist, or add new ones if more are found
       await enrichCoursesForCollege(college)
       coursesAddedCount++
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
       // 4. Enrich reviews and ratings - only if college has less than 5 reviews
       const existingReviewsBefore = await db
         .select()
@@ -1125,22 +1125,8 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
         reviewsAddedCount++
       }
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // 5. Enrich cutoffs - only if college has less than 5 cutoff records
-      const existingCutoffsBefore = await db
-        .select()
-        .from(cutoffs)
-        .where(eq(cutoffs.collegeId, college.id))
-      await enrichCollegeCutoffs(college)
-      const existingCutoffsAfter = await db
-        .select()
-        .from(cutoffs)
-        .where(eq(cutoffs.collegeId, college.id))
-      if (existingCutoffsAfter.length > existingCutoffsBefore.length) {
-        cutoffsAddedCount++
-      }
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
+
       // 6. Enrich placement stats - only if college has less than 3 placement records
       const existingPlacementsBefore = await db
         .select()
@@ -1155,7 +1141,7 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
         placementsAddedCount++
       }
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
       // 7. Enrich application guides - only if college has no guides
       const existingGuidesBefore = await db
         .select()
@@ -1170,15 +1156,15 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
         guidesAddedCount++
       }
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
+
       if (!collegeUpdated && allFieldsToCheck.length === 0) {
         skippedCount++
       }
-      
+
       // Small delay between colleges
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
-    
+
     console.log(`\n✨ Enrichment completed!`)
     console.log(`📊 Summary:`)
     console.log(`   - Colleges with data enriched: ${enrichedCount}`)
@@ -1190,13 +1176,13 @@ async function enrichAllColleges(options: { discoverFirst?: boolean; importLinki
     console.log(`   - Colleges processed for application guides: ${guidesAddedCount}`)
     console.log(`   - Colleges skipped (already complete): ${skippedCount}`)
     console.log(`   - Total colleges processed: ${allColleges.length}`)
-    
+
     if (discoverFirst || importLinkingsky) {
       console.log(`\n${"=".repeat(60)}`)
       console.log("✨ Complete Process Finished!")
       console.log(`${"=".repeat(60)}`)
     }
-    
+
   } catch (error) {
     console.error("❌ Enrichment failed:", error)
     throw error
@@ -1230,20 +1216,20 @@ function generateSlug(name: string): string {
 // Function to discover and add missing Indian colleges
 async function discoverAndAddMissingColleges(state?: string, city?: string, batchSize: number = 50): Promise<{ added: number; skipped: number }> {
   console.log("🔍 Starting discovery of missing Indian colleges...\n")
-  
+
   if (state || city) {
     console.log(`📍 Searching for colleges in: ${city ? city + ", " : ""}${state || "India"}\n`)
   } else {
     console.log("📍 Searching for colleges across India\n")
   }
-  
+
   // Get existing college names and slugs for comparison
   const existingColleges = await db.select({ name: colleges.name, slug: colleges.slug, city: colleges.city, state: colleges.state }).from(colleges)
   const existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
   const existingSlugs = new Set(existingColleges.map(c => c.slug))
-  
+
   console.log(`📊 Found ${existingColleges.length} existing colleges in database\n`)
-  
+
   const prompt = `List ALL colleges/universities in India${state ? ` in the state of ${state}` : ""}${city ? ` in the city of ${city}` : ""}.
 
 Focus on ALL types of colleges:
@@ -1296,40 +1282,40 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Parse JSON with error handling
     const collegesData = parseJsonFromOllama(response, 'array')
-    
+
     // Validate that we got an array
     if (!Array.isArray(collegesData)) {
       console.error(`⚠️  Expected array but got ${typeof collegesData}. Returning empty array.`)
       return { added: 0, skipped: 0 }
     }
-    
+
     // Check if we got any data
     if (collegesData.length === 0) {
       console.log(`\n⚠️  No colleges found in response. Ollama may have returned empty or invalid data.`)
       return { added: 0, skipped: 0 }
     }
-    
+
     let added = 0
     let skipped = 0
-    
+
     console.log(`\n📋 Found ${collegesData.length} colleges from Ollama\n`)
-    
+
     // Process each college
     for (const collegeData of collegesData) {
       if (!collegeData.name) continue
-      
+
       const normalizedName = normalizeName(collegeData.name)
-      
+
       // Skip if college already exists
       if (existingNames.has(normalizedName)) {
         skipped++
         console.log(`  ⏭️  Skipped (already exists): ${collegeData.name}`)
         continue
       }
-      
+
       // Generate slug
       let slug = generateSlug(collegeData.name)
       let slugCounter = 1
@@ -1338,7 +1324,7 @@ Important:
         slugCounter++
       }
       existingSlugs.add(slug)
-      
+
       try {
         // Insert new college
         await db.insert(colleges).values({
@@ -1347,17 +1333,17 @@ Important:
           city: collegeData.city || null,
           state: collegeData.state || null,
           country: "India",
-          location: collegeData.city && collegeData.state 
+          location: collegeData.city && collegeData.state
             ? `${collegeData.city}, ${collegeData.state}`
             : collegeData.city || collegeData.state || null,
           website: collegeData.website || null,
           description: `${collegeData.name}${collegeData.city ? ` located in ${collegeData.city}` : ""}${collegeData.state ? `, ${collegeData.state}` : ""}${collegeData.type ? ` - ${collegeData.type} college` : ""}`,
         })
-        
+
         console.log(`  ✅ Added: ${collegeData.name}${collegeData.city ? ` (${collegeData.city}, ${collegeData.state || ""})` : ""}`)
         added++
         existingNames.add(normalizedName)
-        
+
         // Small delay to avoid overwhelming database
         await new Promise(resolve => setTimeout(resolve, 100))
       } catch (error: any) {
@@ -1369,12 +1355,12 @@ Important:
         }
       }
     }
-    
+
     console.log(`\n✨ Discovery completed!`)
     console.log(`📊 Summary:`)
     console.log(`   - Colleges added: ${added}`)
     console.log(`   - Colleges skipped: ${skipped}`)
-    
+
     return { added, skipped }
   } catch (error) {
     console.error("❌ Error discovering colleges:", error)
@@ -1389,16 +1375,16 @@ async function enrichCollegeReviews(college: any): Promise<void> {
     .select()
     .from(collegeReviews)
     .where(eq(collegeReviews.collegeId, college.id))
-  
+
   // Only add reviews if college has less than 5 reviews
   if (existingReviews.length >= 5) {
     console.log(`  ⏭️  College already has ${existingReviews.length} reviews`)
     return
   }
-  
+
   const reviewsNeeded = 5 - existingReviews.length
   console.log(`  💬 Finding ${reviewsNeeded} review(s) with Ollama (college has ${existingReviews.length})...`)
-  
+
   const prompt = `Find or generate realistic student reviews and ratings for ${college.name} located in ${college.city || college.location || "India"}.
 
 ${college.website ? `College website: ${college.website} - check this website for reviews if available.` : ""}
@@ -1449,55 +1435,55 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Parse JSON with error handling
     const reviewsData = parseJsonFromOllama(response, 'array')
-    
+
     // Validate that we got an array
     if (!Array.isArray(reviewsData)) {
       console.error(`⚠️  Expected array but got ${typeof reviewsData}. Returning empty array.`)
       return
     }
-    
+
     let reviewsAdded = 0
-    
+
     // Add reviews to database
     for (let i = 0; i < reviewsData.length; i++) {
       const reviewData = reviewsData[i]
       if (!reviewData.review || !reviewData.rating) continue
-      
+
       // Validate rating (1-5)
       const rating = Math.max(1, Math.min(5, parseInt(reviewData.rating) || 4))
-      
+
       // Validate category
       const validCategories = ["academics", "infrastructure", "placements", "campus_life", "faculty"]
       const category = validCategories.includes(reviewData.category) ? reviewData.category : "academics"
-      
+
       // Generate realistic review date based on batch year
       let reviewDate = new Date()
       const batchYear = reviewData.batch ? parseInt(reviewData.batch) : null
-      
+
       if (batchYear && batchYear >= 2018 && batchYear <= 2024) {
         // Review date should be after graduation (batch year + course duration)
         // For B.Tech (4 years), MBA (2 years), etc.
-        const courseDuration = reviewData.course?.toLowerCase().includes("m.tech") || 
-                              reviewData.course?.toLowerCase().includes("mba") || 
-                              reviewData.course?.toLowerCase().includes("m.") ? 2 : 4
-        
+        const courseDuration = reviewData.course?.toLowerCase().includes("m.tech") ||
+          reviewData.course?.toLowerCase().includes("mba") ||
+          reviewData.course?.toLowerCase().includes("m.") ? 2 : 4
+
         const graduationYear = batchYear + courseDuration
         const currentYear = new Date().getFullYear()
         const currentMonth = new Date().getMonth()
-        
+
         // Review can be from graduation year to current year
         // Spread reviews over time - some recent, some older
         const yearsSinceGraduation = Math.min(currentYear - graduationYear, 3) // Max 3 years after graduation
         const randomYearOffset = Math.floor(Math.random() * (yearsSinceGraduation + 1))
         const reviewYear = Math.min(graduationYear + randomYearOffset, currentYear)
-        
+
         // Random month (1-12) and day (1-28 to avoid month-end issues)
         const randomMonth = Math.floor(Math.random() * 12)
         const randomDay = Math.floor(Math.random() * 28) + 1
-        
+
         // If review year is current year, don't go beyond current month
         if (reviewYear === currentYear) {
           const maxMonth = Math.min(randomMonth, currentMonth)
@@ -1511,18 +1497,18 @@ Important:
         reviewDate = new Date()
         reviewDate.setDate(reviewDate.getDate() - daysAgo)
       }
-      
+
       // Add some variation to avoid all reviews on same day
       // Spread reviews over a few days/weeks
       const dayVariation = Math.floor(Math.random() * 30) - 15 // ±15 days
       reviewDate.setDate(reviewDate.getDate() + dayVariation)
-      
+
       // Ensure date is not in the future
       if (reviewDate > new Date()) {
         reviewDate = new Date()
         reviewDate.setDate(reviewDate.getDate() - Math.floor(Math.random() * 30))
       }
-      
+
       try {
         await db.insert(collegeReviews).values({
           collegeId: college.id,
@@ -1539,7 +1525,7 @@ Important:
           externalDate: reviewDate, // Set realistic review date
           createdAt: reviewDate, // Also set createdAt to match
         })
-        
+
         console.log(`    ✅ Added review: ${rating} stars - "${reviewData.title || reviewData.review.substring(0, 50)}..."`)
         reviewsAdded++
       } catch (error: any) {
@@ -1548,7 +1534,7 @@ Important:
         }
       }
     }
-    
+
     if (reviewsAdded > 0) {
       console.log(`  ✅ Added ${reviewsAdded} review(s)`)
     } else {
@@ -1562,23 +1548,23 @@ Important:
 // Function to enrich reviews for all colleges
 async function enrichAllCollegeReviews(): Promise<void> {
   console.log("💬 Starting review and rating enrichment with Ollama...\n")
-  
+
   try {
     const allColleges = await db.select().from(colleges)
     console.log(`📊 Found ${allColleges.length} colleges to process\n`)
-    
+
     let reviewsAddedCount = 0
     let skippedCount = 0
-    
+
     for (let i = 0; i < allColleges.length; i++) {
       const college = allColleges[i]
       console.log(`\n[${i + 1}/${allColleges.length}] Processing: ${college.name}`)
-      
+
       const existingReviews = await db
         .select()
         .from(collegeReviews)
         .where(eq(collegeReviews.collegeId, college.id))
-      
+
       if (existingReviews.length >= 5) {
         console.log(`  ⏭️  College already has ${existingReviews.length} reviews`)
         skippedCount++
@@ -1586,17 +1572,17 @@ async function enrichAllCollegeReviews(): Promise<void> {
         await enrichCollegeReviews(college)
         reviewsAddedCount++
       }
-      
+
       // Small delay between colleges
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
-    
+
     console.log(`\n✨ Review enrichment completed!`)
     console.log(`📊 Summary:`)
     console.log(`   - Colleges processed for reviews: ${reviewsAddedCount}`)
     console.log(`   - Colleges skipped (already have 5+ reviews): ${skippedCount}`)
     console.log(`   - Total colleges processed: ${allColleges.length}`)
-    
+
   } catch (error) {
     console.error("❌ Review enrichment failed:", error)
     throw error
@@ -1605,134 +1591,6 @@ async function enrichAllCollegeReviews(): Promise<void> {
   }
 }
 
-// Function to enrich cutoffs for a college
-async function enrichCollegeCutoffs(college: any): Promise<void> {
-  // Check if college already has cutoffs
-  const existingCutoffs = await db
-    .select()
-    .from(cutoffs)
-    .where(eq(cutoffs.collegeId, college.id))
-  
-  // Only add cutoffs if college has less than 5 cutoff records
-  if (existingCutoffs.length >= 5) {
-    console.log(`  ⏭️  College already has ${existingCutoffs.length} cutoff records`)
-    return
-  }
-  
-  // Get college courses to know which exams/courses to look for
-  const collegeCourses = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.collegeId, college.id))
-  
-  const courseNames = collegeCourses.map(c => c.name).join(", ") || "various courses"
-  
-  console.log(`  📊 Finding cutoff data (college has ${existingCutoffs.length} records)...`)
-  
-  const prompt = `Find entrance exam cutoff data for ${college.name} located in ${college.city || college.location || "India"}.
-
-${college.website ? `College website: ${college.website} - check this website for cutoff information.` : ""}
-${college.description ? `College description: ${college.description.substring(0, 500)}` : ""}
-${collegeCourses.length > 0 ? `College offers: ${courseNames}` : ""}
-
-Find cutoff data for recent years (2022-2024) including:
-- Entrance exam names (JEE, NEET, CAT, GMAT, etc.)
-- Course names
-- Opening and closing ranks/scores
-- Categories (General, OBC, SC, ST, EWS)
-- Quota (All India, State, Management, etc.)
-
-Return a JSON array with this exact format:
-[
-  {
-    "examName": "JEE Advanced",
-    "courseName": "B.Tech Computer Science",
-    "year": 2024,
-    "category": "General",
-    "openingRank": 1500,
-    "closingRank": 3500,
-    "openingScore": 95,
-    "closingScore": 88,
-    "round": 1,
-    "quota": "All India"
-  },
-  {
-    "examName": "CAT",
-    "courseName": "MBA",
-    "year": 2024,
-    "category": "General",
-    "openingScore": 98,
-    "closingScore": 92,
-    "round": 1,
-    "quota": "All India"
-  }
-]
-
-Important:
-- Include cutoff data for at least 3-5 different exams/courses if available
-- Use realistic rank/score values based on actual cutoff trends
-- Include data for multiple categories (General, OBC, SC, ST) if available
-- Years should be 2022, 2023, or 2024
-- Return ONLY the JSON array, no other text or markdown`
-
-  try {
-    const response = await ollama.chat([{
-      role: "user",
-      content: prompt
-    }])
-    
-    // Parse JSON with error handling
-    const cutoffsData = parseJsonFromOllama(response, 'array')
-    
-    // Validate that we got an array
-    if (!Array.isArray(cutoffsData)) {
-      console.error(`⚠️  Expected array but got ${typeof cutoffsData}. Returning empty array.`)
-      return
-    }
-    
-    let cutoffsAdded = 0
-    
-    // Add cutoffs to database
-    for (const cutoffData of cutoffsData) {
-      if (!cutoffData.examName || !cutoffData.year) continue
-      
-      // Validate year (2020-2024)
-      const year = parseInt(cutoffData.year)
-      if (isNaN(year) || year < 2020 || year > new Date().getFullYear()) continue
-      
-      try {
-        await db.insert(cutoffs).values({
-          collegeId: college.id,
-          examName: cutoffData.examName,
-          courseName: cutoffData.courseName || null,
-          year: year,
-          category: cutoffData.category || null,
-          openingRank: cutoffData.openingRank ? parseInt(cutoffData.openingRank) : null,
-          closingRank: cutoffData.closingRank ? parseInt(cutoffData.closingRank) : null,
-          openingScore: cutoffData.openingScore ? parseInt(cutoffData.openingScore) : null,
-          closingScore: cutoffData.closingScore ? parseInt(cutoffData.closingScore) : null,
-          round: cutoffData.round ? parseInt(cutoffData.round) : 1,
-          quota: cutoffData.quota || null,
-        })
-        
-        console.log(`    ✅ Added cutoff: ${cutoffData.examName} - ${cutoffData.courseName || "General"} (${year})`)
-        cutoffsAdded++
-      } catch (error: any) {
-        if (error?.code !== "23505") { // Ignore duplicate errors
-          console.error(`    ❌ Error adding cutoff:`, error.message)
-        }
-      }
-    }
-    
-    if (cutoffsAdded > 0) {
-      console.log(`  ✅ Added ${cutoffsAdded} cutoff record(s)`)
-    } else {
-      console.log(`  ⚠️  No cutoff data found or added`)
-    }
-  } catch (error) {
-    console.error(`Error enriching cutoffs for ${college.name}:`, error)
-  }
-}
 
 // Function to enrich placement stats for a college
 async function enrichPlacementStats(college: any): Promise<void> {
@@ -1741,15 +1599,15 @@ async function enrichPlacementStats(college: any): Promise<void> {
     .select()
     .from(placementStats)
     .where(eq(placementStats.collegeId, college.id))
-  
+
   // Only add if college has less than 3 placement records
   if (existingPlacements.length >= 3) {
     console.log(`  ⏭️  College already has ${existingPlacements.length} placement records`)
     return
   }
-  
+
   console.log(`  💼 Finding placement statistics (college has ${existingPlacements.length} records)...`)
-  
+
   const prompt = `Find placement statistics for ${college.name} located in ${college.city || college.location || "India"}.
 
 ${college.website ? `College website: ${college.website} - check this website for placement data.` : ""}
@@ -1803,26 +1661,26 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Parse JSON with error handling
     const placementsData = parseJsonFromOllama(response, 'array')
-    
+
     // Validate that we got an array
     if (!Array.isArray(placementsData)) {
       console.error(`⚠️  Expected array but got ${typeof placementsData}. Returning empty array.`)
       return
     }
-    
+
     let placementsAdded = 0
-    
+
     // Add placement stats to database
     for (const placementData of placementsData) {
       if (!placementData.year) continue
-      
+
       // Validate year (2020-2024)
       const year = parseInt(placementData.year)
       if (isNaN(year) || year < 2020 || year > new Date().getFullYear()) continue
-      
+
       try {
         await db.insert(placementStats).values({
           collegeId: college.id,
@@ -1837,7 +1695,7 @@ Important:
           topRecruiters: placementData.topRecruiters || [],
           departmentWiseData: placementData.departmentWiseData || {},
         })
-        
+
         console.log(`    ✅ Added placement stats: ${year} (${placementData.placementPercentage || "N/A"}% placement)`)
         placementsAdded++
       } catch (error: any) {
@@ -1846,7 +1704,7 @@ Important:
         }
       }
     }
-    
+
     if (placementsAdded > 0) {
       console.log(`  ✅ Added ${placementsAdded} placement record(s)`)
     } else {
@@ -1864,21 +1722,21 @@ async function enrichApplicationGuides(college: any): Promise<void> {
     .select()
     .from(applicationGuides)
     .where(eq(applicationGuides.collegeId, college.id))
-  
+
   // Only add if college has no application guides
   if (existingGuides.length > 0) {
     console.log(`  ⏭️  College already has ${existingGuides.length} application guide(s)`)
     return
   }
-  
+
   // Get college courses to create course-specific guides
   const collegeCourses = await db
     .select()
     .from(courses)
     .where(eq(courses.collegeId, college.id))
-  
+
   console.log(`  📝 Creating application guide (college has ${existingGuides.length} guides)...`)
-  
+
   const prompt = `Create a comprehensive application guide for ${college.name} located in ${college.city || college.location || "India"}.
 
 ${college.website ? `College website: ${college.website} - check this website for application information.` : ""}
@@ -1934,21 +1792,21 @@ Important:
       role: "user",
       content: prompt
     }])
-    
+
     // Parse JSON with error handling
     const guideData = parseJsonFromOllama(response, 'object')
-    
+
     // Validate that we got an object
     if (typeof guideData !== 'object' || Array.isArray(guideData)) {
       console.error(`⚠️  Expected object but got ${typeof guideData}. Skipping guide creation.`)
       return
     }
-    
+
     if (!guideData.guideContent) {
       console.log(`  ⚠️  No valid guide content found`)
       return
     }
-    
+
     try {
       await db.insert(applicationGuides).values({
         collegeId: college.id,
@@ -1960,7 +1818,7 @@ Important:
         applicationUrl: guideData.applicationUrl || null,
         contactInfo: guideData.contactInfo || {},
       })
-      
+
       console.log(`  ✅ Added application guide`)
     } catch (error: any) {
       if (error?.code !== "23505") { // Ignore duplicate errors
@@ -1975,37 +1833,37 @@ Important:
 // Function to correct all college names
 async function correctAllCollegeNames(): Promise<{ corrected: number; skipped: number }> {
   console.log("✏️  Starting college name correction process...\n")
-  
+
   try {
     const allColleges = await db.select().from(colleges)
     console.log(`📊 Found ${allColleges.length} colleges to check\n`)
-    
+
     let corrected = 0
     let skipped = 0
-    
+
     for (let i = 0; i < allColleges.length; i++) {
       const college = allColleges[i]
-      
+
       if (!needsNameCorrection(college.name)) {
         skipped++
         continue
       }
-      
+
       console.log(`\n[${i + 1}/${allColleges.length}] Checking: ${college.name}`)
-      
+
       const correctedName = await correctCollegeName(college)
-      
+
       if (correctedName) {
         // Generate new slug if name changed
         const newSlug = generateSlug(correctedName)
-        
+
         // Check if new slug already exists
         const existingWithSlug = await db
           .select()
           .from(colleges)
           .where(eq(colleges.slug, newSlug))
           .limit(1)
-        
+
         if (existingWithSlug.length === 0 || existingWithSlug[0].id === college.id) {
           await db
             .update(colleges)
@@ -2015,7 +1873,7 @@ async function correctAllCollegeNames(): Promise<{ corrected: number; skipped: n
               updatedAt: new Date()
             })
             .where(eq(colleges.id, college.id))
-          
+
           console.log(`  ✅ Name and slug updated`)
           corrected++
         } else {
@@ -2027,23 +1885,23 @@ async function correctAllCollegeNames(): Promise<{ corrected: number; skipped: n
               updatedAt: new Date()
             })
             .where(eq(colleges.id, college.id))
-          
+
           corrected++
         }
       } else {
         skipped++
       }
-      
+
       // Small delay between colleges
       await new Promise(resolve => setTimeout(resolve, 2000))
     }
-    
+
     console.log(`\n✨ Name correction completed!`)
     console.log(`📊 Summary:`)
     console.log(`   - Names corrected: ${corrected}`)
     console.log(`   - Names skipped (already correct): ${skipped}`)
     console.log(`   - Total colleges processed: ${allColleges.length}`)
-    
+
     return { corrected, skipped }
   } catch (error) {
     console.error("❌ Name correction failed:", error)
@@ -2056,36 +1914,36 @@ async function correctAllCollegeNames(): Promise<{ corrected: number; skipped: n
 // Main function to discover colleges, remove duplicates, and enrich
 async function discoverEnrichAndCleanup(state?: string, city?: string) {
   console.log("🚀 Starting complete college discovery and enrichment process...\n")
-  
+
   try {
     // Step 1: Discover and add missing colleges
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     console.log("STEP 1: Discovering Missing Colleges")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     const discoveryResult = await discoverAndAddMissingColleges(state, city)
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Step 2: Remove duplicates
-    console.log("\n" + "=" .repeat(60))
+    console.log("\n" + "=".repeat(60))
     console.log("STEP 2: Removing Duplicate Colleges")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     const duplicateResult = await removeDuplicates(false) // Don't close connection, enrichAllColleges needs it
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // Step 3: Enrich all colleges
-    console.log("\n" + "=" .repeat(60))
+    console.log("\n" + "=".repeat(60))
     console.log("STEP 3: Enriching College Data")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     await enrichAllColleges()
-    
-    console.log("\n" + "=" .repeat(60))
+
+    console.log("\n" + "=".repeat(60))
     console.log("✨ Complete Process Finished!")
-    console.log("=" .repeat(60))
+    console.log("=".repeat(60))
     console.log(`📊 Final Summary:`)
     console.log(`   - Colleges discovered and added: ${discoveryResult.added}`)
     console.log(`   - Duplicates removed: ${duplicateResult?.duplicatesRemoved || 0}`)
     console.log(`   - Courses merged: ${duplicateResult?.coursesMerged || 0}`)
-    
+
     return {
       discovery: discoveryResult,
       duplicates: duplicateResult,
@@ -2099,9 +1957,9 @@ async function discoverEnrichAndCleanup(state?: string, city?: string) {
 // Function to fetch and parse universities from linkingsky.com
 async function fetchUniversitiesFromLinkingsky(): Promise<{ added: number; skipped: number }> {
   console.log("🌐 Fetching universities from linkingsky.com...\n")
-  
+
   const url = "https://linkingsky.com/career-news/universities-list.html"
-  
+
   try {
     // Fetch the webpage
     console.log(`📡 Fetching: ${url}`)
@@ -2110,29 +1968,29 @@ async function fetchUniversitiesFromLinkingsky(): Promise<{ added: number; skipp
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       }
     })
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
     }
-    
+
     const html = await response.text()
     console.log(`✅ Fetched ${html.length} characters of HTML\n`)
-    
+
     // Use Ollama to extract ALL university data from HTML
     // Send full HTML with clear instructions to extract everything
     console.log("🤖 Using Ollama to extract ALL universities from HTML...\n")
     console.log("⚠️  This may take a few minutes as we extract all 1198+ universities...\n")
-    
+
     let universitiesData: any[] = []
-    
+
     // Process HTML in smaller chunks by state sections to avoid timeout
     // Split by state headings (h2 or h3 with state names)
     const statePattern = /<h[23][^>]*>.*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\(?\d+\)?.*?<\/h[23]>/gi
     const stateMatches = [...html.matchAll(statePattern)]
-    
+
     console.log(`📊 Found ${stateMatches.length} state sections in HTML\n`)
     console.log("🔄 Processing each state section separately to avoid timeout...\n")
-    
+
     // Process each state section
     for (let i = 0; i < stateMatches.length; i++) {
       const match = stateMatches[i]
@@ -2140,9 +1998,9 @@ async function fetchUniversitiesFromLinkingsky(): Promise<{ added: number; skipp
       const startIndex = match.index || 0
       const endIndex = i < stateMatches.length - 1 ? (stateMatches[i + 1].index || html.length) : html.length
       const stateSection = html.substring(startIndex, Math.min(endIndex, startIndex + 50000)) // Limit to 50KB per section
-      
+
       console.log(`  Processing state ${i + 1}/${stateMatches.length}: ${stateName}...`)
-      
+
       const prompt = `Extract ALL universities/colleges from this HTML section for ${stateName} state.
 
 The section contains universities organized by categories:
@@ -2170,13 +2028,13 @@ Return JSON array:
 ]
 
 Extract ALL universities from this ${stateName} section.`
-      
+
       try {
         const ollamaResponse = await ollama.chat([{
           role: "user",
           content: prompt
         }])
-      
+
         // Extract JSON array from response
         let jsonStr = ollamaResponse.trim()
         if (jsonStr.includes("```json")) {
@@ -2184,19 +2042,19 @@ Extract ALL universities from this ${stateName} section.`
         } else if (jsonStr.includes("```")) {
           jsonStr = jsonStr.split("```")[1].split("```")[0].trim()
         }
-        
+
         // Parse JSON with error handling
         const stateUniversities = parseJsonFromOllama(ollamaResponse, 'array')
-        
+
         // Validate that we got an array
         if (!Array.isArray(stateUniversities)) {
           console.error(`⚠️  Expected array but got ${typeof stateUniversities}. Skipping ${stateName}.`)
           continue
         }
         universitiesData = universitiesData.concat(stateUniversities)
-        
+
         console.log(`    ✅ Extracted ${stateUniversities.length} universities from ${stateName}`)
-        
+
         // Small delay between states
         await new Promise(resolve => setTimeout(resolve, 3000))
       } catch (error) {
@@ -2204,7 +2062,7 @@ Extract ALL universities from this ${stateName} section.`
         // Continue with next state
       }
     }
-    
+
     // Remove duplicates based on normalized name
     const uniqueUniversities = new Map<string, any>()
     for (const uni of universitiesData) {
@@ -2214,28 +2072,28 @@ Extract ALL universities from this ${stateName} section.`
         uniqueUniversities.set(normalized, uni)
       }
     }
-    
+
     universitiesData = Array.from(uniqueUniversities.values())
-    
+
     console.log(`\n📋 Extracted ${universitiesData.length} unique universities from HTML\n`)
-    
+
     // Get existing college names and slugs for comparison
     const existingColleges = await db.select({ name: colleges.name, slug: colleges.slug, city: colleges.city, state: colleges.state }).from(colleges)
     const existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
     const existingSlugs = new Set(existingColleges.map(c => c.slug))
-    
+
     console.log(`📊 Found ${existingColleges.length} existing colleges in database\n`)
-    
+
     let added = 0
     let skipped = 0
-    
+
     // Process each university
     for (let i = 0; i < universitiesData.length; i++) {
       const universityData = universitiesData[i]
       if (!universityData.name) continue
-      
+
       const normalizedName = normalizeName(universityData.name)
-      
+
       // Skip if university already exists
       if (existingNames.has(normalizedName)) {
         skipped++
@@ -2244,7 +2102,7 @@ Extract ALL universities from this ${stateName} section.`
         }
         continue
       }
-      
+
       // Generate slug
       let slug = generateSlug(universityData.name)
       let slugCounter = 1
@@ -2253,7 +2111,7 @@ Extract ALL universities from this ${stateName} section.`
         slugCounter++
       }
       existingSlugs.add(slug)
-      
+
       // Extract city from name or use state as fallback
       let city = universityData.city || null
       if (!city && universityData.name) {
@@ -2263,7 +2121,7 @@ Extract ALL universities from this ${stateName} section.`
           city = cityMatch[1].trim()
         }
       }
-      
+
       try {
         // Insert new university/college
         await db.insert(colleges).values({
@@ -2272,20 +2130,20 @@ Extract ALL universities from this ${stateName} section.`
           city: city,
           state: universityData.state || null,
           country: "India",
-          location: city && universityData.state 
+          location: city && universityData.state
             ? `${city}, ${universityData.state}`
             : city || universityData.state || null,
           description: `${universityData.name}${universityData.state ? ` located in ${universityData.state}` : ""}${universityData.category ? ` - ${universityData.category}` : ""}`,
-          ownership: universityData.category?.includes("Private") ? "Private" : 
-                    universityData.category?.includes("Government") ? "Government" : null,
+          ownership: universityData.category?.includes("Private") ? "Private" :
+            universityData.category?.includes("Government") ? "Government" : null,
         })
-        
+
         if (i % 10 === 0 || added < 20) {
           console.log(`  ✅ Added: ${universityData.name}${universityData.state ? ` (${universityData.state})` : ""}`)
         }
         added++
         existingNames.add(normalizedName)
-        
+
         // Small delay to avoid overwhelming database
         await new Promise(resolve => setTimeout(resolve, 50))
       } catch (error: any) {
@@ -2297,13 +2155,13 @@ Extract ALL universities from this ${stateName} section.`
         }
       }
     }
-    
+
     console.log(`\n✨ Linkingsky import completed!`)
     console.log(`📊 Summary:`)
     console.log(`   - Universities added: ${added}`)
     console.log(`   - Universities skipped (already exist): ${skipped}`)
     console.log(`   - Total universities processed: ${universitiesData.length}`)
-    
+
     return { added, skipped }
   } catch (error) {
     console.error("❌ Error fetching universities from linkingsky:", error)
@@ -2318,7 +2176,7 @@ Extract ALL universities from this ${stateName} section.`
 async function discoverCollegesComprehensive(): Promise<{ added: number; skipped: number; statesProcessed: number }> {
   console.log("🚀 Starting comprehensive college discovery across all Indian states...\n")
   console.log("📊 This will discover colleges from all 28 states and 8 union territories\n")
-  
+
   // All Indian states and union territories
   const indianStates = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -2331,7 +2189,7 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
     "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
     "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
   ]
-  
+
   // Major cities for additional discovery
   const majorCities = [
     "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai",
@@ -2339,32 +2197,32 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
     "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane",
     "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad"
   ]
-  
+
   let totalAdded = 0
   let totalSkipped = 0
   let statesProcessed = 0
-  
+
   // Refresh existing colleges list periodically
   let existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
   let existingNames = new Set(existingColleges.map(c => normalizeName(c.name)))
   let existingSlugs = new Set(existingColleges.map(c => c.slug))
-  
+
   console.log(`📊 Starting with ${existingColleges.length} existing colleges\n`)
-  
+
   // Discover by state
   for (let i = 0; i < indianStates.length; i++) {
     const state = indianStates[i]
     console.log(`\n${"=".repeat(60)}`)
     console.log(`[${i + 1}/${indianStates.length}] Processing State: ${state}`)
     console.log(`${"=".repeat(60)}`)
-    
+
     try {
       // Discover colleges in this state (request larger batches)
       const result = await discoverAndAddMissingColleges(state, undefined, 100)
       totalAdded += result.added
       totalSkipped += result.skipped
       statesProcessed++
-      
+
       // Refresh existing colleges list every 5 states to catch new additions
       if ((i + 1) % 5 === 0) {
         existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
@@ -2372,7 +2230,7 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
         existingSlugs = new Set(existingColleges.map(c => c.slug))
         console.log(`\n🔄 Refreshed existing colleges list (now ${existingColleges.length} colleges)`)
       }
-      
+
       // Delay between states to avoid overwhelming Ollama
       await new Promise(resolve => setTimeout(resolve, 3000))
     } catch (error) {
@@ -2380,21 +2238,21 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
       // Continue with next state
     }
   }
-  
+
   // Also discover by major cities (to catch colleges that might be missed)
   console.log(`\n${"=".repeat(60)}`)
   console.log("Processing Major Cities for Additional Discovery")
   console.log(`${"=".repeat(60)}`)
-  
+
   for (let i = 0; i < majorCities.length; i++) {
     const city = majorCities[i]
     console.log(`\n[${i + 1}/${majorCities.length}] Processing City: ${city}`)
-    
+
     try {
       const result = await discoverAndAddMissingColleges(undefined, city, 50)
       totalAdded += result.added
       totalSkipped += result.skipped
-      
+
       // Refresh existing colleges list every 5 cities
       if ((i + 1) % 5 === 0) {
         existingColleges = await db.select({ name: colleges.name, slug: colleges.slug }).from(colleges)
@@ -2402,17 +2260,17 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
         existingSlugs = new Set(existingColleges.map(c => c.slug))
         console.log(`\n🔄 Refreshed existing colleges list (now ${existingColleges.length} colleges)`)
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 2000))
     } catch (error) {
       console.error(`❌ Error processing city ${city}:`, error)
       // Continue with next city
     }
   }
-  
+
   // Final count
   const finalColleges = await db.select().from(colleges)
-  
+
   console.log(`\n${"=".repeat(60)}`)
   console.log("✨ Comprehensive Discovery Completed!")
   console.log(`${"=".repeat(60)}`)
@@ -2423,7 +2281,7 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
   console.log(`   - Total colleges skipped: ${totalSkipped}`)
   console.log(`   - Final college count: ${finalColleges.length}`)
   console.log(`   - New colleges discovered: ${finalColleges.length - existingColleges.length}`)
-  
+
   return {
     added: totalAdded,
     skipped: totalSkipped,
@@ -2431,5 +2289,5 @@ async function discoverCollegesComprehensive(): Promise<{ added: number; skipped
   }
 }
 
-export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, enrichCollegeCutoffs, enrichPlacementStats, enrichApplicationGuides, correctCollegeName, correctAllCollegeNames, fetchUniversitiesFromLinkingsky, discoverCollegesComprehensive }
+export { enrichAllColleges, enrichCollegeData, enrichCoursesForCollege, enrichCollegeImages, discoverAndAddMissingColleges, discoverEnrichAndCleanup, enrichCollegeReviews, enrichAllCollegeReviews, enrichPlacementStats, enrichApplicationGuides, correctCollegeName, correctAllCollegeNames, fetchUniversitiesFromLinkingsky, discoverCollegesComprehensive }
 

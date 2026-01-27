@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/db"
-import { colleges, courses, collegeReviews, cutoffs, placementStats, collegeRankings } from "@/db/schema"
+import { colleges, courses, collegeReviews, placementStats, collegeRankings } from "@/db/schema"
 import { ilike, or, and, eq, gte, lte, sql, desc, asc, inArray } from "drizzle-orm"
 import { searchCache, generateCacheKey } from "@/lib/search/cache"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
+
     // Check cache first
     const cacheParams: Record<string, any> = {}
     searchParams.forEach((value, key) => {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (cachedResult) {
       return NextResponse.json(cachedResult)
     }
-    
+
     // Extract filter parameters
     const search = searchParams.get("search") || ""
     const location = searchParams.get("location") || ""
@@ -30,11 +30,6 @@ export async function GET(request: NextRequest) {
     const ownership = searchParams.get("ownership") || ""
     const academicAlliance = searchParams.get("academicAlliance")
     // New filter parameters
-    const cutoffExam = searchParams.get("cutoffExam") || ""
-    const cutoffCategory = searchParams.get("cutoffCategory") || ""
-    const cutoffYear = searchParams.get("cutoffYear") || ""
-    const cutoffRankMin = searchParams.get("cutoffRankMin") || ""
-    const cutoffRankMax = searchParams.get("cutoffRankMax") || ""
     const placementPackageMin = searchParams.get("placementPackageMin") || ""
     const placementPackageMax = searchParams.get("placementPackageMax") || ""
     const placementPercentageMin = searchParams.get("placementPercentageMin") || ""
@@ -159,7 +154,6 @@ export async function GET(request: NextRequest) {
       campusSize: colleges.campusSize,
       totalStudents: colleges.totalStudents,
       googlePlaceId: colleges.googlePlaceId,
-      cutoffData: colleges.cutoffData,
       placementData: colleges.placementData,
       rankingData: colleges.rankingData,
       createdAt: colleges.createdAt,
@@ -221,35 +215,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Cutoff filters - filter colleges based on cutoff data
-    if (cutoffExam || cutoffCategory || cutoffYear || cutoffRankMin || cutoffRankMax) {
-      const cutoffConditions = []
-      if (cutoffExam) {
-        cutoffConditions.push(eq(cutoffs.examName, cutoffExam))
-      }
-      if (cutoffCategory) {
-        cutoffConditions.push(eq(cutoffs.category, cutoffCategory))
-      }
-      if (cutoffYear) {
-        cutoffConditions.push(eq(cutoffs.year, parseInt(cutoffYear)))
-      }
-      if (cutoffRankMin) {
-        cutoffConditions.push(gte(cutoffs.closingRank, parseInt(cutoffRankMin)))
-      }
-      if (cutoffRankMax) {
-        cutoffConditions.push(lte(cutoffs.openingRank, parseInt(cutoffRankMax)))
-      }
-
-      if (cutoffConditions.length > 0) {
-        const collegesWithCutoffs = await db
-          .selectDistinct({ collegeId: cutoffs.collegeId })
-          .from(cutoffs)
-          .where(and(...cutoffConditions))
-
-        const collegeIds = new Set(collegesWithCutoffs.map((c) => c.collegeId))
-        filteredColleges = filteredColleges.filter((c) => collegeIds.has(c.id))
-      }
-    }
 
     // Placement filters
     if (placementPackageMin || placementPackageMax || placementPercentageMin) {
@@ -305,7 +270,7 @@ export async function GET(request: NextRequest) {
     // Get average ratings for colleges (for sorting by rating)
     const collegeIds = filteredColleges.map((c) => c.id)
     let ratingsMap: Record<number, number> = {}
-    
+
     if (collegeIds.length > 0 && sortBy === "rating") {
       const ratings = await db
         .select({

@@ -868,4 +868,3 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   featuredIn: many(featuredColleges),
 }));
 
-export * from "./schema-cutoffs";

@@ -53,7 +53,6 @@ export function CollegeComparison() {
   const [loading, setLoading] = useState(false)
   const [collegeDetails, setCollegeDetails] = useState<Record<number, College>>({})
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
-  const [cutoffsData, setCutoffsData] = useState<Record<number, any[]>>({})
   const [placementsData, setPlacementsData] = useState<Record<number, any>>({})
   const [rankingsData, setRankingsData] = useState<Record<number, any[]>>({})
 
@@ -63,7 +62,7 @@ export function CollegeComparison() {
     // Load selected colleges from URL params or localStorage
     const params = new URLSearchParams(window.location.search)
     const collegeIds = params.get("colleges")?.split(",").filter(Boolean).map(Number) || []
-    
+
     if (collegeIds.length > 0) {
       fetchCollegesByIds(collegeIds)
     } else {
@@ -86,24 +85,12 @@ export function CollegeComparison() {
   useEffect(() => {
     if (selectedColleges.length > 0) {
       selectedColleges.forEach((college) => {
-        fetchCutoffs(college.id)
         fetchPlacements(college.id)
         fetchRankings(college.id)
       })
     }
   }, [selectedColleges])
 
-  const fetchCutoffs = async (collegeId: number) => {
-    try {
-      const response = await fetch(`/api/cutoffs?collegeId=${collegeId}&year=${new Date().getFullYear()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setCutoffsData((prev) => ({ ...prev, [collegeId]: data.cutoffs || [] }))
-      }
-    } catch (error) {
-      console.error("Error fetching cutoffs:", error)
-    }
-  }
 
   const fetchPlacements = async (collegeId: number) => {
     try {
@@ -136,7 +123,7 @@ export function CollegeComparison() {
     try {
       setLoading(true)
       const colleges: College[] = []
-      
+
       for (const id of ids.slice(0, MAX_COMPARISONS)) {
         try {
           const response = await fetch(`/api/colleges/by-id/${id}`)
@@ -149,7 +136,7 @@ export function CollegeComparison() {
           console.error(`Error fetching college ${id}:`, err)
         }
       }
-      
+
       if (colleges.length > 0) {
         setSelectedColleges(colleges)
         // Save to localStorage
@@ -206,10 +193,10 @@ export function CollegeComparison() {
     setCollegeDetails(prev => ({ ...prev, [college.id]: college }))
     setSearchQuery("")
     setSearchResults([])
-    
+
     // Save to localStorage
     localStorage.setItem("comparison_colleges", JSON.stringify(newSelected.map(c => c.id)))
-    
+
     // Update URL
     const params = new URLSearchParams()
     params.set("colleges", newSelected.map(c => c.id).join(","))
@@ -219,7 +206,7 @@ export function CollegeComparison() {
   const removeCollege = (collegeId: number) => {
     const newSelected = selectedColleges.filter(c => c.id !== collegeId)
     setSelectedColleges(newSelected)
-    
+
     // Save to localStorage
     if (newSelected.length > 0) {
       localStorage.setItem("comparison_colleges", JSON.stringify(newSelected.map(c => c.id)))
@@ -293,8 +280,8 @@ export function CollegeComparison() {
                         📍 {college.city || college.location || "Location not specified"}
                       </p>
                     </div>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                     >
                       Add
@@ -312,8 +299,8 @@ export function CollegeComparison() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {selectedColleges.map((college) => (
-                    <Badge 
-                      key={college.id} 
+                    <Badge
+                      key={college.id}
                       className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 text-sm font-medium"
                     >
                       {college.name}
@@ -348,7 +335,7 @@ export function CollegeComparison() {
                 Compare selected colleges side-by-side
               </p>
             </div>
-            
+
             {selectedColleges.map((college, index) => {
               const gradients = [
                 "from-blue-500 to-cyan-600",
@@ -364,114 +351,114 @@ export function CollegeComparison() {
                     <div className="flex items-start gap-3">
                       {/* Logo */}
                       <div className={`w-16 h-16 rounded-lg overflow-hidden bg-white/20 backdrop-blur-sm flex-shrink-0 border border-white/30`}>
-                      {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
-                        <Image
-                          src={Array.isArray(college.images) ? college.images[0] : college.images}
-                          alt={college.name}
-                          width={64}
-                          height={64}
-                          className="object-contain bg-white p-1"
-                          style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
-                          onError={() => {
-                            setImageErrors(prev => new Set(prev).add(college.id))
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                          {getInitials(college.name)}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/colleges/${college.slug}`} className="hover:underline">
-                        <CardTitle className="text-white text-lg line-clamp-2">{college.name}</CardTitle>
-                      </Link>
-                      <p className="text-sm text-white/90 mt-1">
-                        📍 {college.city || college.location || "N/A"}{college.state && `, ${college.state}`}
-                      </p>
-                    </div>
-                    
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeCollege(college.id)}
-                      className="text-white hover:bg-white/20 flex-shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-muted-foreground text-xs">Ranking</p>
-                        <p className="font-medium">{college.ranking ? `#${college.ranking}` : "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Established</p>
-                        <p className="font-medium">{college.establishedYear || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Accreditation</p>
-                        <p className="font-medium">{college.accreditation || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Ownership</p>
-                        <p className="font-medium">{college.ownership || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Students</p>
-                        <p className="font-medium">{college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-muted-foreground text-xs">Hostel Fees</p>
-                        <p className="font-medium">{formatCurrency(college.hostelFees)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Avg Package</p>
-                        <p className="font-medium">{formatCurrency(college.averagePackage)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Highest Package</p>
-                        <p className="font-medium">{formatCurrency(college.highestPackage)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">Campus Size</p>
-                        <p className="font-medium">{college.campusSize || "N/A"}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Entrance Exams */}
-                  {college.entranceExams && college.entranceExams.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-muted-foreground text-xs mb-1">Entrance Exams</p>
-                      <div className="flex flex-wrap gap-1">
-                        {college.entranceExams.slice(0, 4).map((exam, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            {exam}
-                          </Badge>
-                        ))}
-                        {college.entranceExams.length > 4 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{college.entranceExams.length - 4}
-                          </Badge>
+                        {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
+                          <Image
+                            src={Array.isArray(college.images) ? college.images[0] : college.images}
+                            alt={college.name}
+                            width={64}
+                            height={64}
+                            className="object-contain bg-white p-1"
+                            style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%' }}
+                            onError={() => {
+                              setImageErrors(prev => new Set(prev).add(college.id))
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                            {getInitials(college.name)}
+                          </div>
                         )}
                       </div>
+
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/colleges/${college.slug}`} className="hover:underline">
+                          <CardTitle className="text-white text-lg line-clamp-2">{college.name}</CardTitle>
+                        </Link>
+                        <p className="text-sm text-white/90 mt-1">
+                          📍 {college.city || college.location || "N/A"}{college.state && `, ${college.state}`}
+                        </p>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeCollege(college.id)}
+                        className="text-white hover:bg-white/20 flex-shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                  
-                  <Link href={`/colleges/${college.slug}`} className="block mt-4">
-                    <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
-                      View Full Details
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-muted-foreground text-xs">Ranking</p>
+                          <p className="font-medium">{college.ranking ? `#${college.ranking}` : "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Established</p>
+                          <p className="font-medium">{college.establishedYear || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Accreditation</p>
+                          <p className="font-medium">{college.accreditation || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Ownership</p>
+                          <p className="font-medium">{college.ownership || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Students</p>
+                          <p className="font-medium">{college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-muted-foreground text-xs">Hostel Fees</p>
+                          <p className="font-medium">{formatCurrency(college.hostelFees)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Avg Package</p>
+                          <p className="font-medium">{formatCurrency(college.averagePackage)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Highest Package</p>
+                          <p className="font-medium">{formatCurrency(college.highestPackage)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Campus Size</p>
+                          <p className="font-medium">{college.campusSize || "N/A"}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Entrance Exams */}
+                    {college.entranceExams && college.entranceExams.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-muted-foreground text-xs mb-1">Entrance Exams</p>
+                        <div className="flex flex-wrap gap-1">
+                          {college.entranceExams.slice(0, 4).map((exam, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {exam}
+                            </Badge>
+                          ))}
+                          {college.entranceExams.length > 4 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{college.entranceExams.length - 4}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <Link href={`/colleges/${college.slug}`} className="block mt-4">
+                      <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
+                        View Full Details
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
               )
             })}
           </div>
@@ -505,207 +492,207 @@ export function CollegeComparison() {
                           <th key={college.id} className="text-left p-4 font-semibold min-w-[200px] lg:min-w-[250px] border-l border-gray-200">
                             <div className="space-y-2">
                               <div className={`relative w-full h-24 lg:h-32 mb-2 rounded-lg overflow-hidden bg-gradient-to-br ${gradient} shadow-md`}>
-                              {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
-                                <div className="relative w-full h-full">
-                                  <Image
-                                    src={Array.isArray(college.images) ? college.images[0] : college.images}
-                                    alt={college.name}
-                                    fill
-                                    sizes="(max-width: 768px) 200px, 250px"
-                                    className="object-contain rounded bg-white p-2"
-                                    onError={() => {
-                                      setImageErrors(prev => new Set(prev).add(college.id))
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl lg:text-2xl">
-                                  {getInitials(college.name)}
-                                </div>
-                              )}
+                                {college.images && college.images.length > 0 && college.images[0] && !imageErrors.has(college.id) ? (
+                                  <div className="relative w-full h-full">
+                                    <Image
+                                      src={Array.isArray(college.images) ? college.images[0] : college.images}
+                                      alt={college.name}
+                                      fill
+                                      sizes="(max-width: 768px) 200px, 250px"
+                                      className="object-contain rounded bg-white p-2"
+                                      onError={() => {
+                                        setImageErrors(prev => new Set(prev).add(college.id))
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl lg:text-2xl">
+                                    {getInitials(college.name)}
+                                  </div>
+                                )}
+                              </div>
+                              <Link href={`/colleges/${college.slug}`} className="hover:underline">
+                                <p className="font-bold text-sm lg:text-lg line-clamp-2 text-gray-900">{college.name}</p>
+                              </Link>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeCollege(college.id)}
+                                className="text-red-600 hover:bg-red-50"
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Remove
+                              </Button>
                             </div>
-                            <Link href={`/colleges/${college.slug}`} className="hover:underline">
-                              <p className="font-bold text-sm lg:text-lg line-clamp-2 text-gray-900">{college.name}</p>
-                            </Link>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeCollege(college.id)}
-                              className="text-red-600 hover:bg-red-50"
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Remove
-                            </Button>
-                          </div>
-                        </th>
+                          </th>
                         )
                       })}
                     </tr>
                   </thead>
                   <tbody>
-                  {/* Location */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-blue-600" />
-                        Location
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.city || college.location || "N/A"}
-                        {college.state && <span className="text-gray-600">, {college.state}</span>}
+                    {/* Location */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-blue-600" />
+                          Location
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.city || college.location || "N/A"}
+                          {college.state && <span className="text-gray-600">, {college.state}</span>}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Ranking */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-blue-600" />
-                        Ranking
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.ranking ? `#${college.ranking}` : "N/A"}
+                    {/* Ranking */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-blue-600" />
+                          Ranking
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.ranking ? `#${college.ranking}` : "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Established Year */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-blue-600" />
-                        Established
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.establishedYear || "N/A"}
+                    {/* Established Year */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-blue-600" />
+                          Established
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.establishedYear || "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Accreditation */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-blue-600" />
-                        Accreditation
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.accreditation || "N/A"}
+                    {/* Accreditation */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Award className="h-4 w-4 text-blue-600" />
+                          Accreditation
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.accreditation || "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Ownership */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-blue-600" />
-                        Ownership
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.ownership || "N/A"}
+                    {/* Ownership */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-blue-600" />
+                          Ownership
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.ownership || "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Campus Size */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-blue-600" />
-                        Campus Size
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.campusSize || "N/A"}
+                    {/* Campus Size */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-blue-600" />
+                          Campus Size
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.campusSize || "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Total Students */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-600" />
-                        Total Students
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}
+                    {/* Total Students */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          Total Students
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.totalStudents ? college.totalStudents.toLocaleString() : "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Hostel Fees */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">₹</span>
-                        Hostel Fees (per year)
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {formatCurrency(college.hostelFees)}
+                    {/* Hostel Fees */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">₹</span>
+                          Hostel Fees (per year)
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {formatCurrency(college.hostelFees)}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Average Package */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">₹</span>
-                        Average Package
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {formatCurrency(college.averagePackage)}
+                    {/* Average Package */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">₹</span>
+                          Average Package
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {formatCurrency(college.averagePackage)}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Highest Package */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">₹</span>
-                        Highest Package
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {formatCurrency(college.highestPackage)}
+                    {/* Highest Package */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">₹</span>
+                          Highest Package
+                        </div>
                       </td>
-                    ))}
-                  </tr>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {formatCurrency(college.highestPackage)}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Entrance Exams */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4 text-blue-600" />
-                        Entrance Exams
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        {college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0
-                          ? (
+                    {/* Entrance Exams */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4 text-blue-600" />
+                          Entrance Exams
+                        </div>
+                      </td>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          {college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0
+                            ? (
                               <div className="flex flex-wrap gap-1">
                                 {college.entranceExams.map((exam, idx) => (
                                   <Badge key={idx} className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs">
@@ -714,190 +701,154 @@ export function CollegeComparison() {
                                 ))}
                               </div>
                             )
-                          : "N/A"}
-                      </td>
-                    ))}
-                  </tr>
+                            : "N/A"}
+                        </td>
+                      ))}
+                    </tr>
 
-                  {/* Contact Information */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-blue-600" />
-                        Contact
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        <div className="space-y-1 text-sm">
-                          {college.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3 text-gray-500" />
-                              {college.phone}
-                            </div>
-                          )}
-                          {college.email && (
-                            <div className="flex items-center gap-1">
-                              <Mail className="h-3 w-3 text-gray-500" />
-                              {college.email}
-                            </div>
-                          )}
-                          {college.website && (
-                            <div className="flex items-center gap-1">
-                              <Globe className="h-3 w-3 text-gray-500" />
-                              <a
-                                href={college.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                Visit Website
-                              </a>
-                            </div>
-                          )}
-                          {!college.phone && !college.email && !college.website && "N/A"}
+                    {/* Contact Information */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-blue-600" />
+                          Contact
                         </div>
                       </td>
-                    ))}
-                  </tr>
-
-                  {/* Description */}
-                  <tr className="border-b hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
-                      Description
-                    </td>
-                    {selectedColleges.map((college) => (
-                      <td key={college.id} className="p-4 border-l border-gray-200">
-                        <p className="text-sm text-gray-600 line-clamp-3">
-                          {college.description || "N/A"}
-                        </p>
-                      </td>
-                    ))}
-                  </tr>
-
-                  {/* Placement Statistics */}
-                  <tr className="border-b bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-blue-50 to-cyan-50 z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="h-4 w-4 text-blue-600" />
-                        Placement (Latest Year)
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => {
-                      const placement = placementsData[college.id]
-                      return (
-                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
-                          {placement ? (
-                            <div className="space-y-1 text-sm">
-                              <div className="font-medium">Avg: {formatCurrency(placement.averagePackage)}</div>
-                              <div className="font-medium">Highest: {formatCurrency(placement.highestPackage)}</div>
-                              <div>%: {placement.placementPercentage || "N/A"}{placement.placementPercentage && "%"}</div>
-                            </div>
-                          ) : (
-                            "N/A"
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-
-                  {/* Cutoff Information */}
-                  <tr className="border-b bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-green-50 to-emerald-50 z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4 text-green-600" />
-                        Recent Cutoffs
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => {
-                      const cutoffs = cutoffsData[college.id] || []
-                      const latestCutoff = cutoffs[0]
-                      return (
-                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-                          {latestCutoff ? (
-                            <div className="space-y-1 text-sm">
-                              <div className="font-semibold">{latestCutoff.examName}</div>
-                              <div>
-                                {latestCutoff.closingRank
-                                  ? `Rank: ${latestCutoff.closingRank.toLocaleString()}`
-                                  : latestCutoff.closingScore
-                                  ? `Score: ${latestCutoff.closingScore}`
-                                  : "N/A"}
-                              </div>
-                              {latestCutoff.category && (
-                                <div className="text-xs text-gray-600">
-                                  {latestCutoff.category}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            "N/A"
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-
-                  {/* Rankings */}
-                  <tr className="border-b bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors">
-                    <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-purple-50 to-pink-50 z-10 border-r-2 border-gray-200">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-purple-600" />
-                        Rankings
-                      </div>
-                    </td>
-                    {selectedColleges.map((college) => {
-                      const rankings = rankingsData[college.id] || []
-                      const nirfRanking = rankings.find((r: any) => r.rankingSource === "NIRF")
-                      return (
-                        <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
-                          {nirfRanking ? (
-                            <div className="space-y-1 text-sm">
-                              <div className="font-semibold">NIRF: #{nirfRanking.rank}</div>
-                              {nirfRanking.category && (
-                                <div className="text-xs text-gray-600">
-                                  {nirfRanking.category}
-                                </div>
-                              )}
-                            </div>
-                          ) : college.ranking ? (
-                            <div className="text-sm font-medium">#{college.ranking}</div>
-                          ) : (
-                            "N/A"
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-
-                  {/* View Details */}
-                  <tr>
-                    <td className="p-4 sticky left-0 bg-white z-10 border-r-2 border-gray-200"></td>
-                    {selectedColleges.map((college, index) => {
-                      const gradients = [
-                        "from-blue-600 to-cyan-600",
-                        "from-indigo-600 to-purple-600",
-                        "from-violet-600 to-purple-600",
-                        "from-teal-600 to-emerald-600",
-                      ]
-                      const gradient = gradients[index % gradients.length]
-
-                      return (
+                      {selectedColleges.map((college) => (
                         <td key={college.id} className="p-4 border-l border-gray-200">
-                          <Link href={`/colleges/${college.slug}`}>
-                            <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
-                              View Full Details
-                            </Button>
-                          </Link>
+                          <div className="space-y-1 text-sm">
+                            {college.phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3 text-gray-500" />
+                                {college.phone}
+                              </div>
+                            )}
+                            {college.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3 text-gray-500" />
+                                {college.email}
+                              </div>
+                            )}
+                            {college.website && (
+                              <div className="flex items-center gap-1">
+                                <Globe className="h-3 w-3 text-gray-500" />
+                                <a
+                                  href={college.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  Visit Website
+                                </a>
+                              </div>
+                            )}
+                            {!college.phone && !college.email && !college.website && "N/A"}
+                          </div>
                         </td>
-                      )
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                      ))}
+                    </tr>
+
+                    {/* Description */}
+                    <tr className="border-b hover:bg-blue-50/30 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-white z-10 border-r-2 border-gray-200">
+                        Description
+                      </td>
+                      {selectedColleges.map((college) => (
+                        <td key={college.id} className="p-4 border-l border-gray-200">
+                          <p className="text-sm text-gray-600 line-clamp-3">
+                            {college.description || "N/A"}
+                          </p>
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Placement Statistics */}
+                    <tr className="border-b bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-blue-50 to-cyan-50 z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                          Placement (Latest Year)
+                        </div>
+                      </td>
+                      {selectedColleges.map((college) => {
+                        const placement = placementsData[college.id]
+                        return (
+                          <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+                            {placement ? (
+                              <div className="space-y-1 text-sm">
+                                <div className="font-medium">Avg: {formatCurrency(placement.averagePackage)}</div>
+                                <div className="font-medium">Highest: {formatCurrency(placement.highestPackage)}</div>
+                                <div>%: {placement.placementPercentage || "N/A"}{placement.placementPercentage && "%"}</div>
+                              </div>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+
+
+                    {/* Rankings */}
+                    <tr className="border-b bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors">
+                      <td className="p-4 font-semibold text-gray-900 sticky left-0 bg-gradient-to-r from-purple-50 to-pink-50 z-10 border-r-2 border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-purple-600" />
+                          Rankings
+                        </div>
+                      </td>
+                      {selectedColleges.map((college) => {
+                        const rankings = rankingsData[college.id] || []
+                        const nirfRanking = rankings.find((r: any) => r.rankingSource === "NIRF")
+                        return (
+                          <td key={college.id} className="p-4 border-l border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
+                            {nirfRanking ? (
+                              <div className="space-y-1 text-sm">
+                                <div className="font-semibold">NIRF: #{nirfRanking.rank}</div>
+                                {nirfRanking.category && (
+                                  <div className="text-xs text-gray-600">
+                                    {nirfRanking.category}
+                                  </div>
+                                )}
+                              </div>
+                            ) : college.ranking ? (
+                              <div className="text-sm font-medium">#{college.ranking}</div>
+                            ) : (
+                              "N/A"
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+
+                    {/* View Details */}
+                    <tr>
+                      <td className="p-4 sticky left-0 bg-white z-10 border-r-2 border-gray-200"></td>
+                      {selectedColleges.map((college, index) => {
+                        const gradients = [
+                          "from-blue-600 to-cyan-600",
+                          "from-indigo-600 to-purple-600",
+                          "from-violet-600 to-purple-600",
+                          "from-teal-600 to-emerald-600",
+                        ]
+                        const gradient = gradients[index % gradients.length]
+
+                        return (
+                          <td key={college.id} className="p-4 border-l border-gray-200">
+                            <Link href={`/colleges/${college.slug}`}>
+                              <Button className={`w-full bg-gradient-to-r ${gradient} hover:opacity-90 text-white font-semibold`}>
+                                View Full Details
+                              </Button>
+                            </Link>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
 
