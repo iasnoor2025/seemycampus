@@ -64,13 +64,10 @@ export function TestimonialsSection() {
 
   // Auto-slide testimonials every 5 seconds
   useEffect(() => {
-    if (testimonials.length <= 3 || isPaused) return
+    if (testimonials.length <= 1 || isPaused) return
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => {
-        const maxSlides = Math.ceil(testimonials.length / 3)
-        return (prev + 1) % maxSlides
-      })
+      setCurrentSlide((prev) => (prev + 1) % testimonials.length)
     }, 5000)
 
     return () => clearInterval(interval)
@@ -90,22 +87,16 @@ export function TestimonialsSection() {
     return null // Don't show section if no testimonials
   }
 
-  // Group testimonials into slides of 3
-  const slides: Testimonial[][] = []
-  for (let i = 0; i < testimonials.length; i += 3) {
-    slides.push(testimonials.slice(i, i + 3))
-  }
-
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
   }
 
   const goToPrevious = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+    setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length)
   }
 
   const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length)
+    setCurrentSlide((prev) => (prev + 1) % testimonials.length)
   }
 
   return (
@@ -155,84 +146,78 @@ export function TestimonialsSection() {
               className="flex transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
-              {slides.map((slide, slideIndex) => (
+              {testimonials.map((testimonial, index) => (
                 <div
-                  key={slideIndex}
-                  className="min-w-full grid grid-cols-1 md:grid-cols-3 gap-8 px-4 py-4"
+                  key={testimonial.id}
+                  className="min-w-full flex justify-center px-4 py-2" // Reduced padding
                 >
-                  {slide.map((testimonial, cardIndex) => (
-                    <Card
-                      key={testimonial.id}
-                      className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl hover:bg-white/15 transition-all duration-500 transform hover:-translate-y-4 rounded-[2rem] group/card overflow-hidden"
-                    >
-                      <CardContent className="p-10 relative flex flex-col items-center">
-                        {/* Quote Decoration */}
-                        <Quote className="absolute top-8 left-8 h-12 w-12 text-white/10 group-hover/card:text-white/20 transition-colors" />
+                  <Card
+                    className="w-full max-w-md bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl hover:bg-white/15 transition-all duration-500 transform hover:-translate-y-2 rounded-3xl group/card overflow-hidden"
+                  >
+                    <CardContent className="p-6 relative flex flex-col items-center"> {/* Reduced from p-10 to p-6 */}
+                      {/* Quote Decoration */}
+                      <Quote className="absolute top-4 left-4 h-8 w-8 text-white/10 group-hover/card:text-white/20 transition-colors" /> {/* Smaller quote */}
 
-                        <div className="relative mb-8 pt-4">
-                          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-white/30 to-white/10 p-1 backdrop-blur-md shadow-2xl group-hover/card:scale-110 group-hover/card:rotate-3 transition-all duration-500">
-                            <div className="w-full h-full rounded-[1.25rem] bg-slate-900/50 overflow-hidden relative border border-white/20">
-                              {testimonial.photoUrl ? (
-                                <img
-                                  src={testimonial.photoUrl}
-                                  alt={testimonial.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none"
-                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                    if (fallback) fallback.style.display = "flex"
-                                  }}
-                                />
-                              ) : null}
-                              <div
-                                className={`w-full h-full flex items-center justify-center text-white text-3xl font-black bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} ${testimonial.photoUrl ? "hidden" : ""}`}
-                              >
-                                {getInitials(testimonial.name)}
-                              </div>
+                      <div className="relative mb-4 pt-2"> {/* Reduced spacing */}
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/30 to-white/10 p-1 backdrop-blur-md shadow-2xl group-hover/card:scale-110 group-hover/card:rotate-3 transition-all duration-500"> {/* Smaller avatar */}
+                          <div className="w-full h-full rounded-xl bg-slate-900/50 overflow-hidden relative border border-white/20">
+                            {testimonial.photoUrl ? (
+                              <img
+                                src={testimonial.photoUrl}
+                                alt={testimonial.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none"
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                  if (fallback) fallback.style.display = "flex"
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className={`w-full h-full flex items-center justify-center text-white text-2xl font-black bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} ${testimonial.photoUrl ? "hidden" : ""}`}
+                            >
+                              {getInitials(testimonial.name)}
                             </div>
                           </div>
-
-                          {/* Rating Badge */}
-                          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-4 py-1.5 shadow-2xl flex items-center gap-1.5 border border-slate-100 scale-90 group-hover/card:scale-100 transition-transform">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star key={star} className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-                            ))}
-                          </div>
                         </div>
 
-                        <div className="text-center mb-8 relative z-10">
-                          <h3 className="text-2xl font-black text-white mb-2 tracking-tight group-hover/card:text-blue-200 transition-colors">
-                            {testimonial.name}
-                          </h3>
-                          <div className="flex items-center justify-center gap-2 text-white/60 font-bold text-xs uppercase tracking-widest">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>{new Date(testimonial.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                          </div>
+                        {/* Rating Badge */}
+                        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white rounded-full px-3 py-1 shadow-2xl flex items-center gap-1 border border-slate-100 scale-90 group-hover/card:scale-100 transition-transform">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className="w-3 h-3 text-orange-500 fill-orange-500" />
+                          ))}
                         </div>
+                      </div>
 
-                        <p className="text-white/80 text-lg leading-relaxed text-center font-medium italic mb-10 relative z-10">
-                          &ldquo;{testimonial.testimonial}&rdquo;
-                        </p>
+                      <div className="text-center mb-4 relative z-10"> {/* Reduced spacing */}
+                        <h3 className="text-xl font-black text-white mb-1 tracking-tight group-hover/card:text-blue-200 transition-colors"> {/* Smaller text */}
+                          {testimonial.name}
+                        </h3>
+                        <div className="flex items-center justify-center gap-2 text-white/60 font-bold text-xs uppercase tracking-widest">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(testimonial.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                        </div>
+                      </div>
 
-                        <Link href="/contact" className="w-full mt-auto relative z-10">
-                          <Button className="w-full bg-white/10 hover:bg-white text-white hover:text-slate-900 font-black py-7 rounded-2xl transition-all duration-500 border border-white/20 group/btn">
-                            Success Story
-                            <ChevronRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-2 transition-transform" />
-                          </Button>
-                        </Link>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {slide.length < 3 && Array.from({ length: 3 - slide.length }).map((_, i) => (
-                    <div key={`empty-${i}`} className="hidden md:block" />
-                  ))}
+                      <p className="text-white/80 text-base leading-relaxed text-center font-medium italic mb-6 relative z-10"> {/* Smaller text and spacing */}
+                        &ldquo;{testimonial.testimonial}&rdquo;
+                      </p>
+
+                      <Link href="/contact" className="w-full mt-auto relative z-10">
+                        <Button className="w-full bg-white/10 hover:bg-white text-white hover:text-slate-900 font-black py-5 rounded-xl transition-all duration-500 border border-white/20 group/btn"> {/* Smaller button */}
+                          Success Story
+                          <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-2 transition-transform" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Navigation Controls - Hidden by default, show on hover */}
-          {slides.length > 1 && (
+          {testimonials.length > 1 && (
             <>
               <button
                 onClick={goToPrevious}
@@ -253,15 +238,15 @@ export function TestimonialsSection() {
         </div>
 
         {/* Pagination Dots */}
-        {slides.length > 1 && (
+        {testimonials.length > 1 && (
           <div className="flex justify-center gap-2 mt-12">
-            {slides.map((_, index) => (
+            {testimonials.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`rounded-full transition-all duration-300 ${index === currentSlide
-                    ? "w-3 h-3 bg-white shadow-lg"
-                    : "w-2.5 h-2.5 bg-white/50 hover:bg-white/70"
+                  ? "w-3 h-3 bg-white shadow-lg"
+                  : "w-2.5 h-2.5 bg-white/50 hover:bg-white/70"
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
