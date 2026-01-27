@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronRight, Calendar, ChevronLeft, Quote, Star, MessageCircle } from "lucide-react"
+import { getDirectImageUrl } from "@/lib/image-utils"
 
 interface Testimonial {
   id: number
@@ -184,7 +185,12 @@ export function TestimonialsSection() {
                             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/30 to-white/10 p-1 backdrop-blur-md shadow-2xl">
                               <div className="w-full h-full rounded-xl bg-slate-900/50 overflow-hidden relative border border-white/20">
                                 {testimonial.photoUrl && (
-                                  <img src={testimonial.photoUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                                  <img
+                                    src={getDirectImageUrl(testimonial.photoUrl) || testimonial.photoUrl}
+                                    alt={testimonial.name}
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                  />
                                 )}
                                 <div className={`w-full h-full flex items-center justify-center text-white text-2xl font-black bg-gradient-to-br ${getColorClasses(testimonial.avatarColor)} ${testimonial.photoUrl ? "hidden" : ""}`}>
                                   {getInitials(testimonial.name)}
