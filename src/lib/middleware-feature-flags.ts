@@ -7,7 +7,6 @@ const pathToFeatureKey: Record<string, string> = {
   // Dashboard pages
   "/dashboard/leads": "dashboard_leads",
   "/dashboard/colleges": "dashboard_colleges",
-  "/dashboard/cutoffs": "dashboard_cutoffs",
   "/dashboard/placements": "dashboard_placements",
   "/dashboard/application-guides": "dashboard_application_guides",
   "/dashboard/inquiries": "dashboard_inquiries",
@@ -25,7 +24,7 @@ const pathToFeatureKey: Record<string, string> = {
   "/dashboard/students": "dashboard_students",
   "/dashboard/users": "dashboard_users",
   "/dashboard/analytics": "dashboard_analytics",
-  
+
   // Public pages
   "/colleges": "public_colleges",
   "/scholarships": "public_scholarships",
@@ -54,14 +53,14 @@ export function getFeatureKeyForPath(pathname: string): string | null {
   if (pathToFeatureKey[pathname]) {
     return pathToFeatureKey[pathname]
   }
-  
+
   // Check if path starts with any key (for nested routes)
   for (const [path, key] of Object.entries(pathToFeatureKey)) {
     if (pathname.startsWith(path + "/") || pathname === path) {
       return key
     }
   }
-  
+
   return null
 }
 
@@ -76,12 +75,12 @@ export function getFeatureKeyForPath(pathname: string): string | null {
  */
 export async function isPathEnabled(pathname: string): Promise<boolean> {
   const featureKey = getFeatureKeyForPath(pathname)
-  
+
   // If no feature key, path is always enabled
   if (!featureKey) {
     return true
   }
-  
+
   // In Edge Runtime, we cannot access the database directly
   // because Drizzle ORM requires Node.js modules that aren't available.
   // We fail open (return true) to ensure pages are accessible.
@@ -89,7 +88,7 @@ export async function isPathEnabled(pathname: string): Promise<boolean> {
   // 1. Page components (server components can check feature flags)
   // 2. API routes (which run in Node.js runtime)
   // 3. Client components (using the API endpoint)
-  
+
   // For now, always return true (fail open) in middleware
   // This prevents blocking pages due to edge runtime limitations
   return true

@@ -34,7 +34,7 @@ export async function getAllFeatureFlags(): Promise<FeatureFlag[]> {
 export async function getFeatureFlag(key: string): Promise<FeatureFlag | null> {
   const [flag] = await db.select().from(featureFlags).where(eq(featureFlags.key, key)).limit(1)
   if (!flag) return null
-  
+
   return {
     ...flag,
     category: flag.category as FeatureFlagCategory,
@@ -58,17 +58,17 @@ export async function isFeatureEnabled(key: string): Promise<boolean> {
 export async function updateFeatureFlag(key: string, isEnabled: boolean): Promise<FeatureFlag> {
   const [updated] = await db
     .update(featureFlags)
-    .set({ 
+    .set({
       isEnabled,
       updatedAt: new Date(),
     })
     .where(eq(featureFlags.key, key))
     .returning()
-  
+
   if (!updated) {
     throw new Error(`Feature flag with key "${key}" not found`)
   }
-  
+
   return {
     ...updated,
     category: updated.category as FeatureFlagCategory,
@@ -86,7 +86,7 @@ export async function getFeatureFlagsByCategory(category: FeatureFlagCategory): 
     .from(featureFlags)
     .where(eq(featureFlags.category, category))
     .orderBy(asc(featureFlags.name))
-  
+
   return flags.map(flag => ({
     ...flag,
     category: flag.category as FeatureFlagCategory,
@@ -103,7 +103,6 @@ export async function initializeDefaultFeatureFlags() {
     // Dashboard pages
     { key: "dashboard_leads", name: "Leads", category: "dashboard" as FeatureFlagCategory, description: "Lead management page" },
     { key: "dashboard_colleges", name: "Colleges", category: "dashboard" as FeatureFlagCategory, description: "College management page" },
-    { key: "dashboard_cutoffs", name: "Cutoffs", category: "dashboard" as FeatureFlagCategory, description: "Cutoff management page" },
     { key: "dashboard_placements", name: "Placements", category: "dashboard" as FeatureFlagCategory, description: "Placement management page" },
     { key: "dashboard_application_guides", name: "Application Guides", category: "dashboard" as FeatureFlagCategory, description: "Application guide management" },
     { key: "dashboard_inquiries", name: "Inquiries", category: "dashboard" as FeatureFlagCategory, description: "Inquiry management page" },
@@ -121,7 +120,7 @@ export async function initializeDefaultFeatureFlags() {
     { key: "dashboard_students", name: "Students", category: "dashboard" as FeatureFlagCategory, description: "Student management page" },
     { key: "dashboard_users", name: "Users", category: "dashboard" as FeatureFlagCategory, description: "User management page" },
     { key: "dashboard_analytics", name: "Analytics", category: "dashboard" as FeatureFlagCategory, description: "Analytics page" },
-    
+
     // Public pages
     { key: "public_colleges", name: "Colleges Page", category: "public_page" as FeatureFlagCategory, description: "Public colleges listing page" },
     { key: "public_scholarships", name: "Scholarships Page", category: "public_page" as FeatureFlagCategory, description: "Public scholarships page" },
@@ -139,7 +138,7 @@ export async function initializeDefaultFeatureFlags() {
     { key: "public_academic_alliance", name: "Academic Alliance", category: "public_page" as FeatureFlagCategory, description: "Academic alliance page" },
     { key: "public_essay_assistant", name: "Essay Assistant", category: "public_page" as FeatureFlagCategory, description: "Essay assistant page" },
     { key: "public_career_path", name: "Career Path", category: "public_page" as FeatureFlagCategory, description: "Career path simulator page" },
-    
+
     // Features/Functions
     { key: "feature_chat", name: "Chat Feature", category: "feature" as FeatureFlagCategory, description: "AI chatbot feature" },
     { key: "feature_college_search", name: "College Search", category: "feature" as FeatureFlagCategory, description: "College search functionality" },

@@ -344,13 +344,6 @@ export default async function DashboardPage() {
           gradient: "from-amber-500 to-orange-600",
         },
         {
-          title: "Cutoffs",
-          description: "Admission criteria",
-          href: "/dashboard/cutoffs",
-          icon: TrendingUp,
-          gradient: "from-rose-500 to-red-600",
-        },
-        {
           title: "Placements",
           description: "Career outcomes",
           href: "/dashboard/placements",
@@ -526,8 +519,8 @@ export default async function DashboardPage() {
                       </span>
                       {stat.trend && (
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${stat.trendUp
-                            ? 'bg-emerald-500/10 text-emerald-700'
-                            : 'bg-red-500/10 text-red-700'
+                          ? 'bg-emerald-500/10 text-emerald-700'
+                          : 'bg-red-500/10 text-red-700'
                           }`}>
                           {stat.trendUp ? (
                             <TrendingUp className="h-3 w-3" />
@@ -655,12 +648,12 @@ export default async function DashboardPage() {
                       {/* Pulse Indicator */}
                       <div className="relative mt-1 flex-shrink-0">
                         <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${activity.type === 'college' ? 'from-blue-500 to-indigo-500' :
-                            activity.type === 'lead' ? 'from-purple-500 to-pink-500' :
-                              'from-emerald-500 to-teal-500'
+                          activity.type === 'lead' ? 'from-purple-500 to-pink-500' :
+                            'from-emerald-500 to-teal-500'
                           } shadow-md`} />
                         <div className={`absolute inset-0 w-2 h-2 rounded-full bg-gradient-to-r ${activity.type === 'college' ? 'from-blue-500 to-indigo-500' :
-                            activity.type === 'lead' ? 'from-purple-500 to-pink-500' :
-                              'from-emerald-500 to-teal-500'
+                          activity.type === 'lead' ? 'from-purple-500 to-pink-500' :
+                            'from-emerald-500 to-teal-500'
                           } animate-ping opacity-60`} />
                       </div>
 

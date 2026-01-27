@@ -33,7 +33,6 @@ export const colleges = pgTable("colleges", {
   totalStudents: integer("total_students"), // Total student enrollment
   googlePlaceId: varchar("google_place_id", { length: 255 }), // Google Maps Place ID for reviews
   // JSONB fields for quick access to aggregated data
-  cutoffData: jsonb("cutoff_data").$type<Record<string, any>>(), // Aggregated cutoff data for quick access
   placementData: jsonb("placement_data").$type<Record<string, any>>(), // Aggregated placement data for quick access
   rankingData: jsonb("ranking_data").$type<Record<string, any>>(), // Aggregated ranking data for quick access
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -232,7 +231,6 @@ export const entranceExams = pgTable("entrance_exams", {
   officialWebsite: varchar("official_website", { length: 500 }),
   eligibility: text("eligibility"), // Eligibility criteria
   examPattern: text("exam_pattern"), // Exam pattern details
-  cutOffs: jsonb("cut_offs").$type<Record<string, any>>(), // Cut-off scores by college/course
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -421,23 +419,6 @@ export const scholarships = pgTable("scholarships", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Cutoffs table - Store entrance exam cutoff data
-export const cutoffs = pgTable("cutoffs", {
-  id: serial("id").primaryKey(),
-  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "cascade" }).notNull(),
-  examName: varchar("exam_name", { length: 100 }).notNull(), // CAT, GMAT, JEE, NEET, etc.
-  courseName: varchar("course_name", { length: 255 }), // MBA, B.Tech, MBBS, etc.
-  year: integer("year").notNull(), // Year of cutoff (e.g., 2024)
-  category: varchar("category", { length: 50 }), // General, OBC, SC, ST, EWS, etc.
-  openingRank: integer("opening_rank"), // Opening rank for admission
-  closingRank: integer("closing_rank"), // Closing rank for admission
-  openingScore: integer("opening_score"), // Opening score/percentile
-  closingScore: integer("closing_score"), // Closing score/percentile
-  round: integer("round").default(1), // Round number (1, 2, 3, etc.)
-  quota: varchar("quota", { length: 50 }), // All India, State, Management, etc.
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 // Placement Stats table - Detailed placement statistics
 export const placementStats = pgTable("placement_stats", {
@@ -563,12 +544,6 @@ export const scholarshipsRelations = relations(scholarships, ({ one }) => ({
   }),
 }));
 
-export const cutoffsRelations = relations(cutoffs, ({ one }) => ({
-  college: one(colleges, {
-    fields: [cutoffs.collegeId],
-    references: [colleges.id],
-  }),
-}));
 
 export const placementStatsRelations = relations(placementStats, ({ one }) => ({
   college: one(colleges, {
@@ -882,7 +857,6 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   reviews: many(collegeReviews),
   savedBy: many(savedColleges),
   scholarships: many(scholarships),
-  cutoffs: many(cutoffs),
   placementStats: many(placementStats),
   rankings: many(collegeRankings),
   infrastructure: many(collegeInfrastructure),

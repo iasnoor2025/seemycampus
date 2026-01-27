@@ -88,13 +88,7 @@ const allMenuItems = [
     roles: ["admin"],
     featureKey: null, // Enrichment Results is always available for admins
   },
-  {
-    title: "Cutoffs",
-    href: "/dashboard/cutoffs",
-    icon: Award,
-    roles: ["admin", "moderator", "staff"],
-    featureKey: "dashboard_cutoffs",
-  },
+
   {
     title: "Placements",
     href: "/dashboard/placements",
@@ -244,7 +238,7 @@ const menuGroups = [
   },
   {
     label: "Academic",
-    items: ["Colleges", "Courses", "Scholarships", "Application Guides", "Cutoffs", "Placements"]
+    items: ["Colleges", "Courses", "Scholarships", "Application Guides", "Placements"]
   },
   {
     label: "Users & Staff",
