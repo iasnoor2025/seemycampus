@@ -8,7 +8,7 @@ function getCurrentAcademicYearStart(): Date {
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1 // 1-12 (January = 1, December = 12)
-  
+
   // Academic year in India runs from April to March
   // If month is April (4) to December (12), academic year started this year
   // If month is January (1) to March (3), academic year started last year
@@ -24,7 +24,7 @@ function getNextAcademicYearEnd(): Date {
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1
-  
+
   // Return March 31st of the academic year after next
   if (currentMonth >= 4) {
     return new Date(currentYear + 2, 2, 31) // March 31st, 2 years from now
@@ -37,7 +37,7 @@ export async function GET() {
   try {
     const academicYearStart = getCurrentAcademicYearStart()
     const academicYearEnd = getNextAcademicYearEnd()
-    
+
     // Fetch exams that are:
     // 1. Active
     // 2. Either have no exam date (TBD) OR have exam date within current/next academic year
@@ -47,12 +47,9 @@ export async function GET() {
       .where(
         and(
           eq(entranceExams.isActive, true),
-          or(
-            isNull(entranceExams.examDate),
-            and(
-              gte(entranceExams.examDate, academicYearStart),
-              lte(entranceExams.examDate, academicYearEnd)
-            )
+          and(
+            gte(entranceExams.examDate, academicYearStart),
+            lte(entranceExams.examDate, academicYearEnd)
           )
         )
       )
@@ -61,7 +58,7 @@ export async function GET() {
     // Filter out exams that have passed (exam date is in the past, but keep current academic year exams)
     const now = new Date()
     now.setHours(0, 0, 0, 0) // Normalize to start of day
-    
+
     const filteredExams = exams.filter(exam => {
       if (!exam.examDate) return true // Keep exams without dates
       const examDate = new Date(exam.examDate)
