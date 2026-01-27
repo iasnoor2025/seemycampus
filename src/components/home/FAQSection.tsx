@@ -47,25 +47,28 @@ export function FAQSection({ faqs }: FAQSectionProps) {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* FAQ Items */}
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-100 group"
+              className="bg-white/80 backdrop-blur-sm rounded-[2rem] p-10 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(37,99,235,0.1)] transition-all duration-500 transform hover:-translate-y-3 border border-slate-100 group relative overflow-hidden"
             >
-              {/* Number Badge */}
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${gradients[index % gradients.length]} text-white font-bold text-lg mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                {index + 1}
-              </div>
-              
+              {/* Decorative background element */}
+              <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${gradients[index % gradients.length]} opacity-0 group-hover:opacity-5 rounded-full transition-opacity duration-500 blur-2xl`}></div>
+
               {/* Question */}
-              <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                {faq.question}
-              </h3>
-              
+              <div className="flex items-start gap-4 mb-6">
+                <div className={`shrink-0 w-10 h-10 rounded-2xl bg-gradient-to-br ${gradients[index % gradients.length]} text-white flex items-center justify-center font-black text-sm shadow-lg transform group-hover:rotate-12 transition-all duration-500`}>
+                  {index + 1}
+                </div>
+                <h3 className="text-xl font-extrabold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                  {faq.question}
+                </h3>
+              </div>
+
               {/* Answer */}
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed font-medium">
                 {faq.answer}
               </p>
             </div>

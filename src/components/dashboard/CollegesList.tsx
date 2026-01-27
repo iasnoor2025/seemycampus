@@ -61,11 +61,11 @@ interface College {
 function getInitials(name: string): string {
   const words = name.split(" ").filter(word => word.length > 0)
   if (words.length === 0) return "CO"
-  
+
   if (words.length === 1) {
     return words[0].substring(0, 2).toUpperCase()
   }
-  
+
   const first = words[0][0]?.toUpperCase() || ""
   const last = words[words.length - 1][0]?.toUpperCase() || ""
   return (first + last).slice(0, 2) || "CO"
@@ -364,21 +364,21 @@ export function CollegesList() {
   const filteredAndSortedColleges = useMemo(() => {
     let filtered = colleges.filter((college) => {
       // Search filter
-      const matchesSearch = 
+      const matchesSearch =
         college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         college.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         college.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         college.state?.toLowerCase().includes(searchTerm.toLowerCase())
-      
+
       // City filter
       const matchesCity = selectedCity === "all" || college.city === selectedCity
-      
+
       // State filter
       const matchesState = selectedState === "all" || college.state === selectedState
-      
+
       return matchesSearch && matchesCity && matchesState
     })
-    
+
     // Sort by name alphabetically
     return filtered.sort((a, b) => a.name.localeCompare(b.name))
   }, [colleges, searchTerm, selectedCity, selectedState])
@@ -418,19 +418,24 @@ export function CollegesList() {
   return (
     <>
       <div className="space-y-6">
-        {/* Header with Search, Filters, and Add Button */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search colleges..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-2">
+        {/* Header with Search, Filters, and Add Button - Designer Grade */}
+        <div className="bg-white p-3 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.04)] border border-slate-100/50">
+          <div className="flex flex-row items-center gap-3 flex-nowrap">
+            {/* Search - Flexible */}
+            <div className="relative flex-1 min-w-0 group">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-3 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-blue-500/20 text-[11px] font-bold uppercase tracking-wider text-slate-700 placeholder:text-slate-400 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100">
+                <Building2 className="h-3 w-3 text-slate-400" />
+              </div>
+            </div>
+
+            {/* State Filter */}
             <Select
               value={selectedState}
               onValueChange={(value) => {
@@ -438,48 +443,20 @@ export function CollegesList() {
                 setCurrentPage(1)
               }}
             >
-              <SelectTrigger className="w-auto min-w-[12rem] max-w-[20rem] [&>span]:whitespace-nowrap [&>span]:block">
-                <SelectValue placeholder="All States" />
+              <SelectTrigger className="h-12 w-[140px] bg-slate-50 border-none rounded-[1.5rem] text-[9px] font-black uppercase tracking-widest px-3 hover:bg-slate-100 transition-all flex-shrink-0">
+                <SelectValue placeholder="State" />
               </SelectTrigger>
-              <SelectContent className="max-w-[20rem]">
-                <SelectItem value="all">All States</SelectItem>
+              <SelectContent className="rounded-2xl border-slate-100 shadow-xl max-h-[300px]">
+                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">All States</SelectItem>
                 {uniqueStates.map((state) => (
-                  <SelectItem key={state} value={state}>
+                  <SelectItem key={state} value={state} className="text-[10px] font-bold uppercase tracking-widest">
                     {state}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {selectedState !== "all" && (
-              <>
-                {hasEnabledColleges && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBulkDisableClick}
-                    className="flex items-center gap-2 text-destructive hover:text-destructive"
-                    title={`Disable all colleges in ${selectedState}`}
-                  >
-                    <Ban className="h-4 w-4" />
-                    Disable State
-                  </Button>
-                )}
-                {hasDisabledColleges && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBulkEnableClick}
-                    className="flex items-center gap-2 text-green-600 hover:text-green-700"
-                    title={`Enable all colleges in ${selectedState}`}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Enable State
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-          <div className="flex-shrink-0">
+
+            {/* City Filter */}
             <Select
               value={selectedCity}
               onValueChange={(value) => {
@@ -487,23 +464,30 @@ export function CollegesList() {
                 setCurrentPage(1)
               }}
             >
-              <SelectTrigger className="w-auto min-w-[12rem] max-w-[20rem] [&>span]:whitespace-nowrap [&>span]:block">
-                <SelectValue placeholder={selectedState !== "all" ? `Cities in ${selectedState}` : "All Cities"} />
+              <SelectTrigger className="h-12 w-[140px] bg-slate-50 border-none rounded-[1.5rem] text-[9px] font-black uppercase tracking-widest px-3 hover:bg-slate-100 transition-all flex-shrink-0">
+                <SelectValue placeholder="City" />
               </SelectTrigger>
-              <SelectContent className="max-w-[20rem]">
-                <SelectItem value="all">{selectedState !== "all" ? `All Cities in ${selectedState}` : "All Cities"}</SelectItem>
+              <SelectContent className="rounded-2xl border-slate-100 shadow-xl max-h-[300px]">
+                <SelectItem value="all" className="text-[10px] font-bold uppercase tracking-widest">
+                  {selectedState !== "all" ? "All Cities" : "All Cities"}
+                </SelectItem>
                 {uniqueCities.map((city) => (
-                  <SelectItem key={city} value={city}>
+                  <SelectItem key={city} value={city} className="text-[10px] font-bold uppercase tracking-widest">
                     {city}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Add Button */}
+            <Button
+              className="h-12 px-5 bg-slate-900 hover:bg-blue-600 text-white rounded-[1.5rem] transition-all duration-500 shadow-xl hover:shadow-blue-500/30 flex items-center justify-center gap-2 group whitespace-nowrap flex-shrink-0"
+              onClick={handleAdd}
+            >
+              <Plus className="h-3.5 w-3.5 group-hover:rotate-90 transition-transform duration-500" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Add</span>
+            </Button>
           </div>
-          <Button className="flex items-center gap-2 ml-auto" onClick={handleAdd}>
-            <Plus className="h-4 w-4" />
-            Add College
-          </Button>
         </div>
 
         {/* Table */}
@@ -519,117 +503,112 @@ export function CollegesList() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Logo</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>City</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Academic Alliance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-slate-100 hover:bg-transparent">
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em]">Identity</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em]">Institution</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em]">Geography</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em]">Connectivity</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] text-center">Alliance</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em]">Visibility</TableHead>
+                  <TableHead className="py-5 text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] text-right pr-10">Control</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedColleges.map((college) => {
-                  const logoUrl = college.images && Array.isArray(college.images) && college.images.length > 0 
-                    ? college.images[0] 
+                  const logoUrl = college.images && Array.isArray(college.images) && college.images.length > 0
+                    ? college.images[0]
                     : null
                   const hasValidLogo = logoUrl && (logoUrl.startsWith("http://") || logoUrl.startsWith("https://"))
-                  
+
                   return (
-                    <TableRow key={college.id}>
-                    <TableCell>
-                      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-sm border border-gray-200">
-                        {hasValidLogo ? (
-                          <>
+                    <TableRow key={college.id} className="group/row hover:bg-slate-50/80 transition-all duration-300 border-slate-100">
+                      <TableCell className="py-4">
+                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-[0_5px_15px_rgba(0,0,0,0.05)] border border-slate-100 flex items-center justify-center transition-transform group-hover/row:scale-110 duration-500">
+                          {hasValidLogo ? (
                             <Image
                               src={logoUrl}
                               alt={college.name}
                               fill
                               sizes="80px"
-                              className="object-contain p-2 bg-white"
-                              onError={(e) => {
-                                // Hide image on error, show initials
-                                const target = e.target as HTMLImageElement
-                                target.style.display = "none"
-                                const parent = target.parentElement
-                                if (parent) {
-                                  const fallback = parent.querySelector(".logo-fallback") as HTMLElement
-                                  if (fallback) fallback.style.display = "flex"
-                                }
-                              }}
+                              className="object-contain p-2"
                             />
-                            <div 
-                              className="logo-fallback absolute inset-0 flex items-center justify-center text-white font-bold text-sm"
-                              style={{ display: "none" }}
-                            >
+                          ) : (
+                            <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white font-black text-xs">
                               {getInitials(college.name)}
                             </div>
-                          </>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-slate-800 uppercase tracking-tight mb-1 group-hover/row:text-blue-600 transition-colors">
+                            {college.name}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{college.slug}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">{college.city || "-"}</span>
+                          <span className="text-[10px] font-medium text-slate-400">{college.state || "-"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-medium text-slate-600">{college.email || "-"}</span>
+                          <span className="text-[10px] font-medium text-slate-400">{college.phone || "-"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 text-center">
+                        {college.isAcademicAlliance ? (
+                          <div className="inline-flex px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-100">Partner</div>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
-                            {getInitials(college.name)}
-                          </div>
+                          <div className="inline-flex px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest border border-slate-200">Standard</div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{college.name}</TableCell>
-                    <TableCell>{college.location || "-"}</TableCell>
-                    <TableCell>{college.city || "-"}</TableCell>
-                    <TableCell>{college.email || "-"}</TableCell>
-                    <TableCell>{college.phone || "-"}</TableCell>
-                    <TableCell>
-                      {college.isAcademicAlliance ? (
-                        <span className="text-green-600 font-medium">Yes</span>
-                      ) : (
-                        <span className="text-muted-foreground">No</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={college.isEnabled}
-                          onCheckedChange={() => handleToggleEnabled(college.id, college.isEnabled)}
-                          title={college.isEnabled ? "Disable college" : "Enable college"}
-                        />
-                        <span className={`text-sm ${college.isEnabled ? "text-green-600" : "text-muted-foreground"}`}>
-                          {college.isEnabled ? "Enabled" : "Disabled"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => window.open(`/colleges/${college.slug}`, "_blank")}
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(college)}
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeleteCollegeId(college.id)
-                            setShowDeleteDialog(true)
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            checked={college.isEnabled}
+                            onCheckedChange={() => handleToggleEnabled(college.id, college.isEnabled)}
+                            className="scale-75 data-[state=checked]:bg-emerald-500"
+                          />
+                          <span className={`text-[9px] font-black uppercase tracking-widest ${college.isEnabled ? "text-emerald-600" : "text-slate-400"}`}>
+                            {college.isEnabled ? "Live" : "Ghost"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right py-4 pr-10">
+                        <div className="flex items-center justify-end gap-1.5 opacity-40 group-hover/row:opacity-100 transition-opacity duration-300">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            onClick={() => window.open(`/colleges/${college.slug}`, "_blank")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl bg-slate-100 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                            onClick={() => handleEdit(college)}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl bg-slate-100 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                            onClick={() => {
+                              setDeleteCollegeId(college.id)
+                              setShowDeleteDialog(true)
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   )
                 })}
@@ -655,7 +634,7 @@ export function CollegesList() {
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              
+
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(5, totalFilteredPages) }, (_, i) => {
@@ -669,9 +648,9 @@ export function CollegesList() {
                   } else {
                     pageNum = currentPage - 2 + i
                   }
-                  
+
                   const isActive = pageNum === currentPage
-                  
+
                   return (
                     <Button
                       key={pageNum}
@@ -731,7 +710,7 @@ export function CollegesList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disable All Colleges in {bulkDisableState}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to disable all colleges in <strong>{bulkDisableState}</strong>? 
+              Are you sure you want to disable all colleges in <strong>{bulkDisableState}</strong>?
               This will hide all colleges from this state on the public site. You can re-enable them individually or in bulk later.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -753,7 +732,7 @@ export function CollegesList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Enable All Colleges in {bulkEnableState}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to enable all colleges in <strong>{bulkEnableState}</strong>? 
+              Are you sure you want to enable all colleges in <strong>{bulkEnableState}</strong>?
               This will make all colleges from this state visible on the public site again.
             </AlertDialogDescription>
           </AlertDialogHeader>

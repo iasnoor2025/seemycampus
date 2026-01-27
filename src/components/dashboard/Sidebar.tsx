@@ -4,12 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  FileText, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  FileText,
+  BarChart3,
   Settings,
   LogOut,
   GraduationCap,
@@ -237,6 +237,29 @@ const allMenuItems = [
   },
 ]
 
+const menuGroups = [
+  {
+    label: "Main",
+    items: ["Dashboard", "Analytics", "Leads", "Inquiries"]
+  },
+  {
+    label: "Academic",
+    items: ["Colleges", "Courses", "Scholarships", "Application Guides", "Cutoffs", "Placements"]
+  },
+  {
+    label: "Users & Staff",
+    items: ["Students", "Users", "Employees", "Attendance QR Code", "Attendance Records", "Counseling", "OTP Management"]
+  },
+  {
+    label: "Marketing & Content",
+    items: ["News", "Blog", "Events", "Testimonials", "Study Goals", "Hero Slides", "Hero Rotating Texts", "FAQs", "Menu"]
+  },
+  {
+    label: "Engine",
+    items: ["AI Enrichment", "Enrichment Results", "Settings"]
+  }
+]
+
 export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -244,7 +267,6 @@ export function Sidebar() {
   const [enabledFeatures, setEnabledFeatures] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    // Fetch feature flags for dashboard pages
     const fetchFeatureFlags = async () => {
       try {
         const response = await fetch("/api/feature-flags")
@@ -252,19 +274,14 @@ export function Sidebar() {
           const data = await response.json()
           const enabled = new Set<string>()
           data.flags.forEach((flag: { key: string; isEnabled: boolean }) => {
-            if (flag.isEnabled) {
-              enabled.add(flag.key)
-            }
+            if (flag.isEnabled) enabled.add(flag.key)
           })
           setEnabledFeatures(enabled)
         }
       } catch (error) {
         console.error("Error fetching feature flags:", error)
-        // Default to all enabled if fetch fails
         allMenuItems.forEach((item) => {
-          if (item.featureKey) {
-            enabledFeatures.add(item.featureKey)
-          }
+          if (item.featureKey) enabledFeatures.add(item.featureKey)
         })
       }
     }
@@ -275,66 +292,92 @@ export function Sidebar() {
     await signOut({ callbackUrl: "/" })
   }
 
-  // Filter menu items based on user role and feature flags
-  const menuItems = allMenuItems.filter((item) => {
-    // Check role first
-    if (!item.roles.includes(userRole)) {
-      return false
-    }
-    // If no feature key, always show (Dashboard, Settings)
-    if (!item.featureKey) {
-      return true
-    }
-    // Check if feature is enabled
+  const isLinkEnabled = (item: typeof allMenuItems[0]) => {
+    if (!item.roles.includes(userRole)) return false
+    if (!item.featureKey) return true
     return enabledFeatures.has(item.featureKey)
-  })
+  }
 
-  const panelTitle = userRole === USER_ROLES.COUNSELOR ? "Counselor Panel" : "Admin Panel"
+  const panelTitle = userRole === USER_ROLES.COUNSELOR ? "Counselor" : "Pro Admin"
 
   return (
-    <div className="flex flex-col h-screen w-56 bg-[#18254a] text-white border-r border-white/10">
-      {/* Logo Section */}
-      <div className="p-3 border-b border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <GraduationCap className="h-5 w-5" />
-          <span className="text-sm font-bold">{panelTitle}</span>
+    <div className="flex flex-col h-screen w-64 bg-slate-950 text-slate-300 border-r border-white/5 relative z-50">
+      {/* Brand Section */}
+      <div className="p-6 mb-2">
+        <Link href="/dashboard" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:scale-110 transition-transform duration-500">
+            <GraduationCap className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-0.5">{panelTitle}</h2>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Control Panel</p>
+          </div>
         </Link>
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          // Fix: For Dashboard, only match exact path. For others, match exact or sub-routes
-          const isActive = item.href === "/dashboard" 
-            ? pathname === item.href
-            : pathname === item.href || pathname?.startsWith(item.href + "/")
-          
+      {/* Navigation Groups */}
+      <nav className="flex-1 px-4 pb-6 space-y-8 overflow-y-auto scrollbar-hide">
+        {menuGroups.map((group) => {
+          const itemsInGroup = allMenuItems.filter(i =>
+            group.items.includes(i.title) && isLinkEnabled(i)
+          )
+
+          if (itemsInGroup.length === 0) return null
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-sm",
-                isActive
-                  ? "bg-red-500 text-white font-medium"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <Icon className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{item.title}</span>
-            </Link>
+            <div key={group.label} className="space-y-2">
+              <h3 className="px-3 text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] mb-3">{group.label}</h3>
+              <div className="space-y-1">
+                {itemsInGroup.map((item) => {
+                  const Icon = item.icon
+                  const isActive = item.href === "/dashboard"
+                    ? pathname === item.href
+                    : pathname === item.href || pathname?.startsWith(item.href + "/")
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 text-xs font-bold",
+                        isActive
+                          ? "bg-blue-600/10 text-blue-400 shadow-[inset_0_0_20px_rgba(37,99,235,0.05)] border border-blue-600/20"
+                          : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-1.5 rounded-lg transition-colors",
+                        isActive ? "bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-slate-900 group-hover:bg-slate-800"
+                      )}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="truncate flex-1 uppercase tracking-widest leading-none pt-0.5">{item.title}</span>
+                      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.8)]" />}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
           )
         })}
       </nav>
 
-      {/* Sign Out Button */}
-      <div className="p-2 border-t border-white/10">
+      {/* User Session Footer */}
+      <div className="p-4 border-t border-white/5 bg-slate-900/50 backdrop-blur-md">
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 mb-3 border border-white/5">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg">
+            {session?.user?.name?.[0] || 'A'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black text-white truncate uppercase tracking-wider">{session?.user?.name || 'Administrator'}</p>
+            <p className="text-[8px] font-bold text-slate-500 truncate uppercase mt-0.5">{userRole}</p>
+          </div>
+        </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 px-3 py-2 rounded-md text-white/80 hover:bg-white/10 hover:text-white transition-colors w-full text-sm"
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all duration-500 w-full text-[10px] font-black uppercase tracking-[0.2em] group"
         >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
+          <LogOut className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" />
           <span>Sign Out</span>
         </button>
       </div>

@@ -32,10 +32,12 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-slate-50 selection:bg-blue-600/20 selection:text-blue-600">
       <TopBar />
       <HeaderClient />
-      <main className="overflow-x-hidden">{children}</main>
+      <main className="flex-grow relative w-full overflow-x-hidden pt-0 transition-all duration-500">
+        {children}
+      </main>
       <SocialIcons />
       <Footer />
       <ScrollToTop />

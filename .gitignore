@@ -38,3 +38,8 @@ next-env.d.ts
 # drizzle
 /src/db/migrations
 
+# 3-layer architecture
+.tmp/
+credentials.json
+token.json
+

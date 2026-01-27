@@ -1,4 +1,3 @@
-"use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from "lucide-react"
@@ -30,9 +29,8 @@ export function SimpleBarChart({ title, data, total }: AnalyticsChartProps) {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
-                  className={`h-2.5 rounded-full transition-all ${
-                    item.color || "bg-blue-600"
-                  }`}
+                  className={`h-2.5 rounded-full transition-all ${item.color || "bg-blue-600"
+                    }`}
                   style={{ width: `${(item.value / maxValue) * 100}%` }}
                 />
               </div>
@@ -113,9 +111,8 @@ export function MetricCard({ title, value, change, changeLabel, icon, trend }: M
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {change !== undefined && (
-          <div className={`flex items-center gap-1 text-xs mt-1 ${
-            trend === "up" ? "text-green-600" : trend === "down" ? "text-red-600" : "text-muted-foreground"
-          }`}>
+          <div className={`flex items-center gap-1 text-xs mt-1 ${trend === "up" ? "text-green-600" : trend === "down" ? "text-red-600" : "text-muted-foreground"
+            }`}>
             {trend === "up" ? (
               <ArrowUpRight className="h-3 w-3" />
             ) : trend === "down" ? (

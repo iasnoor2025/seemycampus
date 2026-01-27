@@ -73,20 +73,25 @@ export function QuickToolsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
           {tools.map((tool, index) => (
             <Link key={index} href={tool.link}>
-              <Card className="h-full hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-200 bg-white group">
-                <CardContent className="p-6">
-                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${tool.gradient} text-white mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+              <Card className="h-full hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-3 border-slate-200/60 bg-white/80 backdrop-blur-sm group overflow-hidden relative">
+                <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${tool.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}></div>
+                <CardContent className="p-8">
+                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.gradient} text-white mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
                     {tool.icon}
                   </div>
-                  <h3 className={`text-xl font-bold mb-2 group-hover:${tool.color} transition-colors`}>
+                  <h3 className={`text-xl font-bold mb-3 group-hover:${tool.color} transition-colors duration-300`}>
                     {tool.name}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
                     {tool.description}
                   </p>
+
+                  <div className="mt-6 flex items-center text-blue-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Try now <span className="ml-2">→</span>
+                  </div>
                 </CardContent>
               </Card>
             </Link>

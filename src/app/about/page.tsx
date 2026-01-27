@@ -47,10 +47,15 @@ export default async function AboutPage() {
     console.warn("Feature flag check failed, defaulting to enabled:", error)
     isEnabled = true
   }
-  
+
   if (!isEnabled) {
     redirect("/")
   }
+
+  const currentYear = new Date().getFullYear()
+  const prevYear = currentYear - 1
+  const statsYearRange = `2021-${prevYear.toString().slice(-2)}`
+  const admissionsYearRange = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
@@ -61,7 +66,7 @@ export default async function AboutPage() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
@@ -69,7 +74,7 @@ export default async function AboutPage() {
               <Sparkles className="w-5 h-5" />
               <span className="font-medium text-sm">Your Education Partner</span>
             </div>
-            
+
             {/* Main Heading */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
               About Us
@@ -106,7 +111,7 @@ export default async function AboutPage() {
               </CardHeader>
               <CardContent className="pt-6">
                 <p className="text-gray-700 leading-relaxed">
-                  Seemycampus.com is one of the fastest growing education services providers in India today connecting students to colleges and universities from across geographies. As a robust ed-tech company, Seemycampus offers invaluable information to its students demonstrated by 30 thousand sessions across the website and other social media platforms in the year 2021-23.
+                  Seemycampus.com is one of the fastest growing education services providers in India today connecting students to colleges and universities from across geographies. As a robust ed-tech company, Seemycampus offers invaluable information to its students demonstrated by 30 thousand sessions across the website and other social media platforms in the year {statsYearRange}.
                 </p>
               </CardContent>
             </Card>
@@ -152,13 +157,13 @@ export default async function AboutPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Our Impact</h2>
             <p className="text-white/90">Numbers that speak for themselves</p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
               <div className="text-4xl md:text-5xl font-bold text-white mb-2">10+</div>
@@ -206,8 +211,8 @@ export default async function AboutPage() {
                     <div>
                       <p className="font-semibold text-gray-900 mb-2">Institutionalizing Student Counseling</p>
                       <p>
-                        Seemycampus.com was established to institutionalize student counseling in India. Between 2021 and 2023, 
-                        we have counseled over 50,000 students, making us one of India's fastest-growing education service providers. 
+                        Seemycampus.com was established to institutionalize student counseling in India. Between 2021 and {prevYear},
+                        we have counseled over 50,000 students, making us one of India's fastest-growing education service providers.
                         We connect students to colleges and universities globally.
                       </p>
                     </div>
@@ -220,8 +225,8 @@ export default async function AboutPage() {
                     <div>
                       <p className="font-semibold text-gray-900 mb-2">Robust Ed-Tech Platform</p>
                       <p>
-                        Seemycampus.com is a robust ed-tech platform, offering information demonstrated by 30,000 sessions across 
-                        our website and social media in 2021-23. Our objective is to facilitate student recruitment for colleges 
+                        Seemycampus.com is a robust ed-tech platform, offering information demonstrated by 30,000 sessions across
+                        our website and social media in {statsYearRange}. Our objective is to facilitate student recruitment for colleges
                         and universities across all streams and degrees.
                       </p>
                     </div>
@@ -234,9 +239,9 @@ export default async function AboutPage() {
                     <div>
                       <p className="font-semibold text-gray-900 mb-2">Comprehensive College Information</p>
                       <p>
-                        Seemycampus.com boasts over 300 partner colleges and lists 3,000 unique colleges on our website, providing 
-                        comprehensive information on admissions, entrance tests, infrastructure, courses, and careers. We also offer a 
-                        customized student outreach program and assist students with counseling and admission services to help them find 
+                        Seemycampus.com boasts over 300 partner colleges and lists 3,000 unique colleges on our website, providing
+                        comprehensive information on admissions, entrance tests, infrastructure, courses, and careers. We also offer a
+                        customized student outreach program and assist students with counseling and admission services to help them find
                         suitable colleges based on their academic background, skill-set, and potential.
                       </p>
                     </div>

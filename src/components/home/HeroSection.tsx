@@ -62,7 +62,7 @@ export function HeroSection() {
     const fetchData = async () => {
       try {
         const [slidesResponse, textsResponse] = await Promise.all([
-          fetch("/api/hero-slides", { 
+          fetch("/api/hero-slides", {
             cache: 'default',
             signal: abortController.signal
           }),
@@ -170,24 +170,24 @@ export function HeroSection() {
   // Typewriter animation effect
   useEffect(() => {
     if (rotatingTexts.length === 0) return
-    
+
     const currentText = rotatingTexts[textIndex]
     if (!currentText) return
-    
+
     if (!isDeleting && charIndex < currentText.length) {
       // Typing forward
       const timeout = setTimeout(() => {
         setDisplayText(currentText.substring(0, charIndex + 1))
         setCharIndex(charIndex + 1)
       }, 50) // Typing speed
-      
+
       return () => clearTimeout(timeout)
     } else if (!isDeleting && charIndex === currentText.length) {
       // Finished typing, wait then start deleting
       const timeout = setTimeout(() => {
         setIsDeleting(true)
       }, 2000) // Wait 2 seconds before deleting
-      
+
       return () => clearTimeout(timeout)
     } else if (isDeleting && charIndex > 0) {
       // Deleting backward
@@ -195,7 +195,7 @@ export function HeroSection() {
         setDisplayText(currentText.substring(0, charIndex - 1))
         setCharIndex(charIndex - 1)
       }, 30) // Deleting speed (faster)
-      
+
       return () => clearTimeout(timeout)
     } else if (isDeleting && charIndex === 0) {
       // Finished deleting, move to next text
@@ -212,7 +212,7 @@ export function HeroSection() {
 
   const currentSlide = slides[currentIndex] || null
   const defaultImage = "/images/college-hero-default.jpg"
-  
+
   // Default content if no slides
   const defaultTitle = "Find Over 250+ Exams in India"
   const defaultSubtitle = "Discover the best colleges and courses for your future"
@@ -220,9 +220,9 @@ export function HeroSection() {
   return (
     <>
       {/* Hero Section - Fixed height to prevent layout shift */}
-      <section 
+      <section
         className="relative w-full h-[450px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center overflow-hidden"
-        style={{ 
+        style={{
           contain: 'layout style paint',
           minHeight: '450px',
           aspectRatio: 'auto'
@@ -236,9 +236,8 @@ export function HeroSection() {
             slides.map((slide, index) => (
               <div
                 key={slide.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === currentIndex ? "opacity-100 z-0" : "opacity-0 z-0"
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? "opacity-100 z-0" : "opacity-0 z-0"
+                  }`}
                 style={{ willChange: index === currentIndex ? 'opacity' : 'auto' }}
               >
                 <Image
@@ -271,67 +270,64 @@ export function HeroSection() {
         </div>
 
         {/* Content */}
-        <div className="container mx-auto px-3 sm:px-4 relative z-20">
+        <div className="container mx-auto px-4 relative z-20">
           <div className="max-w-4xl mx-auto text-center">
             {/* Main Heading - Typewriter animation with delete and type effect */}
-            <div 
-              className="relative h-[50px] sm:h-[60px] md:h-[100px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-1" 
-              style={{ 
-                aspectRatio: 'auto',
-                minHeight: '50px',
-                contain: 'layout'
-              }}
+            <div
+              className="relative h-[80px] sm:h-[100px] md:h-[120px] mb-6 flex items-center justify-center"
+              style={{ contain: 'layout' }}
             >
-              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.2] sm:leading-tight text-center break-words lg:whitespace-nowrap max-w-full">
-                <span className="inline-block min-w-[1ch]" style={{ minWidth: '1ch' }}>{displayText || '\u00A0'}</span>
-                <span className="animate-pulse">|</span>
+              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-indigo-100">
+                  {displayText || '\u00A0'}
+                </span>
+                <span className="inline-block w-1 h-8 sm:h-12 md:h-16 bg-blue-400 ml-1 animate-pulse shadow-[0_0_10px_#60a5fa]"></span>
               </h1>
             </div>
 
-            {/* Subtitle - Optional, can show slide subtitle if needed */}
-            {slides.length > 0 && slides[currentIndex]?.subtitle && (
-              <div className="relative h-[30px] sm:h-[40px] mb-3 sm:mb-4 md:mb-6 flex items-center justify-center px-2" style={{ aspectRatio: 'auto' }}>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 transition-opacity duration-500">
-                  {slides[currentIndex].subtitle}
-                </p>
-              </div>
-            )}
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base md:text-xl text-blue-100/90 mb-8 max-w-2xl mx-auto font-medium tracking-wide animate-fade-in drop-shadow-lg">
+              {slides.length > 0 && slides[currentIndex]?.subtitle
+                ? slides[currentIndex].subtitle
+                : "Discover the best colleges and courses for your future"}
+            </p>
 
-            {/* Search Bar */}
-            <div className="mb-3 sm:mb-4 md:mb-6">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
-                <div className="flex-1">
+            {/* Search Bar - Glass Morphism */}
+            <div className="mb-10 transform transition-all duration-500 hover:scale-[1.01]">
+              <div className="glass-morphism p-2 sm:p-3 rounded-2xl flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto backdrop-blur-xl border-white/20 shadow-2xl">
+                <div className="flex-1 relative group">
                   <SearchAutocomplete
                     placeholder="Search for colleges, exams, courses and more.."
                     size="lg"
                     onSearch={(query) => setSearchQuery(query)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 transition-all duration-300"
                   />
                 </div>
                 <Button
                   onClick={handleSearch}
                   size="lg"
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg whitespace-nowrap"
-                  style={{ color: '#ffffff' }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-6 text-base font-bold rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] active:scale-95"
                 >
+                  <Search className="w-5 h-5 mr-2" />
                   Search
                 </Button>
               </div>
             </div>
 
-            {/* Expert Guidance Button */}
-            <div className="flex justify-center">
+            {/* Secondary CTA */}
+            <div className="flex justify-center gap-4 animate-bounce-slow">
               <Link href="/career-counseling">
                 <Button
                   size="lg"
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 lg:py-6 text-sm sm:text-base font-semibold rounded-lg shadow-lg"
-                  style={{ color: '#ffffff' }}
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md px-8 py-6 text-base font-semibold rounded-xl transition-all duration-300 hover:border-white/50"
                 >
+                  <GraduationCap className="w-5 h-5 mr-2" />
                   Get Expert Guidance
                 </Button>
               </Link>
             </div>
           </div>
-
         </div>
 
       </section>
@@ -413,7 +409,7 @@ export function HeroSection() {
                               </li>
                             )}
                           </ul>
-                          
+
                           {/* CTA Button */}
                           <div className={`flex items-center justify-between bg-gradient-to-r ${gradient} text-white px-4 py-3 rounded-lg font-semibold text-sm group-hover:shadow-lg transition-all duration-300`}>
                             <span>Explore</span>

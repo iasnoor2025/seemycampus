@@ -7,24 +7,35 @@ export function TopBar() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  const currentYear = new Date().getFullYear()
+  const currentMonth = new Date().getMonth()
+  // For "Admissions Open", we typically show the upcoming academic cycle.
+  // In Jan-May, we are in the 2025-26 session, but admissions for 2026-27 are opening.
+  // In June-Dec, we are definitely in the 2026-27 cycle.
+  const academicYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`
+
   return (
-    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-2 sm:py-2.5 text-xs sm:text-sm relative w-full border-b border-white/10">
-      <div className="w-full px-3 sm:px-4 relative max-w-7xl mx-auto flex items-center justify-center">
-        <p className="text-center text-white/95 flex-1 px-8 sm:px-12 md:px-16">
-          <span className="whitespace-nowrap">For admissions or other details, call us on{" "}</span>
-          <a 
-            href="tel:+918960147776" 
-            className="font-semibold hover:text-white underline decoration-2 underline-offset-2 transition-colors whitespace-nowrap"
-          >
-            +91-8960147776
-          </a>
-        </p>
+    <div className="bg-slate-950 text-white py-2 relative w-full border-b border-white/5 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 animate-pulse"></div>
+      <div className="w-full px-4 relative max-w-[1920px] mx-auto flex items-center justify-between gap-4">
+        <div className="flex-1 overflow-hidden">
+          <p className="text-center text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-white/60 animate-in fade-in slide-in-from-top-1 duration-700">
+            <span className="hidden sm:inline">Admissions & Counseling Open {academicYear} • </span>
+            <span className="text-blue-400">Expert Guidance: </span>
+            <a
+              href="tel:+918960147776"
+              className="text-white hover:text-blue-400 underline decoration-blue-500/50 underline-offset-4 transition-all"
+            >
+              +91-8960147776
+            </a>
+          </p>
+        </div>
         <button
           onClick={scrollToTop}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/20 rounded-lg p-1 transition-all flex-shrink-0"
+          className="bg-white/5 hover:bg-white/10 rounded-lg p-1.5 transition-all group border border-white/5"
           aria-label="Scroll to top"
         >
-          <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <ChevronUp className="h-3.5 w-3.5 group-hover:-translate-y-0.5 transition-transform" />
         </button>
       </div>
     </div>

@@ -78,41 +78,58 @@ export function Footer() {
   return (
     <footer className="mt-16">
       {/* Top Section - Newsletter Subscription */}
-      <div className="bg-gradient-to-r from-slate-800 via-blue-900 to-indigo-900 text-white py-12 -mt-16 relative z-10">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+      <div className="bg-slate-900 border-y border-white/5 py-24 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent"></div>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px]"></div>
         </div>
+
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
-                <Sparkles className="w-5 h-5" />
-                <span className="font-medium text-sm">Stay Updated</span>
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col lg:flex-row items-center gap-12">
+              <div className="flex-1 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-xl mb-6 border border-blue-500/20">
+                  <Sparkles className="w-5 h-5" />
+                  <span className="font-black text-sm uppercase tracking-widest">Premium Updates</span>
+                </div>
+                <h3 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight tracking-tight">
+                  Join Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Elite</span> Student Community
+                </h3>
+                <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-xl">
+                  Get exclusive access to premium campus insights, admission hacks, and expert counseling delivered straight to your inbox.
+                </p>
               </div>
-              <h3 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
-                Subscribe to our Newsletter
-              </h3>
-              <p className="text-white/90">Get the latest updates on colleges, courses, and admission guidance</p>
+
+              <div className="w-full lg:w-[450px]">
+                <div className="glass-morphism p-2 rounded-[2rem] border-white/5 shadow-2xl">
+                  <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
+                    <div className="relative">
+                      <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                      <Input
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-slate-900/50 border-none text-white placeholder:text-slate-600 rounded-2xl h-16 pl-14 pr-6 focus:ring-2 focus:ring-blue-500/50 transition-all font-bold"
+                        required
+                        suppressHydrationWarning
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-500 text-white h-16 text-base font-black uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:shadow-[0_0_40px_rgba(37,99,235,0.5)] transition-all group"
+                    >
+                      <Send className="h-5 w-5 mr-3 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      Scale Your Future
+                    </Button>
+                  </form>
+                  <p className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-4">
+                    No spam. Only high-value insights. Unsubscribe anytime.
+                  </p>
+                </div>
+              </div>
             </div>
-            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/10 backdrop-blur-sm text-white placeholder:text-white/70 border-white/20 rounded-lg px-4 py-3 flex-1 focus:bg-white/20 focus:border-white/40"
-                required
-                suppressHydrationWarning
-              />
-              <Button
-                type="submit"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 font-semibold rounded-lg whitespace-nowrap shadow-lg hover:shadow-xl transition-all"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Subscribe
-              </Button>
-            </form>
           </div>
         </div>
       </div>
@@ -191,8 +208,8 @@ export function Footer() {
                 {categories.length > 0 ? (
                   categories.map((category) => (
                     <li key={category.id}>
-                      <Link 
-                        href={`/colleges/${category.slug}`} 
+                      <Link
+                        href={`/colleges/${category.slug}`}
                         className="flex items-center gap-2 text-white/80 hover:text-white hover:translate-x-1 transition-all group"
                       >
                         <ChevronRight className="h-4 w-4 text-blue-400 flex-shrink-0 group-hover:text-blue-300" />
@@ -280,54 +297,47 @@ export function Footer() {
 
             {/* Column 4 - Contact us */}
             <div>
-              <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-600 rounded-full"></div>
-                Contact us
+              <h3 className="text-xl font-black mb-8 text-white flex items-center gap-3">
+                <div className="w-2 h-8 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                CONNECT
               </h3>
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3 group">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Mail className="h-5 w-5 text-white" />
+              <div className="space-y-4">
+                <a href={`mailto:${contactInfo.email}`} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all duration-300 group">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500">
+                    <Mail className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs mb-1">Email</p>
-                    <a href={`mailto:${contactInfo.email}`} className="text-white hover:text-blue-300 transition-colors break-all">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Email</p>
+                    <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors break-all">
                       {contactInfo.email}
-                    </a>
+                    </p>
                   </div>
-                </li>
-                <li className="flex items-start gap-3 group">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Phone className="h-5 w-5 text-white" />
+                </a>
+
+                <a href={`tel:${contactInfo.phone.replace(/[^0-9+]/g, "")}`} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all duration-300 group">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500">
+                    <Phone className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs mb-1">Phone</p>
-                    <a href={`tel:${contactInfo.phone.replace(/[^0-9+]/g, "")}`} className="text-white hover:text-blue-300 transition-colors">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Phone</p>
+                    <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">
                       {contactInfo.phone}
-                    </a>
+                    </p>
                   </div>
-                </li>
-                <li className="flex items-start gap-3 group">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <MapPin className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-white/60 text-xs mb-1">Address</p>
-                    <p className="text-white">{contactInfo.address}</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 group">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Globe className="h-5 w-5 text-white" />
+                </a>
+
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="w-12 h-12 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center">
+                    <MapPin className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-xs mb-1">Website</p>
-                    <a href="https://www.seemycampus.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-300 transition-colors">
-                      www.seemycampus.com
-                    </a>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">HQ Address</p>
+                    <p className="text-sm font-bold text-white leading-tight">
+                      {contactInfo.address}
+                    </p>
                   </div>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
