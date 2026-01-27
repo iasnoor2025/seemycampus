@@ -867,30 +867,3 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   news: many(collegeNews),
   featuredIn: many(featuredColleges),
 }));
-
-// Skills table
-export const skills = pgTable("skills", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
-  category: varchar("category", { length: 100 }), // academic, professional, career
-  description: text("description"),
-  icon: varchar("icon", { length: 100 }),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Regions table
-export const regions = pgTable("regions", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
-  type: varchar("type", { length: 50 }).notNull(), // country, state, city
-  parentId: integer("parent_id"), // self-reference for hierarchy
-  imageUrl: varchar("image_url", { length: 500 }),
-  description: text("description"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});

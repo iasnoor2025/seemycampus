@@ -34,7 +34,7 @@ const nextConfig = {
   // Note: swcMinify is enabled by default in Next.js 13+, no need to specify
   // Enable experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled - requires critters package
     optimizePackageImports: ['lucide-react', '@/components', '@tabler/icons-react'],
     // Enable partial prerendering for better performance
     ppr: false, // Keep false for now, can enable later

@@ -10,7 +10,6 @@ import { CourseCard } from "@/components/course/CourseCard"
 import { PaginationWrapper } from "@/components/colleges/PaginationWrapper"
 import { CollegeReviews } from "@/components/college/CollegeReviews"
 import { CollegeEntranceExams } from "@/components/college/CollegeEntranceExams"
-import { CollegeCutoffs } from "@/components/college/CollegeCutoffs"
 import { CollegePlacements } from "@/components/college/CollegePlacements"
 import { CollegeInfrastructure } from "@/components/college/CollegeInfrastructure"
 import { ApplicationGuide } from "@/components/college/ApplicationGuide"
@@ -94,24 +93,24 @@ const sampleColleges = [
 // Helper function to get all valid category slugs from database
 async function getCategorySlugs(): Promise<Map<string, { name: string; type: 'category' | 'studyGoal' }>> {
   const categoryMap = new Map<string, { name: string; type: 'category' | 'studyGoal' }>()
-  
+
   try {
     // Fetch active categories
     const dbCategories = await db
       .select()
       .from(categories)
       .where(eq(categories.isActive, true))
-    
+
     dbCategories.forEach((cat) => {
       categoryMap.set(cat.slug.toLowerCase(), { name: cat.name, type: 'category' })
     })
-    
+
     // Fetch active study goals
     const dbStudyGoals = await db
       .select()
       .from(studyGoals)
       .where(eq(studyGoals.isActive, true))
-    
+
     dbStudyGoals.forEach((goal) => {
       // Only add if not already in categories (no duplicates)
       if (!categoryMap.has(goal.slug.toLowerCase())) {
@@ -121,7 +120,7 @@ async function getCategorySlugs(): Promise<Map<string, { name: string; type: 'ca
   } catch (error) {
     console.error("Error fetching category slugs:", error)
   }
-  
+
   return categoryMap
 }
 
@@ -142,7 +141,7 @@ function getInitials(name: string): string {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { params: routeParams } = await params
-  
+
   // If it's a category route (single parameter)
   if (routeParams.length === 1) {
     const categoryInfo = await getCategoryBySlug(routeParams[0])
@@ -182,11 +181,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       }
     }
   }
-  
+
   // Otherwise, treat as individual college slug
   const slug = routeParams.join("/")
   const collegeData = await getCollegeWithCourses(slug)
-  
+
   if (!collegeData) {
     // Return proper 404 metadata to prevent indexing of 404 pages
     return {
@@ -235,12 +234,12 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   const { params: routeParams } = await params
   const params_searchParams = await searchParams
   const currentPage = parseInt(params_searchParams.page || "1", 10)
-  
+
   // Handle category routes (single parameter - dynamic from database)
   if (routeParams.length === 1) {
     const categorySlug = routeParams[0]
     const categoryInfo = await getCategoryBySlug(categorySlug)
-    
+
     if (categoryInfo) {
       // Category page (e.g., /colleges/design, /colleges/law, /colleges/commerce, /colleges/arts)
       const categoryName = categoryInfo.name
@@ -255,16 +254,16 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         topColleges: { name: string; slug: string; ranking: number | null; location: string | null }[]
         averagePackage: number | null
         highestPackage: number | null
-      } = { 
-        totalColleges: 0, 
-        privateColleges: 0, 
-        governmentColleges: 0, 
+      } = {
+        totalColleges: 0,
+        privateColleges: 0,
+        governmentColleges: 0,
         averageRanking: null,
         topColleges: [],
         averagePackage: null,
         highestPackage: null
       }
-      
+
       try {
         const result = await getCollegesByCategoryPaginated(categorySlug, currentPage, 10)
         collegesList = result.colleges || []
@@ -273,7 +272,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         console.error("Error fetching colleges by category:", error)
         // Use empty arrays/defaults - page will still render
       }
-      
+
       try {
         const stats = await getCategoryStats(categoryName)
         if (stats) {
@@ -283,14 +282,14 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         console.error("Error fetching category stats:", error)
         // Use defaults - page will still render
       }
-      
+
       // Generate breadcrumb structured data
       const breadcrumbData = generateBreadcrumbList([
         { name: "Home", url: "/" },
         { name: "Colleges", url: "/colleges" },
         { name: `${categoryName} Colleges`, url: `/colleges/${categorySlug}` },
       ])
-      
+
       // Generate CourseCategory structured data
       const courseCategorySchema = {
         "@context": "https://schema.org",
@@ -300,267 +299,267 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         url: `${baseUrl}/colleges/${categorySlug}`,
       }
 
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(courseCategorySchema) }}
-        />
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
-          {/* Hero Section */}
-          <div className="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-12 md:py-16 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
-            </div>
+      return (
+        <>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(courseCategorySchema) }}
+          />
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30">
+            {/* Hero Section */}
+            <div className="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-12 md:py-16 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
+              </div>
 
-            <div className="container mx-auto px-4 relative z-10">
-              <div className="max-w-5xl mx-auto">
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
-                  <Building className="w-5 h-5" />
-                  <span className="font-medium text-sm">{categoryName} Colleges</span>
-                </div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
-                  Best {categoryName} Colleges in India
-                </h1>
-                <p className="text-xl text-white/90 mb-6">
-                  Discover top-ranked {categoryName} colleges and universities in India. Find complete information about admission, courses, fees, placements, and rankings.
-                </p>
-                
-                {/* Category Statistics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building className="w-5 h-5" />
-                      <span className="text-sm font-medium">Total Colleges</span>
-                    </div>
-                    <p className="text-2xl font-bold">{categoryStats.totalColleges}</p>
+              <div className="container mx-auto px-4 relative z-10">
+                <div className="max-w-5xl mx-auto">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 shadow-lg">
+                    <Building className="w-5 h-5" />
+                    <span className="font-medium text-sm">{categoryName} Colleges</span>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award className="w-5 h-5" />
-                      <span className="text-sm font-medium">Private</span>
-                    </div>
-                    <p className="text-2xl font-bold">{categoryStats.privateColleges}</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="w-5 h-5" />
-                      <span className="text-sm font-medium">Government</span>
-                    </div>
-                    <p className="text-2xl font-bold">{categoryStats.governmentColleges}</p>
-                  </div>
-                  {categoryStats.averageRanking && (
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-100 bg-clip-text text-transparent">
+                    Best {categoryName} Colleges in India
+                  </h1>
+                  <p className="text-xl text-white/90 mb-6">
+                    Discover top-ranked {categoryName} colleges and universities in India. Find complete information about admission, courses, fees, placements, and rankings.
+                  </p>
+
+                  {/* Category Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5" />
-                        <span className="text-sm font-medium">Avg Ranking</span>
+                        <Building className="w-5 h-5" />
+                        <span className="text-sm font-medium">Total Colleges</span>
                       </div>
-                      <p className="text-2xl font-bold">{categoryStats.averageRanking}</p>
+                      <p className="text-2xl font-bold">{categoryStats.totalColleges}</p>
                     </div>
-                  )}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="w-5 h-5" />
+                        <span className="text-sm font-medium">Private</span>
+                      </div>
+                      <p className="text-2xl font-bold">{categoryStats.privateColleges}</p>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-5 h-5" />
+                        <span className="text-sm font-medium">Government</span>
+                      </div>
+                      <p className="text-2xl font-bold">{categoryStats.governmentColleges}</p>
+                    </div>
+                    {categoryStats.averageRanking && (
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="w-5 h-5" />
+                          <span className="text-sm font-medium">Avg Ranking</span>
+                        </div>
+                        <p className="text-2xl font-bold">{categoryStats.averageRanking}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="container mx-auto px-4 py-8 max-w-7xl">
-            {/* Top Colleges Section */}
-            {categoryStats.topColleges.length > 0 && (
-              <div className="mb-8 bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold mb-4">Top Ranked {categoryName} Colleges</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categoryStats.topColleges.slice(0, 6).map((college) => (
-                    <Link
-                      key={college.slug}
-                      href={`/colleges/${college.slug}`}
-                      className="flex items-center gap-3 p-3 rounded-lg border hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <Award className="w-5 h-5 text-blue-600" />
+            <div className="container mx-auto px-4 py-8 max-w-7xl">
+              {/* Top Colleges Section */}
+              {categoryStats.topColleges.length > 0 && (
+                <div className="mb-8 bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-4">Top Ranked {categoryName} Colleges</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {categoryStats.topColleges.slice(0, 6).map((college) => (
+                      <Link
+                        key={college.slug}
+                        href={`/colleges/${college.slug}`}
+                        className="flex items-center gap-3 p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Award className="w-5 h-5 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{college.name}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {college.ranking && <span>Rank #{college.ranking}</span>}
+                            {college.location && (
+                              <>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {college.location}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Placement Statistics */}
+              {(categoryStats.averagePackage || categoryStats.highestPackage) && (
+                <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-4">Placement Statistics</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {categoryStats.averagePackage && (
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Coins className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Average Package</p>
+                          <p className="text-2xl font-bold">₹{categoryStats.averagePackage.toLocaleString()} LPA</p>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{college.name}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {college.ranking && <span>Rank #{college.ranking}</span>}
-                          {college.location && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {college.location}
-                              </span>
-                            </>
-                          )}
+                    )}
+                    {categoryStats.highestPackage && (
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                          <TrendingUp className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Highest Package</p>
+                          <p className="text-2xl font-bold">₹{categoryStats.highestPackage.toLocaleString()} LPA</p>
                         </div>
                       </div>
-                    </Link>
-                  ))}
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Table Header */}
+              <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
+                <div className="grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
+                  <div className="col-span-2 text-center">PREVIEW</div>
+                  <div className="col-span-5">COLLEGE NAME</div>
+                  <div className="col-span-3">LOCATION</div>
+                  <div className="col-span-2 text-center">VIEW</div>
                 </div>
               </div>
-            )}
-            
-            {/* Placement Statistics */}
-            {(categoryStats.averagePackage || categoryStats.highestPackage) && (
-              <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6">
-                <h2 className="text-2xl font-bold mb-4">Placement Statistics</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {categoryStats.averagePackage && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Coins className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Average Package</p>
-                        <p className="text-2xl font-bold">₹{categoryStats.averagePackage.toLocaleString()} LPA</p>
-                      </div>
-                    </div>
-                  )}
-                  {categoryStats.highestPackage && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Highest Package</p>
-                        <p className="text-2xl font-bold">₹{categoryStats.highestPackage.toLocaleString()} LPA</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          {/* Table Header */}
-          <div className="mb-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 border border-slate-200">
-            <div className="grid grid-cols-12 gap-4 py-2 font-semibold text-gray-900">
-              <div className="col-span-2 text-center">PREVIEW</div>
-              <div className="col-span-5">COLLEGE NAME</div>
-              <div className="col-span-3">LOCATION</div>
-              <div className="col-span-2 text-center">VIEW</div>
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            {collegesList.map((college) => (
-              <div
-                key={college.id}
-                className="grid grid-cols-12 gap-4 items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6"
-              >
-                {/* Preview - Logo */}
-                <div className="col-span-2 flex justify-center">
-                  <CollegeLogo
-                    collegeId={college.id}
-                    collegeName={college.name}
-                    imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
-                    size="lg"
-                    variant="circle"
+              <div className="space-y-4">
+                {collegesList.map((college) => (
+                  <div
+                    key={college.id}
+                    className="grid grid-cols-12 gap-4 items-center bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 p-4 md:p-6"
+                  >
+                    {/* Preview - Logo */}
+                    <div className="col-span-2 flex justify-center">
+                      <CollegeLogo
+                        collegeId={college.id}
+                        collegeName={college.name}
+                        imageUrl={college.images && college.images.length > 0 ? college.images[0] : null}
+                        size="lg"
+                        variant="circle"
+                      />
+                    </div>
+
+                    {/* College Name */}
+                    <div className="col-span-5">
+                      <Link href={`/colleges/${college.slug}`}>
+                        <h3 className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                          {college.name}
+                        </h3>
+                      </Link>
+                    </div>
+
+                    {/* Location */}
+                    <div className="col-span-3">
+                      <p className="text-sm text-gray-700">
+                        {college.location || college.city || "Location not specified"}
+                      </p>
+                    </div>
+
+                    {/* View Button */}
+                    <div className="col-span-2 flex justify-center">
+                      <Link href={`/colleges/${college.slug}`}>
+                        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                          VIEW MORE
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-8">
+                  <PaginationWrapper
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
                   />
                 </div>
+              )}
 
-                {/* College Name */}
-                <div className="col-span-5">
-                  <Link href={`/colleges/${college.slug}`}>
-                    <h3 className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors">
-                      {college.name}
-                    </h3>
-                  </Link>
-                </div>
+              {/* SEO Content Section */}
+              <div className="mt-12 prose prose-slate max-w-none bg-white rounded-xl shadow-lg p-8">
+                <h2>About {categoryName} Colleges in India</h2>
+                <p>
+                  {categoryName} colleges in India offer comprehensive programs designed to prepare students for successful careers.
+                  With {categoryStats.totalColleges} institutions across the country, students have access to quality education
+                  {categoryStats.privateColleges > 0 && `, including ${categoryStats.privateColleges} private colleges`}
+                  {categoryStats.governmentColleges > 0 && ` and ${categoryStats.governmentColleges} government institutions`}.
+                </p>
 
-                {/* Location */}
-                <div className="col-span-3">
-                  <p className="text-sm text-gray-700">
-                    {college.location || college.city || "Location not specified"}
-                  </p>
-                </div>
+                <h3>Why Choose {categoryName} Colleges?</h3>
+                <ul>
+                  <li>Industry-relevant curriculum aligned with current market demands</li>
+                  <li>Experienced faculty with industry expertise</li>
+                  <li>Strong placement records with top companies</li>
+                  <li>Modern infrastructure and facilities</li>
+                  <li>Research opportunities and industry collaborations</li>
+                  <li>Alumni network and career support</li>
+                </ul>
 
-                {/* View Button */}
-                <div className="col-span-2 flex justify-center">
-                  <Link href={`/colleges/${college.slug}`}>
-                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow-md hover:shadow-lg transition-all">
-                      VIEW MORE
-                    </Button>
-                  </Link>
-                </div>
+                <h3>Admission Process for {categoryName} Colleges</h3>
+                <p>
+                  Admission to {categoryName} colleges typically requires:
+                </p>
+                <ul>
+                  <li>Qualifying entrance exam scores (varies by college and course)</li>
+                  <li>Academic performance in previous qualifying exams</li>
+                  <li>Personal interview or group discussion (for some colleges)</li>
+                  <li>Application submission within specified deadlines</li>
+                </ul>
+
+                <h3>Career Opportunities After {categoryName}</h3>
+                <p>
+                  Graduates from {categoryName} colleges have diverse career opportunities across various industries.
+                  {categoryStats.averagePackage && ` The average placement package is ₹${categoryStats.averagePackage.toLocaleString()} LPA,`}
+                  {categoryStats.highestPackage && ` with the highest package reaching ₹${categoryStats.highestPackage.toLocaleString()} LPA.`}
+                  Career paths include roles in corporate sectors, government organizations, entrepreneurship, and further studies.
+                </p>
+
+                <h3>How to Choose the Right {categoryName} College</h3>
+                <p>
+                  When selecting a {categoryName} college, consider:
+                </p>
+                <ul>
+                  <li><strong>Ranking & Accreditation:</strong> Check NIRF rankings and accreditation status</li>
+                  <li><strong>Placement Records:</strong> Review placement statistics and top recruiters</li>
+                  <li><strong>Faculty:</strong> Research faculty qualifications and industry experience</li>
+                  <li><strong>Infrastructure:</strong> Evaluate campus facilities, labs, and resources</li>
+                  <li><strong>Location:</strong> Consider proximity to industry hubs and opportunities</li>
+                  <li><strong>Fees & Scholarships:</strong> Assess affordability and available financial aid</li>
+                </ul>
               </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="mt-8">
-              <PaginationWrapper
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-              />
             </div>
-          )}
-
-          {/* SEO Content Section */}
-          <div className="mt-12 prose prose-slate max-w-none bg-white rounded-xl shadow-lg p-8">
-            <h2>About {categoryName} Colleges in India</h2>
-            <p>
-              {categoryName} colleges in India offer comprehensive programs designed to prepare students for successful careers. 
-              With {categoryStats.totalColleges} institutions across the country, students have access to quality education 
-              {categoryStats.privateColleges > 0 && `, including ${categoryStats.privateColleges} private colleges`}
-              {categoryStats.governmentColleges > 0 && ` and ${categoryStats.governmentColleges} government institutions`}.
-            </p>
-            
-            <h3>Why Choose {categoryName} Colleges?</h3>
-            <ul>
-              <li>Industry-relevant curriculum aligned with current market demands</li>
-              <li>Experienced faculty with industry expertise</li>
-              <li>Strong placement records with top companies</li>
-              <li>Modern infrastructure and facilities</li>
-              <li>Research opportunities and industry collaborations</li>
-              <li>Alumni network and career support</li>
-            </ul>
-            
-            <h3>Admission Process for {categoryName} Colleges</h3>
-            <p>
-              Admission to {categoryName} colleges typically requires:
-            </p>
-            <ul>
-              <li>Qualifying entrance exam scores (varies by college and course)</li>
-              <li>Academic performance in previous qualifying exams</li>
-              <li>Personal interview or group discussion (for some colleges)</li>
-              <li>Application submission within specified deadlines</li>
-            </ul>
-            
-            <h3>Career Opportunities After {categoryName}</h3>
-            <p>
-              Graduates from {categoryName} colleges have diverse career opportunities across various industries. 
-              {categoryStats.averagePackage && ` The average placement package is ₹${categoryStats.averagePackage.toLocaleString()} LPA,`}
-              {categoryStats.highestPackage && ` with the highest package reaching ₹${categoryStats.highestPackage.toLocaleString()} LPA.`}
-              Career paths include roles in corporate sectors, government organizations, entrepreneurship, and further studies.
-            </p>
-            
-            <h3>How to Choose the Right {categoryName} College</h3>
-            <p>
-              When selecting a {categoryName} college, consider:
-            </p>
-            <ul>
-              <li><strong>Ranking & Accreditation:</strong> Check NIRF rankings and accreditation status</li>
-              <li><strong>Placement Records:</strong> Review placement statistics and top recruiters</li>
-              <li><strong>Faculty:</strong> Research faculty qualifications and industry experience</li>
-              <li><strong>Infrastructure:</strong> Evaluate campus facilities, labs, and resources</li>
-              <li><strong>Location:</strong> Consider proximity to industry hubs and opportunities</li>
-              <li><strong>Fees & Scholarships:</strong> Assess affordability and available financial aid</li>
-            </ul>
           </div>
-        </div>
-      </div>
-      </>
-    )
+        </>
+      )
     }
     // If category not found, fall through to treat as college slug
   }
-  
+
   // Handle subcategory routes (two parameters) - keeping for backward compatibility
   if (routeParams.length === 2) {
     const category = routeParams[0]
@@ -662,7 +661,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
       </div>
     )
   }
-  
+
   // Otherwise, treat as individual college slug
   const slug = routeParams.join("/")
   let collegeData
@@ -678,7 +677,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
   }
 
   const { courses, ...college } = collegeData
-  
+
   // Fetch review data for aggregate rating (only if reviews exist)
   let reviewCount: number | null = null
   let averageRating: number | null = null
@@ -690,14 +689,14 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
       .where(and(eq(collegeReviews.collegeId, college.id), eq(collegeReviews.isApproved, true)))
       .orderBy(desc(collegeReviews.createdAt))
       .limit(5) // Get top 5 reviews for structured data
-    
+
     if (approvedReviews.length > 0) {
       reviewCount = approvedReviews.length
       const totalRating = approvedReviews.reduce((sum, review) => sum + review.rating, 0)
       averageRating = Math.round((totalRating / approvedReviews.length) * 10) / 10
-      
+
       // Generate Review structured data for top reviews
-      reviewStructuredData = approvedReviews.slice(0, 3).map(review => 
+      reviewStructuredData = approvedReviews.slice(0, 3).map(review =>
         generateSingleReviewStructuredData(
           {
             name: college.name,
@@ -714,7 +713,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
     // Silently fail - reviews are optional
     console.warn('Failed to fetch reviews for structured data:', error)
   }
-  
+
   const structuredData = generateStructuredDataCollege({
     ...college,
     courses: courses || null,
@@ -830,7 +829,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
             <h2 className="text-2xl font-bold mb-4">About {college.name}</h2>
             <div className="text-muted-foreground whitespace-pre-line prose prose-sm max-w-none">
               <p>{college.description}</p>
-              
+
               {/* Location-based internal links */}
               {college.city && (
                 <p className="mt-4 text-sm">
@@ -845,7 +844,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                   .
                 </p>
               )}
-              
+
               {/* Course links */}
               {courses && courses.length > 0 && (
                 <p className="mt-4 text-sm">
@@ -877,7 +876,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
                   .
                 </p>
               )}
-              
+
               {/* Entrance exam links */}
               {college.entranceExams && Array.isArray(college.entranceExams) && college.entranceExams.length > 0 && (
                 <p className="mt-4 text-sm">
@@ -939,10 +938,7 @@ export default async function CollegesPage({ params, searchParams }: PageProps) 
         {/* Entrance Exams Section */}
         <CollegeEntranceExams entranceExams={college.entranceExams} />
 
-        {/* Cutoffs Section */}
-        <div className="mt-12">
-          <CollegeCutoffs collegeId={college.id} collegeSlug={slug} />
-        </div>
+
 
         {/* Placements Section */}
         <div className="mt-12">
