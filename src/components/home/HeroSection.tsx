@@ -46,12 +46,65 @@ export function HeroSection() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isPaused, setIsPaused] = useState(false)
-  const [textIndex, setTextIndex] = useState(0)
   const [displayText, setDisplayText] = useState("")
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [charIndex, setCharIndex] = useState(0)
   const [studyGoalsData, setStudyGoalsData] = useState<StudyGoal[]>([])
   const [rotatingTexts, setRotatingTexts] = useState<string[]>([])
+
+  // Move typewriter logic to its own component to prevent whole HeroSection re-renders
+  const TypewriterHeader = ({ rotatingTexts }: { rotatingTexts: string[] }) => {
+    const [textIndex, setTextIndex] = useState(0)
+    const [displayStr, setDisplayStr] = useState("")
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [charIdx, setCharIdx] = useState(0)
+
+    useEffect(() => {
+      if (rotatingTexts.length === 0) return
+      const currentText = rotatingTexts[textIndex]
+      if (!currentText) return
+
+      if (!isDeleting && charIdx < currentText.length) {
+        const timeout = setTimeout(() => {
+          setDisplayStr(currentText.substring(0, charIdx + 1))
+          setCharIdx(charIdx + 1)
+        }, 50)
+        return () => clearTimeout(timeout)
+      } else if (!isDeleting && charIdx === currentText.length) {
+        const timeout = setTimeout(() => setIsDeleting(true), 2000)
+        return () => clearTimeout(timeout)
+      } else if (isDeleting && charIdx > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayStr(currentText.substring(0, charIdx - 1))
+          setCharIdx(charIdx - 1)
+        }, 30)
+        return () => clearTimeout(timeout)
+      } else if (isDeleting && charIdx === 0) {
+        const timeout = setTimeout(() => {
+          setIsDeleting(false)
+          setTextIndex((prev) => (prev + 1) % rotatingTexts.length)
+        }, 500)
+        return () => clearTimeout(timeout)
+      }
+    }, [textIndex, charIdx, isDeleting, rotatingTexts])
+
+    // Center stabilization: Use an invisible span of the full text to keep layout stable
+    const fullText = rotatingTexts[textIndex] || ""
+
+    return (
+      <div className="relative h-[80px] sm:h-[100px] md:h-[120px] mb-6 flex items-center justify-center overflow-hidden">
+        <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl relative">
+          {/* Static invisible spacer to prevent width jumping */}
+          <span className="opacity-0 pointer-events-none select-none" aria-hidden="true">
+            {fullText}
+          </span>
+          {/* Actual animated text overlayed */}
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-max text-white whitespace-nowrap">
+            {displayStr}
+            <span className="inline-block w-1 h-8 sm:h-12 md:h-16 bg-blue-400 ml-1 animate-pulse shadow-[0_0_10px_#60a5fa] align-middle"></span>
+          </span>
+        </h1>
+      </div>
+    )
+  }
 
   useEffect(() => {
     // Use Promise.all for parallel fetching to improve performance
@@ -159,51 +212,6 @@ export function HeroSection() {
     return () => clearInterval(interval)
   }, [slides.length, isPaused])
 
-  // Initialize display text when rotating texts are loaded
-  useEffect(() => {
-    if (rotatingTexts.length > 0 && displayText === "") {
-      setDisplayText(rotatingTexts[0])
-      setCharIndex(rotatingTexts[0].length)
-    }
-  }, [rotatingTexts.length])
-
-  // Typewriter animation effect
-  useEffect(() => {
-    if (rotatingTexts.length === 0) return
-
-    const currentText = rotatingTexts[textIndex]
-    if (!currentText) return
-
-    if (!isDeleting && charIndex < currentText.length) {
-      // Typing forward
-      const timeout = setTimeout(() => {
-        setDisplayText(currentText.substring(0, charIndex + 1))
-        setCharIndex(charIndex + 1)
-      }, 50) // Typing speed
-
-      return () => clearTimeout(timeout)
-    } else if (!isDeleting && charIndex === currentText.length) {
-      // Finished typing, wait then start deleting
-      const timeout = setTimeout(() => {
-        setIsDeleting(true)
-      }, 2000) // Wait 2 seconds before deleting
-
-      return () => clearTimeout(timeout)
-    } else if (isDeleting && charIndex > 0) {
-      // Deleting backward
-      const timeout = setTimeout(() => {
-        setDisplayText(currentText.substring(0, charIndex - 1))
-        setCharIndex(charIndex - 1)
-      }, 30) // Deleting speed (faster)
-
-      return () => clearTimeout(timeout)
-    } else if (isDeleting && charIndex === 0) {
-      // Finished deleting, move to next text
-      setIsDeleting(false)
-      setTextIndex((prev) => (prev + 1) % rotatingTexts.length)
-    }
-  }, [textIndex, charIndex, isDeleting])
-
   const handleSearch = () => {
     if (searchQuery.trim()) {
       router.push(`/colleges?search=${encodeURIComponent(searchQuery.trim())}`)
@@ -213,52 +221,39 @@ export function HeroSection() {
   const currentSlide = slides[currentIndex] || null
   const defaultImage = "/images/college-hero-default.jpg"
 
-  // Default content if no slides
-  const defaultTitle = "Find Over 250+ Exams in India"
-  const defaultSubtitle = "Discover the best colleges and courses for your future"
-
   return (
     <>
-      {/* Hero Section - Fixed height to prevent layout shift */}
       <section
         className="relative w-full h-[450px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center overflow-hidden"
         style={{
-          contain: 'layout style paint',
+          contain: 'layout style',
           minHeight: '450px',
-          aspectRatio: 'auto'
         }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Background Images - All slides for smooth transition */}
-        <div className="absolute inset-0" style={{ contain: 'layout style paint' }}>
+        <div className="absolute inset-0" style={{ contain: 'strict' }}>
           {slides.length > 0 ? (
             slides.map((slide, index) => (
               <div
                 key={slide.id}
                 className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? "opacity-100 z-0" : "opacity-0 z-0"
                   }`}
-                style={{ willChange: index === currentIndex ? 'opacity' : 'auto' }}
+                style={{ willChange: 'opacity' }}
               >
                 <Image
                   src={slide.imageUrl}
                   alt={slide.title || "College campus"}
                   fill
                   className="object-cover"
-                  priority={index === 0}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  quality={index === 0 ? 95 : 90}
+                  priority={index === currentIndex || index === (currentIndex + 1) % slides.length}
+                  quality={90}
                   sizes="100vw"
-                  fetchPriority={index === 0 ? "high" : "auto"}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//9k="
-                  style={{ willChange: index === 0 ? 'auto' : 'opacity' }}
+                  fetchPriority={index === currentIndex ? "high" : "auto"}
+                  style={{ transform: 'translateZ(0)' }} // Force GPU acceleration
                   onError={(e) => {
-                    // Silently handle image errors to prevent 400 errors in console
                     const target = e.target as HTMLImageElement
-                    if (target) {
-                      target.style.display = 'none'
-                    }
+                    if (target) target.style.display = 'none'
                   }}
                 />
               </div>
@@ -269,24 +264,11 @@ export function HeroSection() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70 z-10" />
         </div>
 
-        {/* Content */}
         <div className="container mx-auto px-4 relative z-20">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Main Heading - Typewriter animation with delete and type effect */}
-            <div
-              className="relative h-[80px] sm:h-[100px] md:h-[120px] mb-6 flex items-center justify-center"
-              style={{ contain: 'layout' }}
-            >
-              <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-2xl">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-indigo-100">
-                  {displayText || '\u00A0'}
-                </span>
-                <span className="inline-block w-1 h-8 sm:h-12 md:h-16 bg-blue-400 ml-1 animate-pulse shadow-[0_0_10px_#60a5fa]"></span>
-              </h1>
-            </div>
+            <TypewriterHeader rotatingTexts={rotatingTexts} />
 
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base md:text-xl text-blue-100/90 mb-8 max-w-2xl mx-auto font-medium tracking-wide animate-fade-in drop-shadow-lg">
+            <p className="text-sm sm:text-base md:text-xl text-blue-100/90 mb-8 max-w-2xl mx-auto font-medium tracking-wide drop-shadow-lg min-h-[1.5rem]">
               {slides.length > 0 && slides[currentIndex]?.subtitle
                 ? slides[currentIndex].subtitle
                 : "Discover the best colleges and courses for your future"}
