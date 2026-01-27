@@ -6,7 +6,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { ClientWidgets } from "@/components/layout/ClientWidgets"
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   display: 'optional', // Use optional for faster initial render, swap if needed
   preload: true,
@@ -72,11 +72,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: baseUrl,
   },
-  icons: {
-    icon: "/logo.svg",
-    shortcut: "/logo.svg",
-    apple: "/logo.svg",
-  },
+  /* icons handled by file-based metadata (icon.tsx, apple-icon.tsx) */
   verification: {
     // Add verification codes when available
     // google: "your-google-verification-code",
@@ -263,9 +259,7 @@ export default function RootLayout({
         {/* Prefetch API routes that will be needed */}
         <link rel="dns-prefetch" href="/api/hero-slides" />
         <link rel="dns-prefetch" href="/api/hero-rotating-texts" />
-        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-        <link rel="alternate icon" href="/logo.svg" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
+        {/* Icons are handled automatically by icon.tsx and apple-icon.tsx */}
         <link rel="image_src" href={`${baseUrl}/main-logo-xxxx.png`} />
         <meta name="image" content={`${baseUrl}/main-logo-xxxx.png`} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
@@ -286,9 +280,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
         <SessionProvider>
-        <ConditionalLayout>{children}</ConditionalLayout>
-        <Toaster />
-        <ClientWidgets />
+          <ConditionalLayout>{children}</ConditionalLayout>
+          <Toaster />
+          <ClientWidgets />
         </SessionProvider>
       </body>
     </html>
