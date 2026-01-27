@@ -867,3 +867,5 @@ export const collegesRelations = relations(colleges, ({ many }) => ({
   news: many(collegeNews),
   featuredIn: many(featuredColleges),
 }));
+
+export * from "./schema-cutoffs";
