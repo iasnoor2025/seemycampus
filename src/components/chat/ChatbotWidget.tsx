@@ -50,10 +50,10 @@ export function ChatbotWidget() {
   }, [])
 
   // Hide widget on dashboard, admin, auth, and chat pages
-  const shouldHide = pathname?.startsWith("/dashboard") || 
-                     pathname?.startsWith("/admin") || 
-                     pathname?.startsWith("/auth") ||
-                     pathname === "/chat"
+  const shouldHide = pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/auth") ||
+    pathname === "/chat"
 
   if (shouldHide) {
     return null
@@ -165,14 +165,14 @@ export function ChatbotWidget() {
       // Get the last message (could be user or assistant)
       const lastMessageIndex = messages.length - 1
       const lastMessage = messages[lastMessageIndex]
-      
+
       if (lastMessage) {
         // Get all message elements
         const messageElements = scrollContainerRef.current.querySelectorAll('[data-message-index]')
         if (messageElements[lastMessageIndex]) {
           // Scroll to show the start of the latest message
-          messageElements[lastMessageIndex].scrollIntoView({ 
-            behavior: "smooth", 
+          messageElements[lastMessageIndex].scrollIntoView({
+            behavior: "smooth",
             block: "start",
             inline: "nearest"
           })
@@ -203,7 +203,7 @@ export function ChatbotWidget() {
       const timeoutId = setTimeout(() => {
         scrollToLatestMessage()
       }, 200)
-      
+
       return () => clearTimeout(timeoutId)
     }
   }, [messages, isOpen, isMinimized])
@@ -211,7 +211,7 @@ export function ChatbotWidget() {
   // Extract name and phone from message
   const extractUserInfo = (message: string): { name?: string; phone?: string } => {
     const info: { name?: string; phone?: string } = {}
-    
+
     // Extract phone number (Indian format: 10 digits, may have +91, spaces, dashes, parentheses)
     const phoneRegex = /(\+91[\s-]?)?[6-9]\d{2}[\s-]?\d{3}[\s-]?\d{4}|(\+91[\s-]?)?[6-9]\d{9}/g
     const phoneMatch = message.match(phoneRegex)
@@ -225,28 +225,28 @@ export function ChatbotWidget() {
         delete info.phone
       }
     }
-    
+
     // Extract name (if message contains "my name is" or similar patterns)
     const namePatterns = [
       /(?:my name is|i'm|i am|name is|call me|this is)\s+([A-Za-z\s]{2,30})/i,
       /^([A-Za-z\s]{2,30})(?:\s|$)/, // If message is just a name (no numbers)
     ]
-    
+
     for (const pattern of namePatterns) {
       const match = message.match(pattern)
       if (match && match[1]) {
         const potentialName = match[1].trim()
         // Only accept if it looks like a name (2-30 chars, mostly letters, no phone numbers)
-        if (potentialName.length >= 2 && 
-            potentialName.length <= 30 && 
-            /^[A-Za-z\s]+$/.test(potentialName) &&
-            !/\d/.test(potentialName)) {
+        if (potentialName.length >= 2 &&
+          potentialName.length <= 30 &&
+          /^[A-Za-z\s]+$/.test(potentialName) &&
+          !/\d/.test(potentialName)) {
           info.name = potentialName
           break
         }
       }
     }
-    
+
     return info
   }
 
@@ -267,18 +267,18 @@ export function ChatbotWidget() {
     // Handle user info collection - MUST collect before answering questions
     if (awaitingUserInfo) {
       const extractedInfo = extractUserInfo(content)
-      
+
       if (awaitingUserInfo === "name" && extractedInfo.name) {
         const currentUserInfo = userInfo || {}
         const updatedInfo = { ...currentUserInfo, name: extractedInfo.name }
-        
+
         // Save to localStorage FIRST
         localStorage.setItem(USER_INFO_KEY, JSON.stringify(updatedInfo))
-        
+
         // Then update state
         setUserInfo(updatedInfo)
         setAwaitingUserInfo("phone")
-        
+
         const askingPhone: Message = {
           role: "assistant",
           content: `Nice to meet you, ${extractedInfo.name}! Could you please share your mobile number so I can assist you better?`,
@@ -296,18 +296,18 @@ export function ChatbotWidget() {
         setMessages((prev) => [...prev, askingName])
         return
       }
-      
+
       if (awaitingUserInfo === "phone" && extractedInfo.phone) {
         const currentUserInfo = userInfo || {}
         const updatedInfo = { ...currentUserInfo, phone: extractedInfo.phone }
-        
+
         // Save to localStorage FIRST
         localStorage.setItem(USER_INFO_KEY, JSON.stringify(updatedInfo))
-        
+
         // Then update state
         setUserInfo(updatedInfo)
         setAwaitingUserInfo(null)
-        
+
         const thankYou: Message = {
           role: "assistant",
           content: `Thank you, ${updatedInfo.name || 'there'}! How can I help you today?`,
@@ -315,7 +315,7 @@ export function ChatbotWidget() {
           showQuickReplies: false,
         }
         setMessages((prev) => [...prev, thankYou])
-        
+
         // Send user info to API to create/update lead (only when both name and phone are available)
         if (updatedInfo.name && updatedInfo.phone) {
           try {
@@ -479,7 +479,7 @@ export function ChatbotWidget() {
           setUserInfo(updatedInfo)
           localStorage.setItem(USER_INFO_KEY, JSON.stringify(updatedInfo))
         }
-        
+
         const assistantMessage: Message = {
           role: "assistant",
           content: data.response || data.fallback || "How can I help you?",
@@ -494,14 +494,14 @@ export function ChatbotWidget() {
     } catch (error: any) {
       console.error("Chat error:", error)
       let errorMessage = "I'm sorry, I'm having trouble processing your request right now."
-      
+
       // Check if it's a rate limit error
       if (error.message?.includes("rate limit") || error.message?.includes("429")) {
         errorMessage = "I'm receiving too many requests. Please wait a moment and try again. You can also visit our help pages or contact support for immediate assistance."
       } else if (error.message?.includes("network") || error.message?.includes("fetch")) {
         errorMessage = "I'm having trouble connecting. Please check your internet connection and try again. You can also visit our FAQ page or contact support."
       }
-      
+
       const errorMsg: Message = {
         role: "assistant",
         content: errorMessage,
@@ -533,35 +533,35 @@ export function ChatbotWidget() {
       {/* Floating Button - Dynamically positioned: lower when back-to-top is hidden, higher when it's visible */}
       {!isOpen && (
         <div className={cn(
-          "fixed right-4 sm:right-6 z-50 group transition-all duration-300",
-          showBackToTop 
-            ? "bottom-20 sm:bottom-24" // Higher position when back-to-top is visible
-            : "bottom-4 sm:bottom-6"   // Lower position (same as back-to-top) when it's hidden
+          "fixed right-0 z-50 group transition-all duration-300",
+          showBackToTop
+            ? "bottom-16 sm:bottom-18" // Higher position when back-to-top is visible
+            : "bottom-3 sm:bottom-4"   // Lower position (same as back-to-top) when it's hidden
         )}>
           <Button
             onClick={handleToggle}
             size="lg"
-            className="relative h-16 w-16 rounded-full shadow-2xl hover:shadow-[0_20px_50px_rgba(59,130,246,0.5)] transition-all duration-300 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-700 touch-manipulation border-2 border-white/20 hover:border-white/30 backdrop-blur-sm hover:scale-110 active:scale-95"
+            className="relative h-12 w-12 rounded-full shadow-lg hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-700 touch-manipulation border-2 border-white/20 hover:border-white/30 backdrop-blur-sm hover:scale-110 active:scale-95"
             aria-label="Open chat"
           >
             {/* Pulse animation ring */}
             <span className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-25 group-hover:opacity-35" style={{ animationDuration: '2s' }} />
-            
+
             {/* Chat icon with AI bot indicator */}
             <div className="relative z-10 flex items-center justify-center">
               <div className="relative">
-                <MessageCircle className="h-7 w-7 text-white group-hover:scale-110 transition-transform duration-300" />
+                <MessageCircle className="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-300" />
                 {/* AI bot icon overlay */}
-                <Bot className="absolute bottom-0 right-0 h-3.5 w-3.5 text-white bg-indigo-700 rounded-full p-0.5 border border-white/40" />
+                <Bot className="absolute bottom-0 right-0 h-3 w-3 text-white bg-indigo-700 rounded-full p-0.5 border border-white/40" />
               </div>
               {/* Online status indicator */}
-              <span className="absolute -top-0.5 -right-0.5 h-3 w-3 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-blue-600 animate-pulse shadow-lg shadow-green-400/50" />
             </div>
-            
+
             {/* Shine effect on hover */}
             <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/0 via-white/15 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Button>
-          
+
           {/* Tooltip on hover */}
           <div className="absolute bottom-full right-0 mb-3 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 whitespace-nowrap transform translate-y-1 group-hover:translate-y-0">
             Chat with us
@@ -579,8 +579,8 @@ export function ChatbotWidget() {
             "bottom-0 left-0 right-0 w-full",
             // Desktop: fixed position, bottom-right
             "sm:bottom-6 sm:right-6 sm:left-auto sm:w-[380px]",
-            isMinimized 
-              ? "h-16" 
+            isMinimized
+              ? "h-16"
               : "h-[calc(100vh-4rem)] sm:h-[700px] sm:max-h-[700px]"
           )}
         >
@@ -588,7 +588,7 @@ export function ChatbotWidget() {
             <CardHeader className="flex flex-row items-center justify-between border-b border-gray-200/60 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white p-3 sm:p-4 relative overflow-hidden">
               {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
-              
+
               <CardTitle className="text-base sm:text-lg font-semibold relative z-10 flex items-center gap-3">
                 {/* Avatar with logo */}
                 <div className="relative flex items-center justify-center">
@@ -626,10 +626,10 @@ export function ChatbotWidget() {
                     `,
                   }} />
                 </div>
-                
+
                 <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative z-10">
-                  <MessageList 
-                    messages={messages} 
+                  <MessageList
+                    messages={messages}
                     onQuickReply={handleSendMessage}
                     disabled={loading}
                   />
@@ -645,7 +645,7 @@ export function ChatbotWidget() {
                   )}
                   <div ref={messagesEndRef} />
                 </div>
-                
+
                 {/* Footer with branding */}
                 <div className="border-t border-gray-200/60 bg-white/80 backdrop-blur-sm p-4 sm:p-5 space-y-3 relative z-10">
                   <ChatInput onSend={handleSendMessage} disabled={loading} />

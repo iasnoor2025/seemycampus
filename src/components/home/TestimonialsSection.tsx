@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,6 +43,8 @@ export function TestimonialsSection() {
   const [loading, setLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -62,16 +64,63 @@ export function TestimonialsSection() {
     fetchTestimonials()
   }, [])
 
+  // Initialize scroll position to the middle block
+  useEffect(() => {
+    if (scrollContainerRef.current && testimonials.length > 0 && !isReady) {
+      const { clientWidth } = scrollContainerRef.current
+      scrollContainerRef.current.scrollLeft = testimonials.length * clientWidth
+      setIsReady(true)
+    }
+  }, [testimonials.length, isReady])
+
+  const handleScroll = () => {
+    if (!scrollContainerRef.current || !isReady) return
+    const { scrollLeft, clientWidth } = scrollContainerRef.current
+    if (clientWidth === 0) return
+
+    const absoluteSlideIndex = Math.round(scrollLeft / clientWidth)
+    const logicalSlideIndex = absoluteSlideIndex % testimonials.length
+
+    if (logicalSlideIndex !== currentSlide) {
+      setCurrentSlide(logicalSlideIndex)
+    }
+
+    // Infinite loop jump
+    if (scrollLeft <= clientWidth * 0.5) {
+      scrollContainerRef.current.scrollLeft = scrollLeft + (testimonials.length * clientWidth)
+    } else if (scrollLeft >= clientWidth * (testimonials.length * 2 + testimonials.length - 0.5)) {
+      scrollContainerRef.current.scrollLeft = scrollLeft - (testimonials.length * clientWidth)
+    }
+  }
+
   // Auto-slide testimonials every 5 seconds
   useEffect(() => {
-    if (testimonials.length <= 1 || isPaused) return
+    if (testimonials.length <= 1 || isPaused || !isReady) return
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % testimonials.length)
+      goToNext()
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [testimonials.length, isPaused])
+  }, [testimonials.length, isPaused, isReady, currentSlide])
+
+  const goToSlide = (index: number) => {
+    if (!scrollContainerRef.current) return
+    scrollContainerRef.current.scrollTo({
+      left: (index + testimonials.length) * scrollContainerRef.current.clientWidth,
+      behavior: "smooth"
+    })
+  }
+
+  const goToPrevious = () => {
+    const prevSlide = (currentSlide - 1 + testimonials.length) % testimonials.length
+    goToSlide(prevSlide)
+  }
+
+  const goToNext = () => {
+    const nextSlide = (currentSlide + 1) % testimonials.length
+    goToSlide(nextSlide)
+  }
 
   if (loading) {
     return (
@@ -84,19 +133,7 @@ export function TestimonialsSection() {
   }
 
   if (testimonials.length === 0) {
-    return null // Don't show section if no testimonials
-  }
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
-
-  const goToPrevious = () => {
-    setCurrentSlide((prev) => (prev - 1 + testimonials.length) % testimonials.length)
-  }
-
-  const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % testimonials.length)
+    return null
   }
 
   return (
@@ -139,17 +176,18 @@ export function TestimonialsSection() {
         </div>
 
         {/* Testimonials Carousel */}
-        <div className="relative mb-12 group/carousel">
+        <div className="relative mb-12 group/carousel max-w-4xl mx-auto">
           {/* Slides Container */}
-          <div className="overflow-hidden rounded-[2.5rem]">
-            <div
-              className="flex transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {testimonials.map((testimonial, index) => (
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="overflow-x-auto flex snap-x snap-mandatory scrollbar-hide py-4"
+          >
+            {[0, 1, 2].map((blockIndex) => (
+              testimonials.map((testimonial) => (
                 <div
-                  key={testimonial.id}
-                  className="min-w-full flex justify-center px-4 py-2" // Reduced padding
+                  key={`${blockIndex}-${testimonial.id}`}
+                  className="min-w-full snap-start snap-always flex justify-center px-4"
                 >
                   <Card
                     className="w-full max-w-md bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl hover:bg-white/15 transition-all duration-500 transform hover:-translate-y-2 rounded-3xl group/card overflow-hidden"
@@ -212,8 +250,8 @@ export function TestimonialsSection() {
                     </CardContent>
                   </Card>
                 </div>
-              ))}
-            </div>
+              ))
+            ))}
           </div>
 
           {/* Navigation Controls - Hidden by default, show on hover */}
@@ -221,17 +259,17 @@ export function TestimonialsSection() {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute -left-6 top-1/2 -translate-y-1/2 z-30 bg-white shadow-2xl rounded-full p-5 text-indigo-600 hover:scale-110 active:scale-95 transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 blur-sm group-hover/carousel:blur-none"
+                className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white backdrop-blur-md shadow-2xl rounded-full p-4 text-white hover:text-indigo-600 transition-all duration-300 opacity-0 group-hover/carousel:opacity-100"
                 aria-label="Previous"
               >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-6 w-6 md:h-8 md:w-8" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute -right-6 top-1/2 -translate-y-1/2 z-30 bg-white shadow-2xl rounded-full p-5 text-indigo-600 hover:scale-110 active:scale-95 transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 blur-sm group-hover/carousel:blur-none"
+                className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white backdrop-blur-md shadow-2xl rounded-full p-4 text-white hover:text-indigo-600 transition-all duration-300 opacity-0 group-hover/carousel:opacity-100"
                 aria-label="Next"
               >
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-6 w-6 md:h-8 md:w-8" />
               </button>
             </>
           )}
@@ -239,14 +277,14 @@ export function TestimonialsSection() {
 
         {/* Pagination Dots */}
         {testimonials.length > 1 && (
-          <div className="flex justify-center gap-2 mt-12">
+          <div className="flex justify-center gap-2 mt-8">
             {testimonials.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`rounded-full transition-all duration-300 ${index === currentSlide
-                  ? "w-3 h-3 bg-white shadow-lg"
-                  : "w-2.5 h-2.5 bg-white/50 hover:bg-white/70"
+                  ? "w-4 h-1.5 bg-white shadow-lg"
+                  : "w-1.5 h-1.5 bg-white/30 hover:bg-white/50"
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -257,4 +295,3 @@ export function TestimonialsSection() {
     </section>
   )
 }
-

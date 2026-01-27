@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { ChevronRight } from "lucide-react"
 import dynamic from "next/dynamic"
 import { HeroSection } from "@/components/home/HeroSection"
 import { StatsSection } from "@/components/home/StatsSection"
@@ -22,6 +23,11 @@ const UpcomingExamsSection = dynamic(() => import("@/components/home/UpcomingExa
 
 const TestimonialsSection = dynamic(() => import("@/components/home/TestimonialsSection").then(mod => ({ default: mod.TestimonialsSection })), {
   loading: () => null,
+  ssr: true,
+})
+
+const InstagramFeed = dynamic(() => import("@/components/home/InstagramFeed").then(mod => ({ default: mod.InstagramFeed })), {
+  loading: () => <div className="h-[600px] bg-slate-100 animate-pulse rounded-[2.5rem]" />,
   ssr: true,
 })
 
@@ -185,6 +191,38 @@ export default async function Home() {
 
       {/* Testimonials Section */}
       <TestimonialsSection />
+
+      {/* Instagram Feed Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-pink-50 text-[#E4405F] px-4 py-2 rounded-full mb-4 border border-pink-100">
+                <div className="w-2 h-2 rounded-full bg-[#E4405F] animate-pulse"></div>
+                <span className="font-black text-xs uppercase tracking-widest">Social Buzz</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight">
+                Life at <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF]">SeeMyCampus</span>
+              </h2>
+              <p className="text-slate-500 text-lg font-medium mt-4">
+                Follow our journey and stay updated with the latest campus trends, student stories, and admission tips.
+              </p>
+            </div>
+            <a
+              href="https://instagram.com/seemycampus"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-600 transition-all duration-500 shadow-xl hover:shadow-blue-500/40"
+            >
+              Follow Us
+              <div className="bg-white/20 p-1 rounded-lg group-hover:rotate-12 transition-transform">
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </a>
+          </div>
+          <InstagramFeed />
+        </div>
+      </section>
 
       {/* FAQ Section */}
       <FAQSection faqs={faqData} />
