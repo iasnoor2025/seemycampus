@@ -102,9 +102,9 @@ export function FeaturedColleges() {
     }
 
     // Silent jump for infinite scroll
-    if (scrollLeft <= clientWidth * 0.5) { // If scrolled past the first block (into the "pre-block")
+    if (scrollLeft <= clientWidth * 0.5) {
       scrollContainerRef.current.scrollLeft = scrollLeft + (maxSlides * clientWidth)
-    } else if (scrollLeft >= clientWidth * (maxSlides * 2 + maxSlides - 0.5)) { // If scrolled past the last block (into the "post-block")
+    } else if (scrollLeft >= clientWidth * (maxSlides * 2 + maxSlides - 0.5)) {
       scrollContainerRef.current.scrollLeft = scrollLeft - (maxSlides * clientWidth)
     }
   }
@@ -127,7 +127,6 @@ export function FeaturedColleges() {
     goToSlide(nextSlide)
   }
 
-  // Auto-slide effect
   useEffect(() => {
     if (loading || colleges.length <= itemsPerView || isPaused || !isReady || maxSlides === 0) return
 
@@ -147,14 +146,13 @@ export function FeaturedColleges() {
       .slice(0, 4)
   }
 
-  // Generate a color gradient for each card
   const getCardGradient = (index: number) => {
     const gradients = [
-      "from-indigo-500 to-purple-600",
-      "from-blue-500 to-cyan-600",
-      "from-violet-500 to-purple-600",
-      "from-teal-500 to-emerald-600",
-      "from-sky-500 to-blue-600",
+      "from-violet-600 to-indigo-700",
+      "from-purple-600 to-blue-600",
+      "from-indigo-600 to-purple-700",
+      "from-blue-600 to-violet-700",
+      "from-violet-500 to-fuchsia-600",
       "from-purple-500 to-pink-600",
     ]
     return gradients[index % gradients.length]
@@ -162,188 +160,146 @@ export function FeaturedColleges() {
 
   const getCardTextColor = (index: number) => {
     const colors = [
+      "text-violet-600",
+      "text-purple-600",
       "text-indigo-600",
       "text-blue-600",
-      "text-violet-600",
-      "text-teal-600",
-      "text-sky-600",
-      "text-purple-600",
+      "text-fuchsia-600",
+      "text-pink-600",
     ]
     return colors[index % colors.length]
   }
 
   return (
-    <section className="py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-200 rounded-full blur-3xl"></div>
+    <section className="py-12 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-0 left-0 w-80 h-80 bg-blue-200 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-200 rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-full mb-4 shadow-lg">
-            <GraduationCap className="w-5 h-5" />
-            <span className="font-medium text-sm">Featured Institutions</span>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-1.5 rounded-full mb-3 shadow-lg">
+            <GraduationCap className="w-4 h-4" />
+            <span className="font-bold text-[10px] uppercase tracking-wider">Featured Institutions</span>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4 leading-tight">
+          <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2 tracking-tight">
             Top Featured Colleges in India
           </h2>
-          <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto">
-            Discover premier institutions for MBA, BBA, Engineering & More
+          <p className="text-slate-500 text-xs md:text-sm max-w-lg mx-auto font-medium">
+            Explore premier institutions across multiple disciplines
           </p>
         </div>
 
-        {/* Category Navigation Tabs - Designer-grade Tabs */}
-        <div className="flex flex-wrap gap-3 mb-12 justify-center">
-          <div className="p-1.5 bg-slate-200/50 backdrop-blur-xl rounded-[2rem] border border-white/40 flex flex-wrap justify-center gap-1 shadow-inner">
-            {(Object.keys(categoryMap) as CollegeCategory[]).map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-5 py-2.5 text-xs font-black uppercase tracking-[0.15em] rounded-full transition-all duration-500 flex items-center gap-2 ${activeCategory === category
-                  ? "bg-white text-blue-600 shadow-[0_10px_25px_rgba(0,0,0,0.1)] scale-100"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
-                  }`}
-              >
-                <span className="text-base leading-none">{categoryIcons[category]}</span>
-                {categoryMap[category].split(" ")[0]}
-              </button>
-            ))}
+        <div className="flex justify-center mb-10">
+          <div className="w-full max-w-3xl overflow-x-auto scrollbar-hide">
+            <div className="p-1.5 bg-slate-200/30 backdrop-blur-xl rounded-2xl border border-white/40 flex items-center justify-start sm:justify-center gap-1.5 min-w-max">
+              {(Object.keys(categoryMap) as CollegeCategory[]).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${activeCategory === category
+                    ? "bg-white text-blue-600 shadow-sm scale-100"
+                    : "text-slate-500 hover:text-slate-900 hover:bg-white/20"
+                    }`}
+                >
+                  <span className="text-sm">{categoryIcons[category]}</span>
+                  {categoryMap[category].split(" ")[0]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Colleges Slider - Card Layout */}
         <div
           className="relative group/slider"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Navigation Buttons */}
-          <div className="absolute top-1/2 -left-4 md:-left-8 -right-4 md:-right-8 -translate-y-1/2 flex justify-between z-20 pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-1/2 -left-4 -right-4 -translate-y-1/2 flex justify-between z-20 pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-all">
             <button
               onClick={goToPrevious}
-              className="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all duration-500 pointer-events-auto border border-white group/btn"
-              aria-label="Previous"
+              className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all pointer-events-auto border border-white/50"
             >
-              <ChevronLeft className="w-6 h-6 group-hover/btn:-translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={goToNext}
-              className="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all duration-500 pointer-events-auto border border-white group/btn"
-              aria-label="Next"
+              className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all pointer-events-auto border border-white/50"
             >
-              <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex overflow-x-auto gap-0 pb-12 pt-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
-            style={{ WebkitOverflowScrolling: "touch" }}
+            className="flex overflow-x-auto gap-0 pb-8 pt-2 scrollbar-hide snap-x snap-mandatory scroll-smooth"
           >
             {loading ? (
-              <div key="loading" className="min-w-full flex-shrink-0 bg-white/50 backdrop-blur-sm rounded-3xl shadow-xl p-20 text-center border border-slate-200/50">
+              <div key="loading" className="min-w-full flex-shrink-0 bg-white/40 backdrop-blur-sm rounded-3xl p-12 text-center">
                 <div className="animate-pulse flex flex-col items-center">
-                  <div className="h-20 w-20 bg-slate-200 rounded-2xl mb-6"></div>
-                  <div className="h-6 bg-slate-200 rounded w-64 mb-4"></div>
+                  <div className="h-16 w-16 bg-slate-200 rounded-2xl mb-4"></div>
                   <div className="h-4 bg-slate-200 rounded w-48"></div>
                 </div>
               </div>
             ) : colleges.length > 0 ? (
-              [0, 1, 2].map((blockIndex) => ( // Triplicate the content for infinite scroll
+              [0, 1, 2].map((blockIndex) => (
                 Array.from({ length: maxSlides }).map((_, slideIndex) => (
-                  <div key={`${blockIndex}-${slideIndex}`} className="min-w-full snap-start snap-always flex gap-6 md:gap-8 px-4">
+                  <div key={`${blockIndex}-${slideIndex}`} className="min-w-full snap-start snap-always flex gap-4 px-2">
                     {colleges.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).map((college, idx) => (
-                      <div
-                        key={`${blockIndex}-${college.id}`}
-                        className="flex-1 min-w-0"
-                      >
-                        <div
-                          className="bg-white rounded-[2.5rem] h-full shadow-[0_20px_50px_rgba(0,0,0,0.06)] hover:shadow-[0_40px_100px_rgba(59,130,246,0.15)] transition-all duration-700 transform hover:-translate-y-4 overflow-hidden group border border-slate-100 flex flex-col relative"
-                          style={{
-                            animationDelay: `${idx * 100}ms`,
-                          }}
-                        >
-                          {/* Premium Card Header */}
-                          <div className={`h-40 bg-gradient-to-br ${getCardGradient(idx)} relative flex items-center justify-center flex-shrink-0 p-6`}>
-                            {/* Abstract background graphics */}
-                            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from),_transparent)]"></div>
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-10 -translate-y-10 blur-2xl"></div>
-
-                            {/* Rating Badge - High End */}
-                            <div className="absolute top-5 right-5 bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/20 z-10 shadow-xl">
-                              <div className="flex items-center gap-1.5">
-                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                                <span className="text-white text-xs font-black tracking-tight">4.{Math.floor(Math.random() * 5) + 5}</span>
-                              </div>
-                            </div>
-
-                            <div className="w-28 h-28 bg-white/95 backdrop-blur-md rounded-[2rem] flex items-center justify-center shadow-[0_15px_35px_rgba(0,0,0,0.1)] group-hover:scale-110 group-hover:rotate-2 transition-all duration-700 overflow-hidden border border-white/40 relative z-10">
-                              {college.images && Array.isArray(college.images) && college.images.length > 0 && !imageErrors.has(college.id) ? (
-                                <div className="relative w-full h-full p-4">
-                                  <Image
-                                    src={college.images[0]}
-                                    alt={`${college.name} logo`}
-                                    fill
-                                    className="object-contain p-2"
-                                    loading="lazy"
-                                    quality={95}
-                                    onError={(e) => {
-                                      setImageErrors(prev => new Set(prev).add(college.id))
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                <span className={`${getCardTextColor(idx)} font-black text-3xl tracking-tighter`}>
+                      <div key={`${blockIndex}-${college.id}`} className="flex-1 min-w-0">
+                        <div className="bg-white rounded-3xl h-full shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(59,130,246,0.1)] transition-all duration-500 transform hover:-translate-y-2 overflow-hidden group border border-slate-100 flex flex-col relative">
+                          <div className={`h-52 bg-gradient-to-br ${getCardGradient(idx)} relative overflow-hidden flex-shrink-0`}>
+                            {college.images?.[0] && !imageErrors.has(college.id) ? (
+                              <>
+                                <Image
+                                  src={college.images[0]}
+                                  alt={college.name}
+                                  fill
+                                  priority={blockIndex === 1} // Priority for the main visible block
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                  quality={95}
+                                  onError={() => setImageErrors(prev => new Set(prev).add(college.id))}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/20"></div>
+                              </>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-white font-black text-3xl opacity-30 drop-shadow-2xl">
                                   {getInitials(college.name)}
                                 </span>
-                              )}
+                              </div>
+                            )}
+
+                            {/* Rating Badge - Repositioned for full-bleed design */}
+                            <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-xl rounded-full px-2.5 py-1 border border-white/20 z-10 shadow-2xl">
+                              <div className="flex items-center gap-1.5">
+                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                <span className="text-white text-[10px] font-black tracking-tighter">
+                                  4.{Math.floor(Math.random() * 5) + 5}
+                                </span>
+                              </div>
                             </div>
                           </div>
-
-                          {/* Card Body - Improved spacing and typography */}
-                          <div className="pt-8 p-10 flex flex-col flex-1 bg-gradient-to-b from-white to-slate-50/50">
-                            <div className="mb-4">
-                              <div className="inline-block px-3 py-1 bg-blue-50 rounded-lg text-blue-600 text-[10px] font-black uppercase tracking-widest mb-3">
-                                {activeCategory} Institution
-                              </div>
-                              <h3 className="text-2xl font-black text-slate-800 mb-2 group-hover:text-blue-600 transition-colors duration-500 leading-[1.1] tracking-tight min-h-[5rem]">
-                                {college.name}
-                              </h3>
+                          <div className="p-5 flex flex-col flex-1 bg-white">
+                            <h3 className="text-xs font-black text-slate-800 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 min-h-[2rem]">
+                              {college.name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-slate-500 mb-5 mt-auto">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[10px] font-bold truncate">{college.location || "India"}</span>
                             </div>
-
-                            <div className="flex items-center gap-2.2 text-slate-500 mb-8 mt-auto">
-                              <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors duration-500">
-                                <MapPin className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Location</p>
-                                <p className="text-sm font-extrabold text-slate-800">{college.location || "India"}</p>
-                              </div>
-                            </div>
-
-                            {/* Action Button - Designer Style */}
-                            <div className="mt-auto pt-4">
-                              <Link href={`/colleges/${college.slug}`} className="block">
-                                <Button
-                                  className={`w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-8 rounded-2xl transition-all duration-500 group/btn relative overflow-hidden shadow-xl hover:shadow-blue-500/40 uppercase tracking-widest text-[10px]`}
-                                >
-                                  <span className="relative z-10 flex items-center justify-center gap-3">
-                                    Discover Institution
-                                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform duration-300" />
-                                  </span>
-                                </Button>
-                              </Link>
-                            </div>
+                            <Link href={`/colleges/${college.slug}`}>
+                              <Button className="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 h-auto rounded-xl shadow-sm uppercase tracking-wider text-[8px] transition-all">
+                                Discover More
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
                     ))}
-                    {/* Fill empty spaces if the last slide doesn't have enough items */}
                     {slideIndex === maxSlides - 1 &&
                       colleges.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).length < itemsPerView &&
                       Array.from({ length: itemsPerView - colleges.slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView).length }).map((_, i) => (
@@ -353,38 +309,33 @@ export function FeaturedColleges() {
                 ))
               ))
             ) : (
-              <div key="empty" className="min-w-full bg-white/80 backdrop-blur-sm rounded-[2.5rem] shadow-2xl p-20 text-center border border-slate-100">
-                <GraduationCap className="w-20 h-20 text-slate-200 mx-auto mb-6" />
-                <p className="text-slate-400 text-xl font-bold italic">
-                  Coming soon...
-                </p>
+              <div key="empty" className="min-w-full bg-white/60 rounded-3xl p-12 text-center">
+                <GraduationCap className="w-10 h-10 text-slate-200 mx-auto mb-2" />
+                <p className="text-slate-400 font-bold text-xs">More coming soon</p>
               </div>
             )}
           </div>
-
-          {/* Pagination Dots */}
-          {maxSlides > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: maxSlides }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`rounded-full transition-all duration-500 ${index === currentSlide ? "w-8 h-1.5 bg-blue-600" : "w-1.5 h-1.5 bg-blue-200"}`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* VIEW ALL Button - High Impact */}
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center gap-1.5 mt-2">
+          {Array.from({ length: maxSlides }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`rounded-full transition-all duration-300 ${index === currentSlide ? "w-6 h-1 bg-blue-600" : "w-1 h-1 bg-blue-200"}`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="flex justify-center mt-10">
           <Link href="/colleges">
             <Button
-              className="bg-white hover:bg-blue-600 text-slate-900 hover:text-white font-black px-12 py-8 rounded-[2rem] shadow-[0_15px_40px_rgba(0,0,0,0.08)] hover:shadow-blue-500/40 transition-all duration-500 transform hover:scale-105 border border-slate-100 flex items-center gap-3 group/all"
+              variant="outline"
+              className="rounded-2xl px-8 py-5 h-auto text-[10px] font-black uppercase tracking-widest border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all group"
             >
-              <span className="uppercase tracking-[0.2em] text-[10px]">View all {colleges.length > 0 ? colleges.length : ""} featured institutions</span>
-              <ArrowRight className="w-4 h-4 group-hover/all:translate-x-2 transition-transform duration-300" />
+              View All {colleges.length > 0 ? colleges.length : ""} Colleges
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>

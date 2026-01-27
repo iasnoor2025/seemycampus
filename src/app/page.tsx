@@ -27,7 +27,7 @@ const TestimonialsSection = dynamic(() => import("@/components/home/Testimonials
 })
 
 const InstagramFeed = dynamic(() => import("@/components/home/InstagramFeed").then(mod => ({ default: mod.InstagramFeed })), {
-  loading: () => <div className="h-[600px] bg-slate-100 animate-pulse rounded-[2.5rem]" />,
+  loading: () => <div className="h-[420px] bg-slate-100 animate-pulse rounded-[2.5rem]" />,
   ssr: true,
 })
 

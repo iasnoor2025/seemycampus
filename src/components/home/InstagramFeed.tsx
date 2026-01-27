@@ -23,6 +23,7 @@ export function InstagramFeed() {
   const [itemsPerView, setItemsPerView] = useState(1)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isReady, setIsReady] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
     fetchInstagramPosts()
@@ -36,7 +37,7 @@ export function InstagramFeed() {
       if (!response.ok) throw new Error("Failed to fetch Instagram posts")
       const data = await response.json()
       if (data.posts && Array.isArray(data.posts)) {
-        setPosts(data.posts.slice(0, 12)) // Take 12 for better slider
+        setPosts(data.posts.slice(0, 12))
       } else {
         setPosts([])
       }
@@ -63,15 +64,15 @@ export function InstagramFeed() {
   const maxSlides = posts.length > 0 ? Math.ceil(posts.length / itemsPerView) : 0
 
   useEffect(() => {
-    if (scrollContainerRef.current && maxSlides > 0 && !isReady) {
+    if (scrollContainerRef.current && maxSlides > 0 && !isReady && !loading) {
       const { clientWidth } = scrollContainerRef.current
       scrollContainerRef.current.scrollLeft = maxSlides * clientWidth
       setIsReady(true)
     }
-  }, [maxSlides, isReady])
+  }, [maxSlides, isReady, loading])
 
   const handleScroll = () => {
-    if (!scrollContainerRef.current || !isReady || maxSlides === 0) return
+    if (!scrollContainerRef.current || !isReady || loading || maxSlides === 0) return
     const { scrollLeft, clientWidth } = scrollContainerRef.current
     if (clientWidth === 0) return
 
@@ -82,7 +83,6 @@ export function InstagramFeed() {
       setCurrentSlide(logicalSlideIndex)
     }
 
-    // Infinite loop jump
     if (scrollLeft <= clientWidth * 0.5) {
       scrollContainerRef.current.scrollLeft = scrollLeft + (maxSlides * clientWidth)
     } else if (scrollLeft >= clientWidth * (maxSlides * 2 + maxSlides - 0.5)) {
@@ -108,32 +108,39 @@ export function InstagramFeed() {
     goToSlide(nextSlide)
   }
 
+  // Auto-slide effect for Instagram Feed
+  useEffect(() => {
+    if (loading || posts.length <= itemsPerView || isPaused || !isReady || maxSlides === 0) return
+
+    const interval = setInterval(() => {
+      goToNext()
+    }, 6000) // Slightly slower for photos
+
+    return () => clearInterval(interval)
+  }, [loading, posts.length, isPaused, isReady, currentSlide, itemsPerView, maxSlides])
+
   if (loading) {
     return (
-      <div className="relative w-full h-[600px] rounded-[2.5rem] overflow-hidden bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 mx-auto mb-4 text-white animate-spin" />
-          <p className="text-sm text-white font-bold">Connecting to Instagram...</p>
-        </div>
+      <div className="relative w-full h-[400px] rounded-[2rem] overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200">
+        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
       </div>
     )
   }
 
   if (error || posts.length === 0) {
     return (
-      <div className="relative w-full h-[600px] rounded-[2.5rem] overflow-hidden group">
+      <div className="relative w-full h-[400px] rounded-[2rem] overflow-hidden group shadow-lg border border-slate-100/50">
         <Image
           src="/guidance-placeholder.png"
           alt="Student guidance"
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-700"
+          className="object-cover transition-transform duration-700 hover:scale-105"
           priority
-          sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-        <div className="absolute bottom-6 left-6 flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 shadow-2xl">
-          <Instagram className="h-6 w-6 text-[#E4405F]" />
-          <span className="text-sm font-black text-white">@seemycampus</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute bottom-6 left-6 flex items-center gap-2.5 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-white">
+          <Instagram className="h-5 w-5" />
+          <span className="text-xs font-black">@seemycampus</span>
         </div>
       </div>
     )
@@ -141,7 +148,11 @@ export function InstagramFeed() {
 
   return (
     <div className="relative w-full group/main">
-      <div className="relative h-[600px] rounded-[2.5rem] overflow-hidden bg-white shadow-2xl">
+      <div
+        className="relative h-[420px] rounded-[2rem] overflow-hidden bg-white shadow-xl bg-slate-50 border border-slate-100/50"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
@@ -149,7 +160,7 @@ export function InstagramFeed() {
         >
           {[0, 1, 2].map((blockIndex) => (
             Array.from({ length: maxSlides }).map((_, slideIndex) => (
-              <div key={`${blockIndex}-${slideIndex}`} className="min-w-full h-full snap-start snap-always grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+              <div key={`${blockIndex}-${slideIndex}`} className="min-w-full h-full snap-start snap-always grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
                 {posts
                   .slice(slideIndex * itemsPerView, (slideIndex + 1) * itemsPerView)
                   .map((post) => (
@@ -158,25 +169,17 @@ export function InstagramFeed() {
                       href={post.permalink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative group overflow-hidden bg-slate-100 h-full border-r border-white/10"
+                      className="relative group overflow-hidden bg-slate-100 h-full"
                     >
                       <Image
                         src={post.media_type === "VIDEO" && post.thumbnail_url ? post.thumbnail_url : post.media_url}
                         alt={post.caption || "Instagram post"}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
-                        sizes="(max-width: 768px) 100vw, 33vw"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-500 flex items-center justify-center">
-                        <Instagram className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-500" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                        <Instagram className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all duration-300" />
                       </div>
-                      {post.media_type === "VIDEO" && (
-                        <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full p-2">
-                          <svg className="h-4 w-4 text-white fill-current" viewBox="0 0 20 20">
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                          </svg>
-                        </div>
-                      )}
                     </a>
                   ))}
               </div>
@@ -184,38 +187,36 @@ export function InstagramFeed() {
           ))}
         </div>
 
-        {/* Brand Overlay */}
-        <div className="absolute bottom-6 left-6 z-20 flex items-center gap-3 bg-white/90 backdrop-blur-sm px-5 py-3 rounded-2xl shadow-2xl border border-white transform group-hover/main:scale-105 transition-transform duration-500">
-          <div className="bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] p-1.5 rounded-xl shadow-inner">
-            <Instagram className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-sm font-black text-slate-800 tracking-tight">@seemycampus</span>
+        {/* Brand Badge */}
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3.5 py-2 rounded-xl shadow-md border border-white/50">
+          <Instagram className="h-4 w-4 text-[#E4405F]" />
+          <span className="text-[10px] font-black text-slate-800 uppercase tracking-wider">@seemycampus</span>
         </div>
 
-        {/* Navigation Controls */}
-        <button
-          onClick={goToPrevious}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm hover:bg-white p-4 rounded-full shadow-2xl text-slate-900 opacity-0 group-hover/main:opacity-100 transition-all duration-500 -translate-x-4 group-hover/main:translate-x-0"
-          aria-label="Previous"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={goToNext}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm hover:bg-white p-4 rounded-full shadow-2xl text-slate-900 opacity-0 group-hover/main:opacity-100 transition-all duration-500 translate-x-4 group-hover/main:translate-x-0"
-          aria-label="Next"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
+        {/* Navigation Buttons */}
+        <div className="absolute top-1/2 -left-2 -right-2 -translate-y-1/2 flex justify-between z-20 pointer-events-none opacity-0 group-hover/main:opacity-100 transition-all">
+          <button
+            onClick={goToPrevious}
+            className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all pointer-events-auto border border-white/50"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md shadow-lg flex items-center justify-center text-slate-800 hover:bg-blue-600 hover:text-white transition-all pointer-events-auto border border-white/50"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Dots */}
-      <div className="flex justify-center gap-2 mt-8">
+      {/* Pagination Dots */}
+      <div className="flex justify-center gap-1.5 mt-4">
         {Array.from({ length: maxSlides }).map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`rounded-full transition-all duration-300 ${index === currentSlide ? "w-8 h-1.5 bg-slate-800" : "w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400"}`}
+            className={`rounded-full transition-all duration-300 ${index === currentSlide ? "w-6 h-1 bg-blue-600" : "w-1 h-1 bg-blue-200"}`}
           />
         ))}
       </div>
