@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { db } from "@/db"
 import { siteSettings } from "@/db/schema"
 import { eq, inArray } from "drizzle-orm"
+import { revalidatePath } from "next/cache"
 
 export async function GET(request: NextRequest) {
     try {
@@ -90,6 +91,9 @@ export async function POST(request: NextRequest) {
                 results.push(inserted[0])
             }
         }
+
+        // Revalidate the home page so stats update immediately
+        revalidatePath('/')
 
         return NextResponse.json({ message: "Settings updated", settings: results })
     } catch (error) {

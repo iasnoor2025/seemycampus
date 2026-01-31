@@ -11,7 +11,7 @@ import { ContactSettings } from "@/components/dashboard/ContactSettings"
 import { AISettings, AIProviderConfig } from "@/components/dashboard/AISettings"
 import { AITraining } from "@/components/dashboard/AITraining"
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
-import { StatsSettings } from "@/components/dashboard/StatsSettings"
+import { StatsSettings } from "@/components/dashboard/StatsSettings"   
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",

@@ -11,6 +11,7 @@ import { faqs, siteSettings } from "@/db/schema"
 import { eq, asc, desc, and, inArray } from "drizzle-orm"
 
 // Lazy load below-the-fold sections for better initial load performance
+export const revalidate = 0 // Ensure fresh data on every request for stats
 const FeaturedColleges = dynamic(() => import("@/components/colleges/FeaturedColleges").then(mod => ({ default: mod.FeaturedColleges })), {
   loading: () => <div className="py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50" />,
   ssr: true,
