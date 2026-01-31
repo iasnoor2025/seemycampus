@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // If requesting all colleges (for client-side pagination), return all without limit
     let query = db.select().from(colleges).orderBy(desc(colleges.createdAt))
-    
+
     if (!getAll) {
       const offset = (page - 1) * limit
       query = query.limit(limit).offset(offset) as any
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images, googlePlaceId, ranking, establishedYear, averagePackage, accreditation } = body
+    const { name, slug, location, city, state, country, description, website, email, phone, isAcademicAlliance, images, googlePlaceId, ranking, establishedYear, averagePackage, accreditation, entranceExams } = body
 
     if (!name || !slug) {
       return NextResponse.json(
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
         establishedYear: establishedYear !== undefined && establishedYear !== null && establishedYear !== "" ? parseInt(establishedYear) : null,
         averagePackage: averagePackage !== undefined && averagePackage !== null && averagePackage !== "" ? parseInt(averagePackage) : null,
         accreditation: accreditation || null,
+        entranceExams: entranceExams || [],
       })
       .returning()
 

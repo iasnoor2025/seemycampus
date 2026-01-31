@@ -2,29 +2,38 @@
 
 import { GraduationCap, Building2, BookOpen, Users } from "lucide-react"
 
-export function StatsSection() {
+interface StatsSectionProps {
+  stats?: {
+    colleges: string
+    courses: string
+    students: string
+    counselors: string
+  }
+}
+
+export function StatsSection({ stats: customStats }: StatsSectionProps) {
   const stats = [
     {
       Icon: Building2,
-      number: "60,000+",
+      number: customStats?.colleges || "60,000+",
       label: "Colleges",
       gradient: "from-blue-500 to-cyan-600"
     },
     {
       Icon: BookOpen,
-      number: "375,000+",
+      number: customStats?.courses || "375,000+",
       label: "Courses",
       gradient: "from-indigo-500 to-purple-600"
     },
     {
       Icon: Users,
-      number: "50,000+",
+      number: customStats?.students || "50,000+",
       label: "Students Helped",
       gradient: "from-violet-500 to-purple-600"
     },
     {
       Icon: GraduationCap,
-      number: "100+",
+      number: customStats?.counselors || "100+",
       label: "Expert Counselors",
       gradient: "from-teal-500 to-emerald-600"
     }

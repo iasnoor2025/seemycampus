@@ -34,6 +34,7 @@ interface College {
   establishedYear?: number | null
   averagePackage?: number | null
   accreditation?: string | null
+  entranceExams?: string[] | null
 }
 
 interface FeaturedCollege {
@@ -71,8 +72,10 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
     establishedYear: null,
     averagePackage: null,
     accreditation: null,
+    entranceExams: null,
   })
   const [logoUrl, setLogoUrl] = useState("")
+  const [entranceExamsInput, setEntranceExamsInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [featuredColleges, setFeaturedColleges] = useState<FeaturedCollege[]>([])
@@ -105,6 +108,7 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
         establishedYear: college.establishedYear ?? null,
         averagePackage: college.averagePackage ?? null,
         accreditation: college.accreditation || null,
+        entranceExams: college.entranceExams || null,
       })
       // Set logo URL from images array
       if (college.images && Array.isArray(college.images) && college.images.length > 0) {
@@ -112,12 +116,21 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
       } else {
         setLogoUrl("")
       }
+
+      // Set entrance exams input
+      if (college.entranceExams && Array.isArray(college.entranceExams)) {
+        setEntranceExamsInput(college.entranceExams.join(", "))
+      } else {
+        setEntranceExamsInput("")
+      }
+
       // Fetch featured colleges data if editing
       if (college.id) {
         fetchFeaturedColleges(college.id)
       }
     } else {
       setLogoUrl("")
+      setEntranceExamsInput("")
       setFeaturedColleges([])
     }
   }, [college])
@@ -596,6 +609,39 @@ export function CollegeForm({ college, onClose }: CollegeFormProps) {
                     </Label>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enrollment as a verified strategic partner institution</p>
                   </div>
+                </div>
+              </section>
+
+              {/* Admission & Exams */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-0.5 w-8 bg-blue-600 rounded-full" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-800">Admission & Exams</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="entranceExams" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Accepted Entrance Exams (Comma Separated)</Label>
+                  <Input
+                    id="entranceExams"
+                    placeholder="e.g., JEE Main, NEET, GATE, CAT"
+                    value={entranceExamsInput}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setEntranceExamsInput(value)
+
+                      // Update form data immediately
+                      const exams = value
+                        ? value.split(",").map(item => item.trim()).filter(item => item.length > 0)
+                        : []
+
+                      setFormData(prev => ({
+                        ...prev,
+                        entranceExams: exams
+                      }))
+                    }}
+                    className="h-12 bg-slate-50 border-none rounded-2xl px-5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/10"
+                  />
+                  <p className="text-[10px] text-slate-400 pl-2">Enter exams separated by commas. These will be displayed as tags on the college page.</p>
                 </div>
               </section>
 

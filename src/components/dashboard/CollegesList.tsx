@@ -55,6 +55,7 @@ interface College {
   accreditation?: string | null
   createdAt: Date | string
   updatedAt: Date | string
+  entranceExams?: string[] | null
 }
 
 // Helper function to get college initials

@@ -7,8 +7,8 @@ import { QuickToolsSection } from "@/components/home/QuickToolsSection"
 import { FAQSection } from "@/components/home/FAQSection"
 import { generateFAQStructuredData } from "@/lib/seo/generateMeta"
 import { db } from "@/db"
-import { faqs } from "@/db/schema"
-import { eq, asc, desc, and } from "drizzle-orm"
+import { faqs, siteSettings } from "@/db/schema"
+import { eq, asc, desc, and, inArray } from "drizzle-orm"
 
 // Lazy load below-the-fold sections for better initial load performance
 const FeaturedColleges = dynamic(() => import("@/components/colleges/FeaturedColleges").then(mod => ({ default: mod.FeaturedColleges })), {
@@ -141,6 +141,35 @@ export default async function Home() {
     ]
   }
 
+  // Fetch Site Stats
+  let siteStats = {
+    colleges: "60,000+",
+    courses: "375,000+",
+    students: "50,000+",
+    counselors: "100+",
+  }
+
+  try {
+    const settings = await db
+      .select()
+      .from(siteSettings)
+      .where(inArray(siteSettings.key, [
+        "hero_stats_colleges",
+        "hero_stats_courses",
+        "hero_stats_students",
+        "hero_stats_counselors"
+      ]))
+
+    settings.forEach(setting => {
+      if (setting.key === "hero_stats_colleges") siteStats.colleges = setting.value || siteStats.colleges
+      if (setting.key === "hero_stats_courses") siteStats.courses = setting.value || siteStats.courses
+      if (setting.key === "hero_stats_students") siteStats.students = setting.value || siteStats.students
+      if (setting.key === "hero_stats_counselors") siteStats.counselors = setting.value || siteStats.counselors
+    })
+  } catch (error) {
+    console.error("Error fetching site stats:", error)
+  }
+
   const faqStructuredData = generateFAQStructuredData(faqData)
 
   // WebPage structured data with image for better Google search visibility
@@ -178,7 +207,7 @@ export default async function Home() {
       <HeroSection />
 
       {/* Statistics Section */}
-      <StatsSection />
+      <StatsSection stats={siteStats} />
 
       {/* Quick Tools Section */}
       <QuickToolsSection />

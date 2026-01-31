@@ -1,8 +1,9 @@
+
 import { Metadata } from "next"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Settings as SettingsIcon, Loader2, Shield, Cpu, Database, Info } from "lucide-react"
 import { FeatureFlagsManager } from "@/components/dashboard/FeatureFlagsManager"
 import { OTPSettings } from "@/components/dashboard/OTPSettings"
@@ -10,6 +11,7 @@ import { ContactSettings } from "@/components/dashboard/ContactSettings"
 import { AISettings, AIProviderConfig } from "@/components/dashboard/AISettings"
 import { AITraining } from "@/components/dashboard/AITraining"
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
+import { StatsSettings } from "@/components/dashboard/StatsSettings"
 
 export const metadata: Metadata = {
   title: "Settings | Dashboard | SeeMyCampus",
@@ -54,6 +56,26 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-12">
+        {/* Homepage Content */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-0.5 w-8 bg-blue-600 rounded-full" />
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Homepage Content</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-6">
+            <Suspense fallback={<SettingsLoader />}><StatsSettings /></Suspense>
+          </div>
+        </section>
+
+        {/* Feature Orchestration */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-0.5 w-8 bg-blue-600 rounded-full" />
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Feature Orchestration</h2>
+          </div>
+          <Suspense fallback={<SettingsLoader />}><FeatureFlagsManager /></Suspense>
+        </section>
+
         {/* Core Sections */}
         <section>
           <div className="flex items-center gap-3 mb-6">
@@ -65,14 +87,6 @@ export default async function SettingsPage() {
             <Suspense fallback={<SettingsLoader />}><AIProviderConfig /></Suspense>
             <Suspense fallback={<SettingsLoader />}><AITraining /></Suspense>
           </div>
-        </section>
-
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-0.5 w-8 bg-blue-600 rounded-full" />
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-900">Feature Orchestration</h2>
-          </div>
-          <Suspense fallback={<SettingsLoader />}><FeatureFlagsManager /></Suspense>
         </section>
 
         <section>
